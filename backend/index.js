@@ -10,7 +10,8 @@ const dbPromise = open({
   filename: './database.db',
   driver: sqlite3.Database,
 });
-
+// enabling static file serving in Express app
+app.use(express.static('public'));
 // API to fetch data from a table
 app.get('/data', async (req, res) => {
   try {
