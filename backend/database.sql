@@ -7,9 +7,9 @@
 -- Server version: 5.7.23-23
 -- PHP Version: 8.1.30
 
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-START TRANSACTION;
-SET time_zone = "+00:00";
+--SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+--START TRANSACTION;
+--SET time_zone = "+00:00";
 
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
@@ -127,7 +127,7 @@ INSERT INTO `food_items` (`english_category`, `spanish_category`, `vietnamese_ca
 ('Produce', 'Frutas y Verduras (Produce)', 'Rau Quả Tươi (Produce)', '新鲜蔬果 (Produce)', 'Свежие продукты (Produce)', '농작물 (Produce)', 'Свіжі продукти (Produce)', 'منتجات طازجة (Produce)', '', 'Plums ', 'Ciruelas', 'Сливи  ', 'Сливы  ', '李子  ', 'Mận  ', '자두  ', 'برقوق  '),
 ('Produce', 'Frutas y Verduras (Produce)', 'Rau Quả Tươi (Produce)', '新鲜蔬果 (Produce)', 'Свежие продукты (Produce)', '농작물 (Produce)', 'Свіжі продукти (Produce)', 'منتجات طازجة (Produce)', '', 'Potatoes ', 'Papas', 'Картопля  ', 'Картофель', '土豆  ', 'Khoai tây  ', '감자  ', 'بطاطس  '),
 ('Produce', 'Frutas y Verduras (Produce)', 'Rau Quả Tươi (Produce)', '新鲜蔬果 (Produce)', 'Свежие продукты (Produce)', '농작물 (Produce)', 'Свіжі продукти (Produce)', 'منتجات طازجة (Produce)', '', '', '', '', '', '', '', '', '');
-COMMIT;
+--COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
