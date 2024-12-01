@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { requestLogger } from './middleware/requestLogger';
 import { errorHandler } from './middleware/errorHandler';
+import { ApiResponse } from './utils/ApiResponse';
 
 // Load environment variables
 dotenv.config();
