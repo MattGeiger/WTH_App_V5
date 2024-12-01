@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { requestLogger } from './middleware/requestLogger';
 import { errorHandler } from './middleware/errorHandler';
 import { ApiResponse } from './utils/ApiResponse';
+import categoryRoutes from './routes/categoryRoutes';
 
 // Load environment variables
 dotenv.config();
@@ -15,6 +16,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(requestLogger);
+
+// Routes
+app.use('/api/categories', categoryRoutes);
 
 // Basic health check endpoint
 app.get('/health', (req, res) => {
