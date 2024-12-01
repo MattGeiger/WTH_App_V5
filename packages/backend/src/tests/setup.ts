@@ -9,15 +9,19 @@ const prisma = new PrismaClient();
 
 // Before all tests
 beforeAll(async () => {
-  // Clean up database before tests
+  // Clean up database before tests - order matters for foreign keys
   await prisma.translation.deleteMany({});
+  await prisma.customField.deleteMany({});
+  await prisma.foodItem.deleteMany({});
   await prisma.category.deleteMany({});
 });
 
 // After all tests
 afterAll(async () => {
-  // Clean up and disconnect
+  // Clean up and disconnect - order matters for foreign keys
   await prisma.translation.deleteMany({});
+  await prisma.customField.deleteMany({});
+  await prisma.foodItem.deleteMany({});
   await prisma.category.deleteMany({});
   await prisma.$disconnect();
 });
