@@ -15,12 +15,12 @@ app.use(cors());
 app.use(express.json());
 app.use(requestLogger);
 
-// Routes
+// Basic health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
 
-// Error handling middleware (must be last)
+// Error handling middleware (must be after all other middleware and routes)
 app.use(errorHandler);
 
 // Start server
