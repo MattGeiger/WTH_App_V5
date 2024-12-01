@@ -18,7 +18,10 @@ app.use(requestLogger);
 
 // Basic health check endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok' });
+  res.status(200).json(ApiResponse.success({
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString()
+  }));
 });
 
 // Error handling middleware (must be after all other middleware and routes)
