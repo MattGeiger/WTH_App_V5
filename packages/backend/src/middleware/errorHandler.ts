@@ -1,24 +1,26 @@
 import { Request, Response, NextFunction } from 'express';
-
-interface ApiError extends Error {
-  statusCode?: number;
-}
+import { ApiError, isApiError } from '../utils/ApiError';
 
 export const errorHandler = (
-  err: ApiError,
+  err: Error,
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const statusCode = err.statusCode || 500;
-  const message = err.message || 'Internal Server Error';
+  if (isApiError(err)) {
+    return res.status(err.statusCode).json({
+      success: false,
+      status: err.statusCode,
+      message: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
+  }
 
-  console.error(`[Error] ${statusCode} - ${message}`);
-  
-  res.status(statusCode).json({
+  // Handle unknown errors
+  return res.status(500).json({
     success: false,
-    status: statusCode,
-    message: statusCode === 500 ? 'Internal Server Error' : message,
+    status: 500,
+    message: 'Internal Server Error',
     stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
   });
 };
