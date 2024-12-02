@@ -5,49 +5,44 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-
-### Added
-- Project initialization with clean repository structure
-- Backend package setup with Prisma ORM
-- Database schema for food pantry inventory:
-  - Categories and food items
-  - Multi-language translation support
-  - Image handling capabilities
-  - Dietary attribute tracking
-  - Custom fields for flexibility
-- Development environment configuration
-- SQLite database initialization
-- Environment variable management
-
-### Changed
-- Repository reset to begin fresh implementation with Prisma ORM
-- Updated documentation to reflect new technical stack and development approach
-
 ### Planned
-- Backend API development
 - OpenAI-powered translation system
 - React-based user interface
 - Production deployment configuration
 
-## [0.1.0] - 2024-11-29
-### Added
-- Initial repository setup
-- Basic documentation structure
-- MIT License
-- Development roadmap
-
 ## [0.1.1] - 2024-12-02
-
 ### Added
-- Complete backend implementation with:
-  - Prisma ORM integration
-  - Category, FoodItem, and Translation services
-  - RESTful API endpoints
-  - Comprehensive test coverage
-  - Error handling
-  - Request logging
+- Complete backend implementation:
+  - Category, FoodItem, and Translation services with CRUD operations
+  - RESTful API endpoints with validation
+  - Comprehensive test coverage (56 tests)
+  - Structured error handling
+  - Request logging middleware
 
 ### Changed
-- Updated project structure for scalability
-- Enhanced error handling across services
+- Enhanced project structure:
+  - Separate route handlers
+  - Service layer abstraction
+  - Utility classes for errors and responses
 - Improved type safety with TypeScript
+- Updated documentation with API endpoints
+
+## [0.1.0] - 2024-11-29
+### Added
+- Initial project setup:
+  - Prisma ORM integration
+  - Database schema for:
+    - Categories and food items
+    - Multi-language translations
+    - Dietary attributes
+    - Custom fields
+  - Development environment configuration
+  - SQLite database initialization
+- Documentation setup:
+  - README structure
+  - Development roadmap
+  - MIT License
+
+### Changed
+- Repository reset for fresh implementation
+- Updated technical stack documentation
