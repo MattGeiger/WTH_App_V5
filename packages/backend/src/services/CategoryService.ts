@@ -68,10 +68,19 @@ export class CategoryService {
 
   async delete(id: number): Promise<void> {
     try {
+      const category = await this.prisma.category.findUnique({
+        where: { id }
+      });
+
+      if (!category) {
+        throw new ApiError(404, 'Category not found');
+      }
+
       await this.prisma.category.delete({
         where: { id }
       });
     } catch (error) {
+      if (error instanceof ApiError) throw error;
       throw new ApiError(400, 'Error deleting category');
     }
   }

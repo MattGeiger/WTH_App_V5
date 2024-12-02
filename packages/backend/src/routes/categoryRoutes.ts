@@ -23,7 +23,6 @@ router.get('/:id', async (req, res, next) => {
     if (isNaN(id)) {
       throw new ApiError(400, 'Invalid category ID');
     }
-
     const category = await categoryService.findById(id);
     res.json(ApiResponse.success(category));
   } catch (error) {
@@ -38,7 +37,6 @@ router.post('/', async (req, res, next) => {
     if (!name || typeof name !== 'string') {
       throw new ApiError(400, 'Name is required and must be a string');
     }
-
     const category = await categoryService.create({ name });
     res.status(201).json(ApiResponse.success(category, 'Category created successfully'));
   } catch (error) {
@@ -53,10 +51,15 @@ router.put('/:id', async (req, res, next) => {
     if (isNaN(id)) {
       throw new ApiError(400, 'Invalid category ID');
     }
-
     const { name } = req.body;
     if (!name || typeof name !== 'string') {
       throw new ApiError(400, 'Name is required and must be a string');
+    }
+
+    // First check if the category exists
+    const existingCategory = await categoryService.findById(id);
+    if (!existingCategory) {
+      throw new ApiError(404, 'Category not found');
     }
 
     const category = await categoryService.update(id, { name });
@@ -72,6 +75,12 @@ router.delete('/:id', async (req, res, next) => {
     const id = parseInt(req.params.id);
     if (isNaN(id)) {
       throw new ApiError(400, 'Invalid category ID');
+    }
+
+    // First check if the category exists
+    const category = await categoryService.findById(id);
+    if (!category) {
+      throw new ApiError(404, 'Category not found');
     }
 
     await categoryService.delete(id);
