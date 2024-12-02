@@ -7,6 +7,7 @@ import { ApiResponse } from './utils/ApiResponse';
 import categoryRoutes from './routes/categoryRoutes';
 import foodItemRoutes from './routes/foodItemRoutes';
 import translationRoutes from './routes/translationRoutes';
+import path from 'path';
 
 // Load environment variables
 dotenv.config();
@@ -19,6 +20,9 @@ export const createApp = () => {
   app.use(cors());
   app.use(express.json());
   app.use(requestLogger);
+  
+  // Serve static files from public directory
+  app.use(express.static(path.join(__dirname, '../public')));
 
   // Routes
   app.use('/api/categories', categoryRoutes);

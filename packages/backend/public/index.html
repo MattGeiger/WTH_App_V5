@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Pantry - Category Management</title>
+    <style>
+        .error { color: red; }
+        .success { color: green; }
+        #messageArea { margin: 10px 0; }
+        #categoryList { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Category Management</h1>
+    
+    <div id="messageArea"></div>
+
+    <form id="categoryForm">
+        <div>
+            <label for="categoryName">Category Name:</label>
+            <input type="text" id="categoryName" name="categoryName" required>
+        </div>
+        <input type="hidden" id="categoryId">
+        <button type="submit">Add Category</button>
+        <button type="button" id="resetForm">Clear Form</button>
+    </form>
+
+    <div id="categoryList">
+        <h2>Categories</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="categoryTableBody">
+                <!-- Categories will be loaded here -->
+            </tbody>
+        </table>
+    </div>
+<script src="script.js"></script>
+</body>
+</html>
