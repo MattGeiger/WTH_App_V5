@@ -35,3 +35,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Basic documentation structure
 - MIT License
 - Development roadmap
+
+## [0.1.1] - 2024-12-02
+
+### Added
+- Complete backend implementation with:
+  - Prisma ORM integration
+  - Category, FoodItem, and Translation services
+  - RESTful API endpoints
+  - Comprehensive test coverage
+  - Error handling
+  - Request logging
+
+### Changed
+- Updated project structure for scalability
+- Enhanced error handling across services
+- Improved type safety with TypeScript
