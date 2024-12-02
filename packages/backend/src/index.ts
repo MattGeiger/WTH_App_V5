@@ -6,6 +6,7 @@ import { errorHandler } from './middleware/errorHandler';
 import { ApiResponse } from './utils/ApiResponse';
 import categoryRoutes from './routes/categoryRoutes';
 import foodItemRoutes from './routes/foodItemRoutes';
+import translationRoutes from './routes/translationRoutes';
 
 // Load environment variables
 dotenv.config();
@@ -22,6 +23,7 @@ export const createApp = () => {
   // Routes
   app.use('/api/categories', categoryRoutes);
   app.use('/api/food-items', foodItemRoutes);
+  app.use('/api/translations', translationRoutes);
 
   // Basic health check endpoint
   app.get('/health', (req, res) => {
