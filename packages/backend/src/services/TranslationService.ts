@@ -21,9 +21,38 @@ export class TranslationService {
     this.supportedLanguages = process.env.SUPPORTED_LANGUAGES ? 
       JSON.parse(process.env.SUPPORTED_LANGUAGES) : 
       ['es', 'ru', 'uk', 'zh', 'vi', 'ko', 'ar'];
-  }
+}
 
-  async createForCategory(categoryId: number, data: CreateTranslationData): Promise<Translation> {
+// Add the new method here
+async findAll(params: {
+  language?: string;
+  categoryId?: number;
+  foodItemId?: number;
+} = {}): Promise<Translation[]> {
+  try {
+      const where = {
+          ...(params.language && { language: params.language }),
+          ...(params.categoryId && { categoryId: params.categoryId }),
+          ...(params.foodItemId && { foodItemId: params.foodItemId })
+      };
+
+      return await this.prisma.translation.findMany({
+          where,
+          include: {
+              category: true,
+              foodItem: true
+          },
+          orderBy: {
+              createdAt: 'desc'
+          }
+      });
+  } catch (error) {
+      if (error instanceof ApiError) throw error;
+      throw new ApiError(500, 'Error fetching translations');
+  }
+}
+
+async createForCategory(categoryId: number, data: CreateTranslationData): Promise<Translation> {
     try {
       if (!this.supportedLanguages.includes(data.language)) {
         throw new ApiError(400, `Language ${data.language} is not supported`);

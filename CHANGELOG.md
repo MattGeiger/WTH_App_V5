@@ -10,6 +10,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - React-based user interface
 - Production deployment configuration
 
+## [v0.4.0] - 2024-12-03
+### Added
+- Test UI for validating backend functionality
+- Category management interface
+- Food item management with dietary and status flags
+- Translation management interface
+- Basic CSS styling for usability
+- Complete CRUD operations for all entities
+- Form validation and error handling
+- Status and dietary attribute display
+
+### Fixed
+- Food items visibility when out of stock
+- JSON parsing in food item edit functionality
+
+### Known Issues
+- Translation loading error after food item deletion
+
 ## [0.1.1] - 2024-12-02
 ### Added
 - Complete backend implementation:

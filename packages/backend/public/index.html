@@ -3,44 +3,219 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Food Pantry - Category Management</title>
+    <title>Food Pantry Management</title>
     <style>
         .error { color: red; }
         .success { color: green; }
         #messageArea { margin: 10px 0; }
-        #categoryList { margin-top: 20px; }
+        .section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        form div { margin: 10px 0; }
+        .translation-type-select { margin-bottom: 10px; }
+        .toggle-group { 
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .toggle-group label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
     </style>
 </head>
 <body>
-    <h1>Category Management</h1>
-    
+    <h1>Food Pantry Management</h1>
     <div id="messageArea"></div>
 
-    <form id="categoryForm">
-        <div>
-            <label for="categoryName">Category Name:</label>
-            <input type="text" id="categoryName" name="categoryName" required>
+    <!-- Categories Section -->
+    <div class="section">
+        <h2>Category Management</h2>
+        <form id="categoryForm">
+            <div>
+                <label for="categoryName">Category Name:</label>
+                <input type="text" id="categoryName" name="categoryName" required>
+            </div>
+            <input type="hidden" id="categoryId">
+            <button type="submit">Add Category</button>
+            <button type="button" id="resetForm">Clear Form</button>
+        </form>
+        <div id="categoryList">
+            <h3>Categories</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="categoryTableBody">
+                    <!-- Categories will be loaded here -->
+                </tbody>
+            </table>
         </div>
-        <input type="hidden" id="categoryId">
-        <button type="submit">Add Category</button>
-        <button type="button" id="resetForm">Clear Form</button>
-    </form>
-
-    <div id="categoryList">
-        <h2>Categories</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Created</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="categoryTableBody">
-                <!-- Categories will be loaded here -->
-            </tbody>
-        </table>
     </div>
-<script src="script.js"></script>
+
+    <!-- Food Items Section -->
+    <div class="section">
+        <h2>Food Item Management</h2>
+        <form id="foodItemForm">
+            <div>
+                <label for="foodItemName">Item Name:</label>
+                <input type="text" id="foodItemName" name="foodItemName" required>
+            </div>
+            <div>
+                <label for="foodItemCategory">Category:</label>
+                <select id="foodItemCategory" required>
+                    <!-- Categories will be loaded here -->
+                </select>
+            </div>
+            <div>
+                <label for="foodItemInStock">In Stock:</label>
+                <input type="checkbox" id="foodItemInStock" name="foodItemInStock" checked>
+            </div>
+            <div>
+                <h4>Status Flags</h4>
+                <div class="toggle-group">
+                    <label>
+                        <input type="checkbox" id="foodItemMustGo" name="mustGo">
+                        Must Go
+                    </label>
+                    <label>
+                        <input type="checkbox" id="foodItemLowSupply" name="lowSupply">
+                        Low Supply
+                    </label>
+                    <label>
+                        <input type="checkbox" id="foodItemReadyToEat" name="readyToEat">
+                        Ready to Eat
+                    </label>
+                </div>
+            </div>
+            <div>
+                <h4>Dietary Flags</h4>
+                <div class="toggle-group">
+                    <label>
+                        <input type="checkbox" id="foodItemKosher" name="kosher">
+                        Kosher
+                    </label>
+                    <label>
+                        <input type="checkbox" id="foodItemHalal" name="halal">
+                        Halal
+                    </label>
+                    <label>
+                        <input type="checkbox" id="foodItemVegetarian" name="vegetarian">
+                        Vegetarian
+                    </label>
+                    <label>
+                        <input type="checkbox" id="foodItemVegan" name="vegan">
+                        Vegan
+                    </label>
+                    <label>
+                        <input type="checkbox" id="foodItemGlutenFree" name="glutenFree">
+                        Gluten Free
+                    </label>
+                    <label>
+                        <input type="checkbox" id="foodItemOrganic" name="organic">
+                        Organic
+                    </label>
+                </div>
+            </div>
+            <input type="hidden" id="foodItemId">
+            <button type="submit">Add Food Item</button>
+            <button type="button" id="resetFoodItemForm">Clear Form</button>
+        </form>
+        <div id="foodItemList">
+            <h3>Food Items</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Status</th>
+                        <th>Dietary</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="foodItemTableBody">
+                    <!-- Food items will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Translations Section -->
+    <div class="section">
+        <h2>Translation Management</h2>
+        <form id="translationForm">
+            <div class="translation-type-select">
+                <label>
+                    <input type="radio" name="translationType" value="category" checked>
+                    Translate Category
+                </label>
+                <label>
+                    <input type="radio" name="translationType" value="foodItem">
+                    Translate Food Item
+                </label>
+            </div>
+            <div>
+                <label for="translationTarget">Select Item to Translate:</label>
+                <select id="translationTarget" required>
+                    <!-- Items will be loaded based on selection -->
+                </select>
+            </div>
+            <div>
+                <label for="language">Language:</label>
+                <select id="language" required>
+                    <option value="es">Spanish</option>
+                    <option value="fr">French</option>
+                    <option value="ar">Arabic</option>
+                    <option value="zh">Chinese</option>
+                    <option value="vi">Vietnamese</option>
+                </select>
+            </div>
+            <div>
+                <label for="translatedText">Translation:</label>
+                <input type="text" id="translatedText" required>
+            </div>
+            <input type="hidden" id="translationId">
+            <button type="submit">Add Translation</button>
+            <button type="button" id="resetTranslationForm">Clear Form</button>
+        </form>
+        <div id="translationList">
+            <h3>Translations</h3>
+            <div>
+                <label for="filterLanguage">Filter by Language:</label>
+                <select id="filterLanguage">
+                    <option value="">All Languages</option>
+                    <option value="es">Spanish</option>
+                    <option value="fr">French</option>
+                    <option value="ar">Arabic</option>
+                    <option value="zh">Chinese</option>
+                    <option value="vi">Vietnamese</option>
+                </select>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Original Text</th>
+                        <th>Language</th>
+                        <th>Translation</th>
+                        <th>Type</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="translationTableBody">
+                    <!-- Translations will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
