@@ -10,6 +10,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - React-based user interface
 - Production deployment configuration
 
+## [v0.5.0] - 2024-12-06
+### Added
+- OpenAI-powered translation system using gpt-4o-mini model
+- Cost-effective automated translations for categories and food items
+- Seamless integration with test UI
+- Multiple language support with near-instant translations
+
+### Fixed
+- Translation loading error after food item deletion
+
+### Changed
+- Translation system from manual to automated
+
 ## [v0.4.0] - 2024-12-03
 ### Added
 - Test UI for validating backend functionality

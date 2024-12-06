@@ -299,7 +299,36 @@ document.addEventListener('DOMContentLoaded', () => {
             throw new Error(error.message || 'Failed to delete translation');
         }
     }
+// OpenAI Translation Testing Function
+async function testTranslation(text, language) {
+    const response = await fetch('/api/categories/test-translation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, language })
+    });
 
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Translation test failed');
+    }
+
+    return response.json();
+}
+
+// Add test button event listener
+document.getElementById('translationForm').addEventListener('change', async (e) => {
+    if (e.target.id === 'translatedText') return;
+    
+    const text = document.getElementById('translationTarget').selectedOptions[0].text;
+    const language = document.getElementById('language').value;
+    
+    try {
+        const result = await testTranslation(text, language);
+        document.getElementById('translatedText').value = result.data.translation;
+    } catch (error) {
+        showMessage(error.message, 'error');
+    }
+});
 // Category UI Helper Functions
 function displayCategories(categories) {
     categoryTableBody.innerHTML = categories.map(category => `
