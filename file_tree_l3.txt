@@ -1,0 +1,71 @@
+.
+├── .git
+│   ├── FETCH_HEAD
+│   ├── HEAD
+│   ├── branches
+│   ├── config
+│   ├── description
+│   ├── hooks
+│   │   ├── applypatch-msg.sample
+│   │   ├── commit-msg.sample
+│   │   ├── fsmonitor-watchman.sample
+│   │   ├── post-update.sample
+│   │   ├── pre-applypatch.sample
+│   │   ├── pre-commit.sample
+│   │   ├── pre-merge-commit.sample
+│   │   ├── pre-push.sample
+│   │   ├── pre-rebase.sample
+│   │   ├── pre-receive.sample
+│   │   ├── prepare-commit-msg.sample
+│   │   ├── push-to-checkout.sample
+│   │   ├── sendemail-validate.sample
+│   │   └── update.sample
+│   ├── index
+│   ├── info
+│   │   └── exclude
+│   ├── lfs
+│   │   └── tmp
+│   ├── logs
+│   │   ├── HEAD
+│   │   └── refs
+│   ├── objects
+│   │   ├── info
+│   │   └── pack
+│   ├── packed-refs
+│   └── refs
+│       ├── heads
+│       ├── remotes
+│       └── tags
+├── .gitignore
+├── CHANGELOG.md
+├── LICENSE
+├── README.md
+├── backup-db
+├── backup-openai
+│   ├── OpenAIService.ts
+│   └── __tests__
+│       └── OpenAIService.test.ts
+├── data
+│   └── food-pantry.db
+├── file_tree.txt
+├── file_tree_l3.txt
+├── package.json
+└── packages
+    ├── backend
+    │   ├── .env
+    │   ├── .env.example
+    │   ├── .gitignore
+    │   ├── jest.config.js
+    │   ├── node_modules
+    │   ├── package-lock.json
+    │   ├── package.json
+    │   ├── prisma
+    │   ├── public
+    │   ├── src
+    │   └── tsconfig.json
+    ├── frontend
+    │   └── package.json
+    └── shared
+        └── package.json
+
+26 directories, 42 files
