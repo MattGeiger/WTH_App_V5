@@ -2,6 +2,43 @@
 
 A web application providing food pantry inventory management through a React-based UI with a SQL database backend. The system includes automated translations through OpenAI integration to support multiple languages.
 
+## Project Structure
+
+```
+.
+├── .gitignore
+├── CHANGELOG.md
+├── LICENSE
+├── README.md
+├── backup-db                      # Database backups
+├── backup-openai                  # OpenAI integration backups
+│   ├── OpenAIService.ts
+│   └── __tests__
+│       └── OpenAIService.test.ts
+├── data
+│   └── food-pantry.db            # SQLite database
+├── package.json
+└── packages/
+    ├── backend/                  # Backend application
+    │   ├── .env                 # Environment configuration
+    │   ├── .env.example        # Environment template
+    │   ├── jest.config.js      # Test configuration
+    │   ├── package.json        # Backend dependencies
+    │   ├── prisma/             # Database schema and migrations
+    │   ├── public/             # Static files
+    │   ├── src/               # Source code
+    │   │   ├── routes/       # API endpoints
+    │   │   ├── services/     # Business logic
+    │   │   ├── middleware/   # Express middleware
+    │   │   ├── utils/       # Utility functions
+    │   │   └── tests/       # Test suites
+    │   └── tsconfig.json     # TypeScript configuration
+    ├── frontend/              # React application (planned)
+    │   └── package.json
+    └── shared/               # Shared code and types
+        └── package.json
+```
+
 ## Project Overview
 
 This application is designed to:
@@ -17,69 +54,96 @@ This application is designed to:
 - **Database Management**:
   - SQL backend using Prisma ORM
   - Category and food item CRUD operations
-  - Dietary attribute tracking (kosher, halal, vegetarian, etc.)
-  - Custom fields for flexible item attributes
-  - Translation management for multilingual support
-  - Robust error handling and validation
+  - Language management system
+  - Translation relationships
+  - Dietary attribute tracking
+  - Custom fields for flexibility
+  - Comprehensive error handling
 
 - **API Endpoints**:
-  - Categories API
-    - List categories with translations
-    - Create, update, delete operations
-    - Validation and error handling
-  - Food Items API
-    - Paginated listing with filters
-    - Detailed item information
-    - Dietary restrictions management
-    - Custom field support
-  - Translations API
-    - Language-specific translations
-    - Support for both categories and items
-    - Validation for supported languages
-
-#### Planned
-- **Translation System**: OpenAI integration for automated translations
-- **User Interface**: React-based frontend for inventory management
-- **Image Management**: Storage and retrieval of product images
+  - Categories API with validation
+  - Food Items API with pagination
+  - Languages API for localization
+  - Translations API with relationships
+  - Standardized response formatting
 
 ## Technical Stack
 
 ### Backend (Implemented)
 - SQLite database
-- Prisma ORM for data management
-- Node.js/Express for API endpoints
-- TypeScript for type safety
-- Jest for testing
-- Comprehensive error handling
+- Prisma ORM
+- Node.js/Express
+- TypeScript
+- Jest testing framework
+- Standardized error handling
 
 ### Frontend (Planned)
 - React
-- Modern JavaScript/TypeScript
-- Component-based architecture
+- TypeScript
+- Component architecture
 
-### External Services (Implemented)
-- OpenAI API (gpt-4o-mini) for cost-effective translations
+## Getting Started
 
-## Project Structure
-```
-sql-react-app/
-├── packages/
-│   ├── backend/                    # Backend application
-│   │   ├── prisma/                # Database schema and migrations
-│   │   ├── src/
-│   │   │   ├── routes/           # API endpoints
-│   │   │   ├── services/         # Business logic
-│   │   │   ├── middleware/       # Express middleware
-│   │   │   ├── utils/           # Utility functions
-│   │   │   └── tests/           # Test suites
-│   │   └── package.json
-│   ├── frontend/                  # React application (planned)
-│   └── shared/                    # Shared code and types
-├── assets/
-│   └── images/                    # Product image storage
-├── docs/                          # Documentation
-└── scripts/                       # Build and maintenance scripts
-```
+### Prerequisites
+- Node.js (v14 or higher)
+- npm or yarn
+- SQLite 3
+- Git
+
+### Initial Setup
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/sql-react-app.git
+   cd sql-react-app
+   ```
+
+2. Install root dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Set up backend:
+   ```bash
+   cd packages/backend
+   npm install
+   ```
+
+4. Configure environment:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your settings
+   ```
+
+5. Initialize database:
+   ```bash
+   npx prisma generate
+   npx prisma migrate dev
+   ```
+
+### Development
+
+1. Start backend server:
+   ```bash
+   npm run dev
+   ```
+
+2. Run tests:
+   ```bash
+   npm test
+   ```
+
+3. Access API:
+   - API: http://localhost:3000
+   - Test UI: http://localhost:3000/index.html
+
+### Available Scripts
+
+- `npm run dev` - Start development server
+- `npm test` - Run test suite
+- `npm run build` - Build for production
+- `npm run lint` - Run linter
+- `npm run migrate` - Run database migrations
 
 ## Development Status
 
@@ -88,81 +152,53 @@ sql-react-app/
 ✅ Backend Implementation
 ✅ Test UI Development
 ✅ OpenAI Integration
-🔄 Step 6: Translation system testing
-⬜ Step 7: React environment setup  
-⬜ Step 8: React UI development  
-⬜ Step 9: Full system integration  
-⬜ Step 10: Documentation completion
-
-## Latest Milestone (v0.5.0)
-Completed OpenAI integration with:
-- Automated translations using gpt-4o-mini
-- Multi-language support
-- Cost-effective processing
-- Seamless UI integration
-
-## Next Steps
-Integration with OpenAI API for automated translations.
+✅ Language Management System
+🔄 Step 7: Translation system testing
+⬜ Step 8: React setup
+⬜ Step 9: React UI development
+⬜ Step 10: System integration
+⬜ Step 11: Documentation
 
 ## API Documentation
 
 ### Categories
-- `GET /api/categories` - List all categories
-- `GET /api/categories/:id` - Get category details
-- `POST /api/categories` - Create new category
-- `PUT /api/categories/:id` - Update category
-- `DELETE /api/categories/:id` - Delete category
+```
+GET    /api/categories
+POST   /api/categories
+GET    /api/categories/:id
+PUT    /api/categories/:id
+DELETE /api/categories/:id
+```
 
 ### Food Items
-- `GET /api/food-items` - List items (supports pagination)
-- `GET /api/food-items/:id` - Get item details
-- `POST /api/food-items` - Create new item
-- `PUT /api/food-items/:id` - Update item
-- `DELETE /api/food-items/:id` - Delete item
+```
+GET    /api/food-items
+POST   /api/food-items
+GET    /api/food-items/:id
+PUT    /api/food-items/:id
+DELETE /api/food-items/:id
+```
+
+### Languages
+```
+GET    /api/languages
+POST   /api/languages
+PUT    /api/languages/:id
+DELETE /api/languages/:id
+```
 
 ### Translations
-- `POST /api/translations/category/:categoryId` - Add category translation
-- `POST /api/translations/food-item/:foodItemId` - Add item translation
-- `GET /api/translations/language/:language` - Get translations by language
-- `PUT /api/translations/:id` - Update translation
-- `DELETE /api/translations/:id` - Delete translation
-
-## Getting Started
-
-### Prerequisites
-- Node.js
-- npm or yarn
-- SQLite
-
-### Initial Setup
-1. Clone the repository
-2. Navigate to the backend directory:
-   ```bash
-   cd packages/backend
-   ```
-3. Install dependencies:
-   ```bash
-   npm install
-   ```
-4. Copy `.env.example` to `.env` and update configuration
-5. Initialize the database:
-   ```bash
-   npx prisma migrate dev
-   ```
-
-### Development
-1. Start the development server:
-   ```bash
-   npm run dev
-   ```
-2. Run tests:
-   ```bash
-   npm test
-   ```
+```
+GET    /api/translations/language/:languageCode
+POST   /api/translations/category/:categoryId
+POST   /api/translations/food-item/:foodItemId
+PUT    /api/translations/:id
+DELETE /api/translations/:id
+```
 
 ## Contributing
 
-This project is currently in active initial development. Contribution guidelines will be established as the project matures.
+This project is in active development. Contribution guidelines will be established as the project matures.
 
 ## License
 

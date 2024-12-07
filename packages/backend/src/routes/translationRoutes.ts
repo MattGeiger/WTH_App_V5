@@ -9,11 +9,11 @@ const translationService = new TranslationService();
 // GET /translations
 router.get('/', async (req, res, next) => {
     try {
-        const { language, categoryId, foodItemId } = req.query;
-        console.log('Translation query params:', { language, categoryId, foodItemId });
+        const { languageCode, categoryId, foodItemId } = req.query;
+        console.log('Translation query params:', { languageCode, categoryId, foodItemId });
         
         const params = {
-            language: language as string,
+            languageCode: languageCode as string,
             categoryId: categoryId ? parseInt(categoryId as string) : undefined,
             foodItemId: foodItemId ? parseInt(foodItemId as string) : undefined
         };
@@ -29,10 +29,10 @@ router.get('/', async (req, res, next) => {
     }
 });
 
-// GET /translations/language/:language
-router.get('/language/:language', async (req, res, next) => {
+// GET /translations/language/:languageCode
+router.get('/language/:languageCode', async (req, res, next) => {
     try {
-        const { language } = req.params;
+        const { languageCode } = req.params;
         const { categoryId, foodItemId } = req.query;
 
         const params = {
@@ -40,7 +40,7 @@ router.get('/language/:language', async (req, res, next) => {
             foodItemId: foodItemId ? parseInt(foodItemId as string) : undefined
         };
 
-        const translations = await translationService.findByLanguage(language, params);
+        const translations = await translationService.findByLanguage(languageCode, params);
         res.json(ApiResponse.success(translations));
     } catch (error) {
         next(error);
@@ -55,13 +55,13 @@ router.post('/category/:categoryId', async (req, res, next) => {
             throw new ApiError(400, 'Invalid category ID');
         }
 
-        const { language, translatedText } = req.body;
-        if (!language || !translatedText) {
-            throw new ApiError(400, 'Language and translated text are required');
+        const { languageCode, translatedText } = req.body;
+        if (!languageCode || !translatedText) {
+            throw new ApiError(400, 'Language code and translated text are required');
         }
 
         const translation = await translationService.createForCategory(categoryId, {
-            language,
+            languageCode,
             translatedText
         });
 
@@ -79,13 +79,13 @@ router.post('/food-item/:foodItemId', async (req, res, next) => {
             throw new ApiError(400, 'Invalid food item ID');
         }
 
-        const { language, translatedText } = req.body;
-        if (!language || !translatedText) {
-            throw new ApiError(400, 'Language and translated text are required');
+        const { languageCode, translatedText } = req.body;
+        if (!languageCode || !translatedText) {
+            throw new ApiError(400, 'Language code and translated text are required');
         }
 
         const translation = await translationService.createForFoodItem(foodItemId, {
-            language,
+            languageCode,
             translatedText
         });
 
@@ -96,7 +96,6 @@ router.post('/food-item/:foodItemId', async (req, res, next) => {
 });
 
 // Generic ID-based routes last
-// GET /translations/:id
 router.get('/:id', async (req, res, next) => {
     try {
         const id = parseInt(req.params.id);
@@ -111,7 +110,6 @@ router.get('/:id', async (req, res, next) => {
     }
 });
 
-// PUT /translations/:id
 router.put('/:id', async (req, res, next) => {
     try {
         const id = parseInt(req.params.id);
@@ -136,7 +134,6 @@ router.put('/:id', async (req, res, next) => {
     }
 });
 
-// DELETE /translations/:id
 router.delete('/:id', async (req, res, next) => {
     try {
         const id = parseInt(req.params.id);

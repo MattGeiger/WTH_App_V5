@@ -2,68 +2,87 @@ import { Router } from 'express';
 import { CategoryService } from '../services/CategoryService';
 import { ApiResponse } from '../utils/ApiResponse';
 import { ApiError } from '../utils/ApiError';
-import { OpenAIService } from '../services/openai/OpenAIService';
 
 const router = Router();
 const categoryService = new CategoryService();
 
+// GET /categories
 router.get('/', async (req, res, next) => {
-  try {
-    const categories = await categoryService.findAll();
-    res.json(ApiResponse.success(categories));
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.post('/', async (req, res, next) => {
-  try {
-    const category = await categoryService.create(req.body);
-    res.status(201).json(ApiResponse.success(category));
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.get('/:id', async (req, res, next) => {
-  try {
-    const category = await categoryService.findById(Number(req.params.id));
-    res.json(ApiResponse.success(category));
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.put('/:id', async (req, res, next) => {
-  try {
-    const category = await categoryService.update(Number(req.params.id), req.body);
-    res.json(ApiResponse.success(category));
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.delete('/:id', async (req, res, next) => {
-  try {
-    await categoryService.delete(Number(req.params.id));
-    res.status(204).send();
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.post('/test-translation', async (req, res, next) => {
-  try {
-    const { text, language } = req.body;
-    if (!text || !language) {
-      throw new ApiError(400, 'Text and language are required');
+    try {
+        const categories = await categoryService.findAll();
+        res.json(ApiResponse.success(categories));
+    } catch (error) {
+        next(error);
     }
-    const service = new OpenAIService();
-    const result = await service.translateText(text, language, 'category');
-    res.json(ApiResponse.success({ translation: result }));
-  } catch (error) {
-    next(error);
-  }
+});
+
+// GET /categories/:id
+router.get('/:id', async (req, res, next) => {
+    try {
+        const id = parseInt(req.params.id);
+        if (isNaN(id)) {
+            throw new ApiError(400, 'Invalid category ID');
+        }
+
+        const category = await categoryService.findById(id);
+        if (!category) {
+            throw new ApiError(404, 'Category not found');
+        }
+
+        res.json(ApiResponse.success(category));
+    } catch (error) {
+        next(error);
+    }
+});
+
+// POST /categories
+router.post('/', async (req, res, next) => {
+    try {
+        const { name } = req.body;
+        if (!name || name.trim() === '') {
+            return res.status(400).json(ApiResponse.error('Category name is required'));
+        }
+
+        const category = await categoryService.create({ name });
+        res.status(201).json(ApiResponse.success(category, 'Category created successfully'));
+    } catch (error) {
+        next(error);
+    }
+});
+
+// PUT /categories/:id
+router.put('/:id', async (req, res, next) => {
+    try {
+        const id = parseInt(req.params.id);
+        if (isNaN(id)) {
+            throw new ApiError(400, 'Invalid category ID');
+        }
+
+        const { name } = req.body;
+        if (!name || name.trim() === '') {
+            return res.status(400).json(ApiResponse.error('Category name is required'));
+        }
+
+        const category = await categoryService.update(id, { name });
+        res.json(ApiResponse.success(category, 'Category updated successfully'));
+    } catch (error) {
+        next(error);
+    }
+});
+
+// DELETE /categories/:id
+router.delete('/:id', async (req, res, next) => {
+    try {
+        const id = parseInt(req.params.id);
+        if (isNaN(id)) {
+            throw new ApiError(400, 'Invalid category ID');
+        }
+
+        await categoryService.delete(id);
+        res.json(ApiResponse.success(null, 'Category deleted successfully'));
+    } catch (error) {
+        next(error);
+    }
 });
 
 export default router;

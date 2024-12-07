@@ -1,12 +1,10 @@
 generator client {
   provider = "prisma-client-js"
 }
-
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
-
 model Category {
   id          Int           @id @default(autoincrement())
   name        String        // English name as base
@@ -15,7 +13,6 @@ model Category {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 }
-
 model FoodItem {
   id            Int           @id @default(autoincrement())
   name          String        // English name as base
@@ -49,25 +46,34 @@ model FoodItem {
   
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
-
+  
   @@index([categoryId])
 }
-
 model Translation {
   id             Int       @id @default(autoincrement())
-  language       String    // e.g., "es", "ru", "uk", "zh", "vi", "ko", "ar"
   translatedText String
   categoryId     Int?
   category       Category? @relation(fields: [categoryId], references: [id])
   foodItemId     Int?
   foodItem       FoodItem? @relation(fields: [foodItemId], references: [id])
+  languageId     Int?
+  language       Language? @relation(fields: [languageId], references: [id])
+  isAutomatic    Boolean   @default(false)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
-
-  @@unique([language, categoryId])
-  @@unique([language, foodItemId])
+  @@unique([languageId, categoryId])
+  @@unique([languageId, foodItemId])
+  @@index([languageId])
 }
-
+model Language {
+  id           Int           @id @default(autoincrement())
+  code         String        @unique  // ISO 639-1 language code (e.g., "en", "es", "zh")
+  name         String        // Display name (e.g., "English", "Spanish", "Chinese")
+  active       Boolean       @default(true)
+  translations Translation[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
 model CustomField {
   id          Int       @id @default(autoincrement())
   key         String
@@ -76,6 +82,5 @@ model CustomField {
   foodItem    FoodItem  @relation(fields: [foodItemId], references: [id])
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-
   @@index([foodItemId])
 }

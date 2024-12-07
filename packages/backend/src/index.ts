@@ -7,6 +7,7 @@ import { ApiResponse } from './utils/ApiResponse';
 import categoryRoutes from './routes/categoryRoutes';
 import foodItemRoutes from './routes/foodItemRoutes';
 import translationRoutes from './routes/translationRoutes';
+import languageRoutes from './routes/languageRoutes';
 import path from 'path';
 
 // Load environment variables
@@ -20,7 +21,7 @@ export const createApp = () => {
   app.use(cors());
   app.use(express.json());
   app.use(requestLogger);
-  
+
   // Serve static files from public directory
   app.use(express.static(path.join(__dirname, '../public')));
 
@@ -28,6 +29,7 @@ export const createApp = () => {
   app.use('/api/categories', categoryRoutes);
   app.use('/api/food-items', foodItemRoutes);
   app.use('/api/translations', translationRoutes);
+  app.use('/api/languages', languageRoutes);
 
   // Basic health check endpoint
   app.get('/health', (req, res) => {

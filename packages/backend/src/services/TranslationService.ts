@@ -1,182 +1,139 @@
 import { PrismaClient, Translation } from '@prisma/client';
 import { ApiError } from '../utils/ApiError';
 
-interface CreateTranslationData {
-  language: string;
-  translatedText: string;
-  categoryId?: number;
-  foodItemId?: number;
-}
-
-interface UpdateTranslationData {
-  translatedText: string;
-}
-
 export class TranslationService {
-  private prisma: PrismaClient;
-  private supportedLanguages: string[];
+    private prisma: PrismaClient;
 
-  constructor() {
-    this.prisma = new PrismaClient();
-    this.supportedLanguages = process.env.SUPPORTED_LANGUAGES ? 
-      JSON.parse(process.env.SUPPORTED_LANGUAGES) : 
-      ['es', 'ru', 'uk', 'zh', 'vi', 'ko', 'ar'];
-}
+    constructor() {
+        this.prisma = new PrismaClient();
+    }
 
-// Add the new method here
-async findAll(params: {
-  language?: string;
-  categoryId?: number;
-  foodItemId?: number;
-} = {}): Promise<Translation[]> {
-  try {
-      const where = {
-          ...(params.language && { language: params.language }),
-          ...(params.categoryId && { categoryId: params.categoryId }),
-          ...(params.foodItemId && { foodItemId: params.foodItemId })
-      };
+    async findAll(params: { languageCode?: string; categoryId?: number; foodItemId?: number }) {
+        return await this.prisma.translation.findMany({
+            where: {
+                AND: [
+                    params.categoryId ? { categoryId: params.categoryId } : {},
+                    params.foodItemId ? { foodItemId: params.foodItemId } : {},
+                    params.languageCode ? { language: { code: params.languageCode } } : {}
+                ]
+            },
+            include: { language: true }
+        });
+    }
 
-      return await this.prisma.translation.findMany({
-          where,
-          include: {
-              category: true,
-              foodItem: true
-          },
-          orderBy: {
-              createdAt: 'desc'
-          }
-      });
-  } catch (error) {
-      if (error instanceof ApiError) throw error;
-      throw new ApiError(500, 'Error fetching translations');
-  }
-}
+    async findById(id: number) {
+        const translation = await this.prisma.translation.findUnique({
+            where: { id },
+            include: { language: true }
+        });
 
-async createForCategory(categoryId: number, data: CreateTranslationData): Promise<Translation> {
-    try {
-      if (!this.supportedLanguages.includes(data.language)) {
-        throw new ApiError(400, `Language ${data.language} is not supported`);
-      }
-
-      // Verify category exists
-      const category = await this.prisma.category.findUnique({
-        where: { id: categoryId }
-      });
-
-      if (!category) {
-        throw new ApiError(404, 'Category not found');
-      }
-
-      return await this.prisma.translation.create({
-        data: {
-          language: data.language,
-          translatedText: data.translatedText,
-          categoryId
+        if (!translation) {
+            throw new ApiError(404, 'Translation not found');
         }
-      });
-    } catch (error) {
-      if (error instanceof ApiError) throw error;
-      throw new ApiError(400, 'Error creating category translation');
+
+        return translation;
     }
-  }
 
-  async createForFoodItem(foodItemId: number, data: CreateTranslationData): Promise<Translation> {
-    try {
-      if (!this.supportedLanguages.includes(data.language)) {
-        throw new ApiError(400, `Language ${data.language} is not supported`);
-      }
+    async findByLanguage(languageCode: string, params: { categoryId?: number; foodItemId?: number }) {
+        const language = await this.prisma.language.findFirst({
+            where: { code: languageCode }
+        });
 
-      // Verify food item exists
-      const foodItem = await this.prisma.foodItem.findUnique({
-        where: { id: foodItemId }
-      });
-
-      if (!foodItem) {
-        throw new ApiError(404, 'Food item not found');
-      }
-
-      return await this.prisma.translation.create({
-        data: {
-          language: data.language,
-          translatedText: data.translatedText,
-          foodItemId
+        if (!language) {
+            throw new ApiError(400, 'Invalid language code');
         }
-      });
-    } catch (error) {
-      if (error instanceof ApiError) throw error;
-      throw new ApiError(400, 'Error creating food item translation');
+
+        return await this.prisma.translation.findMany({
+            where: {
+                languageId: language.id,
+                ...(params.categoryId && { categoryId: params.categoryId }),
+                ...(params.foodItemId && { foodItemId: params.foodItemId })
+            },
+            include: { language: true }
+        });
     }
-  }
 
-  async findById(id: number): Promise<Translation | null> {
-    try {
-      const translation = await this.prisma.translation.findUnique({
-        where: { id }
-      });
+    async createForCategory(categoryId: number, data: { languageCode: string; translatedText: string }) {
+        const category = await this.prisma.category.findUnique({
+            where: { id: categoryId }
+        });
 
-      if (!translation) {
-        throw new ApiError(404, 'Translation not found');
-      }
-
-      return translation;
-    } catch (error) {
-      if (error instanceof ApiError) throw error;
-      throw new ApiError(500, 'Error fetching translation');
-    }
-  }
-
-  async findByLanguage(language: string, params: {
-    categoryId?: number;
-    foodItemId?: number;
-  }): Promise<Translation[]> {
-    try {
-      if (!this.supportedLanguages.includes(language)) {
-        throw new ApiError(400, `Language ${language} is not supported`);
-      }
-
-      return await this.prisma.translation.findMany({
-        where: {
-          language,
-          ...params
+        if (!category) {
+            throw new ApiError(404, 'Category not found');
         }
-      });
-    } catch (error) {
-      if (error instanceof ApiError) throw error;
-      throw new ApiError(500, 'Error fetching translations');
-    }
-  }
 
-  async update(id: number, data: UpdateTranslationData): Promise<Translation> {
-    try {
-      // Verify translation exists
-      const translation = await this.prisma.translation.findUnique({
-        where: { id }
-      });
+        const language = await this.prisma.language.findFirst({
+            where: { code: data.languageCode }
+        });
 
-      if (!translation) {
-        throw new ApiError(404, 'Translation not found');
-      }
-
-      return await this.prisma.translation.update({
-        where: { id },
-        data: {
-          translatedText: data.translatedText,
-          updatedAt: new Date()
+        if (!language) {
+            throw new ApiError(400, 'Invalid language code');
         }
-      });
-    } catch (error) {
-      if (error instanceof ApiError) throw error;
-      throw new ApiError(400, 'Error updating translation');
-    }
-  }
 
-  async delete(id: number): Promise<void> {
-    try {
-      await this.prisma.translation.delete({
-        where: { id }
-      });
-    } catch (error) {
-      throw new ApiError(400, 'Error deleting translation');
+        return await this.prisma.translation.create({
+            data: {
+                translatedText: data.translatedText,
+                categoryId,
+                languageId: language.id
+            },
+            include: { language: true }
+        });
     }
-  }
+
+    async createForFoodItem(foodItemId: number, data: { languageCode: string; translatedText: string }) {
+        const foodItem = await this.prisma.foodItem.findUnique({
+            where: { id: foodItemId }
+        });
+
+        if (!foodItem) {
+            throw new ApiError(404, 'Food item not found');
+        }
+
+        const language = await this.prisma.language.findFirst({
+            where: { code: data.languageCode }
+        });
+
+        if (!language) {
+            throw new ApiError(400, 'Invalid language code');
+        }
+
+        return await this.prisma.translation.create({
+            data: {
+                translatedText: data.translatedText,
+                foodItemId,
+                languageId: language.id
+            },
+            include: { language: true }
+        });
+    }
+
+    async update(id: number, data: { translatedText: string }) {
+        const translation = await this.prisma.translation.findUnique({
+            where: { id }
+        });
+
+        if (!translation) {
+            throw new ApiError(404, 'Translation not found');
+        }
+
+        return await this.prisma.translation.update({
+            where: { id },
+            data: { translatedText: data.translatedText },
+            include: { language: true }
+        });
+    }
+
+    async delete(id: number) {
+        const translation = await this.prisma.translation.findUnique({
+            where: { id }
+        });
+
+        if (!translation) {
+            throw new ApiError(404, 'Translation not found');
+        }
+
+        await this.prisma.translation.delete({
+            where: { id }
+        });
+    }
 }

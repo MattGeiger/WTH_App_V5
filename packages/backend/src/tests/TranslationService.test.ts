@@ -1,159 +1,205 @@
+import { PrismaClient } from '@prisma/client';
 import { TranslationService } from '../services/TranslationService';
 import { CategoryService } from '../services/CategoryService';
 import { FoodItemService } from '../services/FoodItemService';
 import { ApiError } from '../utils/ApiError';
 
 describe('TranslationService', () => {
-  let translationService: TranslationService;
-  let categoryService: CategoryService;
-  let foodItemService: FoodItemService;
-  let testCategoryId: number;
-  let testFoodItemId: number;
+    let translationService: TranslationService;
+    let categoryService: CategoryService;
+    let foodItemService: FoodItemService;
+    let prisma: PrismaClient;
+    let testCategoryId: number;
+    let testFoodItemId: number;
+    let testLanguageId: number;
 
-  beforeAll(async () => {
-    translationService = new TranslationService();
-    categoryService = new CategoryService();
-    foodItemService = new FoodItemService();
+    beforeAll(async () => {
+        translationService = new TranslationService();
+        categoryService = new CategoryService();
+        foodItemService = new FoodItemService();
+        prisma = new PrismaClient();
 
-    // Create test category and food item
-    const category = await categoryService.create({ name: 'Test Category' });
-    testCategoryId = category.id;
+        // Clean up all tables to avoid uniqueness errors
+        await prisma.translation.deleteMany({});
+        await prisma.customField.deleteMany({});
+        await prisma.foodItem.deleteMany({});
+        await prisma.category.deleteMany({});
+        await prisma.language.deleteMany({});
 
-    const foodItem = await foodItemService.create({
-      name: 'Test Food Item',
-      categoryId: testCategoryId
-    });
-    testFoodItemId = foodItem.id;
-  });
+        // Create test language
+        const language = await prisma.language.create({
+            data: { code: 'es', name: 'Spanish', active: true }
+        });
+        testLanguageId = language.id;
 
-  describe('createForCategory', () => {
-    it('should create a translation for a category', async () => {
-      const translationData = {
-        language: 'es',
-        translatedText: 'Categoría de Prueba'
-      };
+        // Create test category and food item
+        const category = await categoryService.create({ name: 'Test Category' });
+        testCategoryId = category.id;
 
-      const result = await translationService.createForCategory(
-        testCategoryId,
-        translationData
-      );
-
-      expect(result).toBeDefined();
-      expect(result.language).toBe('es');
-      expect(result.translatedText).toBe('Categoría de Prueba');
-      expect(result.categoryId).toBe(testCategoryId);
+        const foodItem = await foodItemService.create({
+            name: 'Test Food Item',
+            categoryId: testCategoryId
+        });
+        testFoodItemId = foodItem.id;
     });
 
-    it('should reject invalid language code', async () => {
-      const translationData = {
-        language: 'xx',
-        translatedText: 'Invalid Language'
-      };
-
-      await expect(
-        translationService.createForCategory(testCategoryId, translationData)
-      ).rejects.toThrow(ApiError);
-    });
-  });
-
-  describe('createForFoodItem', () => {
-    it('should create a translation for a food item', async () => {
-      const translationData = {
-        language: 'ru',
-        translatedText: 'Тестовая Еда'
-      };
-
-      const result = await translationService.createForFoodItem(
-        testFoodItemId,
-        translationData
-      );
-
-      expect(result).toBeDefined();
-      expect(result.language).toBe('ru');
-      expect(result.translatedText).toBe('Тестовая Еда');
-      expect(result.foodItemId).toBe(testFoodItemId);
+    afterAll(async () => {
+        await prisma.$disconnect();
     });
 
-    it('should reject translation for non-existent food item', async () => {
-      const translationData = {
-        language: 'ru',
-        translatedText: 'Test Translation'
-      };
-
-      await expect(
-        translationService.createForFoodItem(-1, translationData)
-      ).rejects.toThrow(ApiError);
-    });
-  });
-
-  describe('findByLanguage', () => {
-    it('should find translations by language for category', async () => {
-      const translations = await translationService.findByLanguage('es', {
-        categoryId: testCategoryId
-      });
-
-      expect(Array.isArray(translations)).toBe(true);
-      translations.forEach(translation => {
-        expect(translation.language).toBe('es');
-        expect(translation.categoryId).toBe(testCategoryId);
-      });
+    beforeEach(async () => {
+        // Clean up translations before each test
+        await prisma.translation.deleteMany({});
     });
 
-    it('should find translations by language for food item', async () => {
-      const translations = await translationService.findByLanguage('ru', {
-        foodItemId: testFoodItemId
-      });
+    describe('createForCategory', () => {
+        it('should create a translation for a category', async () => {
+            const translationData = {
+                languageCode: 'es',
+                translatedText: 'Categoría de Prueba'
+            };
 
-      expect(Array.isArray(translations)).toBe(true);
-      translations.forEach(translation => {
-        expect(translation.language).toBe('ru');
-        expect(translation.foodItemId).toBe(testFoodItemId);
-      });
+            const result = await translationService.createForCategory(
+                testCategoryId,
+                translationData
+            );
+
+            expect(result).toBeDefined();
+            expect(result.language!.code).toBe('es');
+            expect(result.translatedText).toBe('Categoría de Prueba');
+            expect(result.categoryId).toBe(testCategoryId);
+        });
+
+        it('should reject invalid language code', async () => {
+            const translationData = {
+                languageCode: 'xx',
+                translatedText: 'Invalid Language'
+            };
+
+            await expect(
+                translationService.createForCategory(testCategoryId, translationData)
+            ).rejects.toThrow(ApiError);
+        });
     });
-  });
 
-  describe('update', () => {
-    it('should update a translation', async () => {
-      // Create a translation with a different language
-      const translation = await translationService.createForCategory(
-        testCategoryId,
-        {
-          language: 'uk',
-          translatedText: 'Original Text'
-        }
-      );
+    describe('createForFoodItem', () => {
+        it('should create a translation for a food item', async () => {
+            const translationData = {
+                languageCode: 'es',
+                translatedText: 'Comida de Prueba'
+            };
 
-      // Then update it
-      const updated = await translationService.update(translation.id, {
-        translatedText: 'Updated Text'
-      });
+            const result = await translationService.createForFoodItem(
+                testFoodItemId,
+                translationData
+            );
 
-      expect(updated.id).toBe(translation.id);
-      expect(updated.translatedText).toBe('Updated Text');
+            expect(result).toBeDefined();
+            expect(result.language!.code).toBe('es');
+            expect(result.translatedText).toBe('Comida de Prueba');
+            expect(result.foodItemId).toBe(testFoodItemId);
+        });
+
+        it('should reject translation for non-existent food item', async () => {
+            const translationData = {
+                languageCode: 'es',
+                translatedText: 'Test Translation'
+            };
+
+            await expect(
+                translationService.createForFoodItem(-1, translationData)
+            ).rejects.toThrow(ApiError);
+        });
     });
-  });
 
-  describe('delete', () => {
-    it('should delete a translation', async () => {
-      // Create a translation with a different language
-      const translation = await translationService.createForCategory(
-        testCategoryId,
-        {
-          language: 'zh',
-          translatedText: 'To Delete'
-        }
-      );
+    describe('findByLanguage', () => {
+        it('should find translations by language code for category', async () => {
+            await prisma.translation.create({
+                data: {
+                    translatedText: 'Test Translation',
+                    categoryId: testCategoryId,
+                    languageId: testLanguageId
+                },
+                include: { language: true }
+            });
 
-      // Then delete it
-      await expect(translationService.delete(translation.id))
-        .resolves
-        .not
-        .toThrow();
+            const translations = await translationService.findByLanguage('es', {
+                categoryId: testCategoryId
+            });
 
-      // Verify it's deleted
-      await expect(translationService.findById(translation.id))
-        .rejects
-        .toThrow(ApiError);
+            expect(Array.isArray(translations)).toBe(true);
+            translations.forEach(translation => {
+                expect(translation.language!.code).toBe('es');
+                expect(translation.categoryId).toBe(testCategoryId);
+            });
+        });
+
+        it('should find translations by language code for food item', async () => {
+            await prisma.translation.create({
+                data: {
+                    translatedText: 'Test Translation',
+                    foodItemId: testFoodItemId,
+                    languageId: testLanguageId
+                },
+                include: { language: true }
+            });
+
+            const translations = await translationService.findByLanguage('es', {
+                foodItemId: testFoodItemId
+            });
+
+            expect(Array.isArray(translations)).toBe(true);
+            translations.forEach(translation => {
+                expect(translation.language!.code).toBe('es');
+                expect(translation.foodItemId).toBe(testFoodItemId);
+            });
+        });
     });
-  });
+
+    describe('update', () => {
+        let testTranslationId: number;
+
+        beforeEach(async () => {
+            const translation = await prisma.translation.create({
+                data: {
+                    translatedText: 'Original Text',
+                    categoryId: testCategoryId,
+                    languageId: testLanguageId
+                },
+                include: { language: true }
+            });
+            testTranslationId = translation.id;
+        });
+
+        it('should update a translation', async () => {
+            const updated = await translationService.update(testTranslationId, {
+                translatedText: 'Updated Text'
+            });
+
+            expect(updated.id).toBe(testTranslationId);
+            expect(updated.translatedText).toBe('Updated Text');
+        });
+    });
+
+    describe('delete', () => {
+        it('should delete a translation', async () => {
+            const translation = await prisma.translation.create({
+                data: {
+                    translatedText: 'To Delete',
+                    categoryId: testCategoryId,
+                    languageId: testLanguageId
+                },
+                include: { language: true }
+            });
+
+            await expect(translationService.delete(translation.id))
+                .resolves
+                .not
+                .toThrow();
+
+            await expect(translationService.findById(translation.id))
+                .rejects
+                .toThrow(ApiError);
+        });
+    });
 });
