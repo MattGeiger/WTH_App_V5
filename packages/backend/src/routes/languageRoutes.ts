@@ -1,41 +1,64 @@
 import { Router } from 'express';
-import { LanguageService } from '../services/LanguageService';
+import { PrismaClient } from '@prisma/client';
 import { ApiResponse } from '../utils/ApiResponse';
 import { ApiError } from '../utils/ApiError';
 
 const router = Router();
-const languageService = new LanguageService();
+const prisma = new PrismaClient();
 
-/**
- * POST /api/languages
- * Add a new language by code and optional name.
- * Example body: { "code": "fr", "name": "French" }
- */
-router.post('/', async (req, res, next) => {
-  try {
-    const { code, name } = req.body;
-    if (!code) {
-      throw new ApiError(400, 'Language code is required');
+// GET /api/languages
+router.get('/', async (req, res, next) => {
+    try {
+        const languages = await prisma.language.findMany({
+            orderBy: { code: 'asc' }
+        });
+        res.json(ApiResponse.success(languages));
+    } catch (error) {
+        next(error);
     }
-
-    const newLang = await languageService.addLanguage(code, name);
-    res.status(201).json(ApiResponse.success(newLang, 'Language created successfully'));
-  } catch (error) {
-    next(error);
-  }
 });
 
-/**
- * GET /api/languages
- * Returns a list of all active languages.
- */
-router.get('/', async (req, res, next) => {
-  try {
-    const languages = await languageService.findAll();
-    res.json(ApiResponse.success(languages));
-  } catch (error) {
-    next(error);
-  }
+// POST /api/languages/bulk
+router.post('/bulk', async (req, res, next) => {
+    try {
+        const { languages } = req.body;
+        
+        if (!Array.isArray(languages)) {
+            throw new ApiError(400, 'Invalid languages data');
+        }
+
+        // Deactivate all languages first
+        await prisma.language.updateMany({
+            data: { active: false }
+        });
+
+        // Upsert each language
+        const operations = languages.map(lang => 
+            prisma.language.upsert({
+                where: { code: lang.code },
+                update: { 
+                    name: lang.name,
+                    active: true
+                },
+                create: {
+                    code: lang.code,
+                    name: lang.name,
+                    active: true
+                }
+            })
+        );
+
+        await prisma.$transaction(operations);
+
+        const updatedLanguages = await prisma.language.findMany({
+            where: { active: true },
+            orderBy: { code: 'asc' }
+        });
+
+        res.json(ApiResponse.success(updatedLanguages, 'Languages updated successfully'));
+    } catch (error) {
+        next(error);
+    }
 });
 
 export default router;

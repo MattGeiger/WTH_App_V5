@@ -1,10 +1,12 @@
 generator client {
   provider = "prisma-client-js"
 }
+
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
+
 model Category {
   id          Int           @id @default(autoincrement())
   name        String        // English name as base
@@ -13,6 +15,7 @@ model Category {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 }
+
 model FoodItem {
   id            Int           @id @default(autoincrement())
   name          String        // English name as base
@@ -49,6 +52,7 @@ model FoodItem {
   
   @@index([categoryId])
 }
+
 model Translation {
   id             Int       @id @default(autoincrement())
   translatedText String
@@ -65,6 +69,7 @@ model Translation {
   @@unique([languageId, foodItemId])
   @@index([languageId])
 }
+
 model Language {
   id           Int           @id @default(autoincrement())
   code         String        @unique  // ISO 639-1 language code (e.g., "en", "es", "zh")
@@ -74,6 +79,7 @@ model Language {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 }
+
 model CustomField {
   id          Int       @id @default(autoincrement())
   key         String
@@ -83,4 +89,10 @@ model CustomField {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   @@index([foodItemId])
+}
+
+model Settings {
+  id              Int      @id @default(1)
+  globalUpperLimit Int     @default(10)
+  updatedAt       DateTime @updatedAt
 }

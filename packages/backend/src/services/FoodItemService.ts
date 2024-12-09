@@ -45,9 +45,7 @@ export class FoodItemService {
       return await this.prisma.foodItem.create({
         data: {
           ...foodItemData,
-          customFields: {
-            create: customFields
-          }
+          customFields: customFields ? { create: customFields } : undefined
         },
         include: {
           category: true,
@@ -119,11 +117,9 @@ export class FoodItemService {
 
   async update(id: number, data: UpdateFoodItemData): Promise<FoodItem> {
     try {
-      const { customFields, ...updateData } = data;
-
-      // Verify item exists
       const existingItem = await this.prisma.foodItem.findUnique({
-        where: { id }
+        where: { id },
+        include: { customFields: true }
       });
 
       if (!existingItem) {
@@ -131,34 +127,56 @@ export class FoodItemService {
       }
 
       // If categoryId is being updated, verify new category exists
-      if (data.categoryId) {
+      if (data.categoryId && data.categoryId !== existingItem.categoryId) {
         const category = await this.prisma.category.findUnique({
           where: { id: data.categoryId }
         });
-
         if (!category) {
           throw new ApiError(400, 'Invalid category ID');
         }
       }
 
-      return await this.prisma.foodItem.update({
+      const { customFields, ...itemData } = data;
+      const globalUpperLimit =  50
+      // For this example, we'll just ensure itemLimit remains as is if not provided.
+
+      // Merge existing item values with the new data, ensuring booleans and itemLimit are handled correctly
+      const updatedData = {
+        name: itemData.name ?? existingItem.name,
+        categoryId: itemData.categoryId ?? existingItem.categoryId,
+        imageUrl: itemData.imageUrl ?? existingItem.imageUrl,
+        thumbnailUrl: itemData.thumbnailUrl ?? existingItem.thumbnailUrl,
+        itemLimit: (itemData.itemLimit !== undefined) ? itemData.itemLimit : existingItem.itemLimit,
+        inStock: (itemData.inStock !== undefined) ? itemData.inStock : existingItem.inStock,
+        mustGo: (itemData.mustGo !== undefined) ? itemData.mustGo : existingItem.mustGo,
+        lowSupply: (itemData.lowSupply !== undefined) ? itemData.lowSupply : existingItem.lowSupply,
+        kosher: (itemData.kosher !== undefined) ? itemData.kosher : existingItem.kosher,
+        halal: (itemData.halal !== undefined) ? itemData.halal : existingItem.halal,
+        vegetarian: (itemData.vegetarian !== undefined) ? itemData.vegetarian : existingItem.vegetarian,
+        vegan: (itemData.vegan !== undefined) ? itemData.vegan : existingItem.vegan,
+        glutenFree: (itemData.glutenFree !== undefined) ? itemData.glutenFree : existingItem.glutenFree,
+        organic: (itemData.organic !== undefined) ? itemData.organic : existingItem.organic,
+        readyToEat: (itemData.readyToEat !== undefined) ? itemData.readyToEat : existingItem.readyToEat,
+        updatedAt: new Date(),
+        ...(customFields ? {
+          customFields: {
+            deleteMany: {},
+            create: customFields
+          }
+        } : {})
+      };
+
+      const updatedItem = await this.prisma.foodItem.update({
         where: { id },
-        data: {
-          ...updateData,
-          updatedAt: new Date(),
-          ...(customFields && {
-            customFields: {
-              deleteMany: {},
-              create: customFields
-            }
-          })
-        },
+        data: updatedData,
         include: {
           category: true,
           translations: true,
           customFields: true
         }
       });
+
+      return updatedItem;
     } catch (error) {
       if (error instanceof ApiError) throw error;
       throw new ApiError(400, 'Error updating food item');

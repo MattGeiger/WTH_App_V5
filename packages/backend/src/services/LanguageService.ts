@@ -70,4 +70,33 @@ export class LanguageService {
       throw new ApiError(500, 'Error fetching language');
     }
   }
+
+  /**
+   * Updates a language's active status or name.
+   * Throws ApiError if the language is not found.
+   */
+  async update(id: number, data: { active?: boolean; name?: string }): Promise<Language> {
+    try {
+      const language = await this.prisma.language.update({
+        where: { id },
+        data
+      });
+      return language;
+    } catch (error) {
+      throw new ApiError(404, `Language with ID ${id} not found`);
+    }
+  }
+
+  /**
+   * Fetches all languages that are active.
+   */
+  async findActive(): Promise<Language[]> {
+    try {
+      return await this.prisma.language.findMany({
+        where: { active: true }
+      });
+    } catch (error) {
+      throw new ApiError(500, 'Error fetching active languages');
+    }
+  }
 }
