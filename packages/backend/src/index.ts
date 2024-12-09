@@ -1,4 +1,6 @@
 import dotenv from 'dotenv';
+dotenv.config(); // Call this first, before importing anything else that relies on env vars
+
 import express from 'express';
 import cors from 'cors';
 import { requestLogger } from './middleware/requestLogger';
@@ -8,11 +10,8 @@ import categoryRoutes from './routes/categoryRoutes';
 import foodItemRoutes from './routes/foodItemRoutes';
 import translationRoutes from './routes/translationRoutes';
 import languageRoutes from './routes/languageRoutes';
-import settingsRoutes from './routes/settingsRoutes';  // Add this import
+import settingsRoutes from './routes/settingsRoutes';
 import path from 'path';
-
-// Load environment variables
-dotenv.config();
 
 // Create and configure express app
 export const createApp = () => {
