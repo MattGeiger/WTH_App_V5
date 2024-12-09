@@ -1,13 +1,18 @@
 import { PrismaClient, Translation } from '@prisma/client';
 import { ApiError } from '../utils/ApiError';
+import { OpenAIService } from './openai/OpenAIService';
+import { LanguageConfig } from '../config/languageConfig';
 
 export class TranslationService {
     private prisma: PrismaClient;
+    private openAI: OpenAIService;
 
     constructor() {
         this.prisma = new PrismaClient();
+        this.openAI = new OpenAIService();
     }
 
+    // Existing findAll method remains the same
     async findAll(params: { languageCode?: string; categoryId?: number; foodItemId?: number }) {
         return await this.prisma.translation.findMany({
             where: {
@@ -21,6 +26,7 @@ export class TranslationService {
         });
     }
 
+    // Existing findById method remains the same
     async findById(id: number) {
         const translation = await this.prisma.translation.findUnique({
             where: { id },
@@ -34,13 +40,14 @@ export class TranslationService {
         return translation;
     }
 
+    // Updated to handle automatic translations
     async findByLanguage(languageCode: string, params: { categoryId?: number; foodItemId?: number }) {
         const language = await this.prisma.language.findFirst({
-            where: { code: languageCode }
+            where: { code: languageCode, active: true }
         });
 
         if (!language) {
-            throw new ApiError(400, 'Invalid language code');
+            throw new ApiError(400, 'Invalid or inactive language code');
         }
 
         return await this.prisma.translation.findMany({
@@ -53,7 +60,8 @@ export class TranslationService {
         });
     }
 
-    async createForCategory(categoryId: number, data: { languageCode: string; translatedText: string }) {
+    // Updated to handle automatic translations
+    async createForCategory(categoryId: number, data: { languageCode: string; translatedText: string; isAutomatic?: boolean }) {
         const category = await this.prisma.category.findUnique({
             where: { id: categoryId }
         });
@@ -63,24 +71,41 @@ export class TranslationService {
         }
 
         const language = await this.prisma.language.findFirst({
-            where: { code: data.languageCode }
+            where: { code: data.languageCode, active: true }
         });
 
         if (!language) {
-            throw new ApiError(400, 'Invalid language code');
+            throw new ApiError(400, 'Invalid or inactive language code');
+        }
+
+        // Check for existing translation
+        const existingTranslation = await this.prisma.translation.findFirst({
+            where: {
+                categoryId,
+                languageId: language.id
+            }
+        });
+
+        if (existingTranslation) {
+            return this.update(existingTranslation.id, { 
+                translatedText: data.translatedText,
+                isAutomatic: data.isAutomatic ?? false
+            });
         }
 
         return await this.prisma.translation.create({
             data: {
                 translatedText: data.translatedText,
                 categoryId,
-                languageId: language.id
+                languageId: language.id,
+                isAutomatic: data.isAutomatic ?? false
             },
             include: { language: true }
         });
     }
 
-    async createForFoodItem(foodItemId: number, data: { languageCode: string; translatedText: string }) {
+    // Similar update for food items
+    async createForFoodItem(foodItemId: number, data: { languageCode: string; translatedText: string; isAutomatic?: boolean }) {
         const foodItem = await this.prisma.foodItem.findUnique({
             where: { id: foodItemId }
         });
@@ -90,24 +115,40 @@ export class TranslationService {
         }
 
         const language = await this.prisma.language.findFirst({
-            where: { code: data.languageCode }
+            where: { code: data.languageCode, active: true }
         });
 
         if (!language) {
-            throw new ApiError(400, 'Invalid language code');
+            throw new ApiError(400, 'Invalid or inactive language code');
+        }
+
+        const existingTranslation = await this.prisma.translation.findFirst({
+            where: {
+                foodItemId,
+                languageId: language.id
+            }
+        });
+
+        if (existingTranslation) {
+            return this.update(existingTranslation.id, { 
+                translatedText: data.translatedText,
+                isAutomatic: data.isAutomatic ?? false
+            });
         }
 
         return await this.prisma.translation.create({
             data: {
                 translatedText: data.translatedText,
                 foodItemId,
-                languageId: language.id
+                languageId: language.id,
+                isAutomatic: data.isAutomatic ?? false
             },
             include: { language: true }
         });
     }
 
-    async update(id: number, data: { translatedText: string }) {
+    // Updated update method
+    async update(id: number, data: { translatedText: string; isAutomatic?: boolean }) {
         const translation = await this.prisma.translation.findUnique({
             where: { id }
         });
@@ -118,11 +159,59 @@ export class TranslationService {
 
         return await this.prisma.translation.update({
             where: { id },
-            data: { translatedText: data.translatedText },
+            data: {
+                translatedText: data.translatedText,
+                isAutomatic: data.isAutomatic ?? translation.isAutomatic
+            },
             include: { language: true }
         });
     }
 
+    // New method for automatic translations
+    async generateAutomaticTranslations(itemId: number, itemType: 'category' | 'foodItem') {
+        const item = await this.prisma[itemType].findUnique({
+            where: { id: itemId }
+        });
+
+        if (!item) {
+            throw new ApiError(404, `${itemType} not found`);
+        }
+
+        const activeLanguages = await this.prisma.language.findMany({
+            where: { active: true }
+        });
+
+        const results = [];
+        for (const language of activeLanguages) {
+            if (language.code === LanguageConfig.DEFAULT_LANGUAGE) continue;
+
+            try {
+                const translation = await this.openAI.translateText(
+                    item.name,
+                    language.code,
+                    itemType
+                );
+
+                const savedTranslation = await this[`createFor${itemType.charAt(0).toUpperCase() + itemType.slice(1)}`](
+                    itemId,
+                    {
+                        languageCode: language.code,
+                        translatedText: translation,
+                        isAutomatic: true
+                    }
+                );
+
+                results.push(savedTranslation);
+            } catch (error) {
+                console.error(`Failed to generate translation for ${itemType} ${itemId} in ${language.code}:`, error);
+                // Continue with next language even if one fails
+            }
+        }
+
+        return results;
+    }
+
+    // Existing delete method remains the same
     async delete(id: number) {
         const translation = await this.prisma.translation.findUnique({
             where: { id }

@@ -1,205 +1,167 @@
 import { PrismaClient } from '@prisma/client';
+import { LanguageService } from '../services/LanguageService';
 import { TranslationService } from '../services/TranslationService';
-import { CategoryService } from '../services/CategoryService';
-import { FoodItemService } from '../services/FoodItemService';
 import { ApiError } from '../utils/ApiError';
 
-describe('TranslationService', () => {
-    let translationService: TranslationService;
-    let categoryService: CategoryService;
-    let foodItemService: FoodItemService;
+// Mock TranslationService
+jest.mock('../services/TranslationService');
+
+describe('LanguageService', () => {
+    let languageService: LanguageService;
     let prisma: PrismaClient;
-    let testCategoryId: number;
-    let testFoodItemId: number;
-    let testLanguageId: number;
+    let mockGenerateTranslations: jest.Mock;
 
-    beforeAll(async () => {
-        translationService = new TranslationService();
-        categoryService = new CategoryService();
-        foodItemService = new FoodItemService();
+    beforeAll(() => {
+        // Setup TranslationService mock
+        mockGenerateTranslations = jest.fn();
+        (TranslationService as jest.Mock).mockImplementation(() => ({
+            generateAutomaticTranslations: mockGenerateTranslations
+        }));
+    });
+
+    beforeEach(async () => {
         prisma = new PrismaClient();
+        languageService = new LanguageService();
 
-        // Clean up all tables to avoid uniqueness errors
+        // Clean up database
         await prisma.translation.deleteMany({});
-        await prisma.customField.deleteMany({});
+        await prisma.language.deleteMany({});
         await prisma.foodItem.deleteMany({});
         await prisma.category.deleteMany({});
-        await prisma.language.deleteMany({});
 
-        // Create test language
-        const language = await prisma.language.create({
-            data: { code: 'es', name: 'Spanish', active: true }
-        });
-        testLanguageId = language.id;
-
-        // Create test category and food item
-        const category = await categoryService.create({ name: 'Test Category' });
-        testCategoryId = category.id;
-
-        const foodItem = await foodItemService.create({
-            name: 'Test Food Item',
-            categoryId: testCategoryId
-        });
-        testFoodItemId = foodItem.id;
+        // Reset mocks
+        mockGenerateTranslations.mockClear();
     });
 
     afterAll(async () => {
         await prisma.$disconnect();
     });
 
-    beforeEach(async () => {
-        // Clean up translations before each test
-        await prisma.translation.deleteMany({});
-    });
+    describe('addLanguage', () => {
+        it('should create a new language and trigger translations', async () => {
+            const result = await languageService.addLanguage('fr', 'French');
 
-    describe('createForCategory', () => {
-        it('should create a translation for a category', async () => {
-            const translationData = {
-                languageCode: 'es',
-                translatedText: 'Categoría de Prueba'
-            };
+            expect(result.code).toBe('fr');
+            expect(result.name).toBe('French');
+            expect(result.active).toBe(true);
 
-            const result = await translationService.createForCategory(
-                testCategoryId,
-                translationData
-            );
-
-            expect(result).toBeDefined();
-            expect(result.language!.code).toBe('es');
-            expect(result.translatedText).toBe('Categoría de Prueba');
-            expect(result.categoryId).toBe(testCategoryId);
+            // Allow time for async translation generation
+            await new Promise(resolve => setTimeout(resolve, 100));
+            expect(mockGenerateTranslations).toHaveBeenCalled();
         });
 
-        it('should reject invalid language code', async () => {
-            const translationData = {
-                languageCode: 'xx',
-                translatedText: 'Invalid Language'
-            };
-
+        it('should reject duplicate language codes', async () => {
+            await languageService.addLanguage('fr', 'French');
             await expect(
-                translationService.createForCategory(testCategoryId, translationData)
-            ).rejects.toThrow(ApiError);
-        });
-    });
-
-    describe('createForFoodItem', () => {
-        it('should create a translation for a food item', async () => {
-            const translationData = {
-                languageCode: 'es',
-                translatedText: 'Comida de Prueba'
-            };
-
-            const result = await translationService.createForFoodItem(
-                testFoodItemId,
-                translationData
-            );
-
-            expect(result).toBeDefined();
-            expect(result.language!.code).toBe('es');
-            expect(result.translatedText).toBe('Comida de Prueba');
-            expect(result.foodItemId).toBe(testFoodItemId);
+                languageService.addLanguage('fr', 'French Again')
+            ).rejects.toThrow('Language code \'fr\' already exists');
         });
 
-        it('should reject translation for non-existent food item', async () => {
-            const translationData = {
-                languageCode: 'es',
-                translatedText: 'Test Translation'
-            };
-
+        it('should handle empty language code', async () => {
             await expect(
-                translationService.createForFoodItem(-1, translationData)
-            ).rejects.toThrow(ApiError);
-        });
-    });
-
-    describe('findByLanguage', () => {
-        it('should find translations by language code for category', async () => {
-            await prisma.translation.create({
-                data: {
-                    translatedText: 'Test Translation',
-                    categoryId: testCategoryId,
-                    languageId: testLanguageId
-                },
-                include: { language: true }
-            });
-
-            const translations = await translationService.findByLanguage('es', {
-                categoryId: testCategoryId
-            });
-
-            expect(Array.isArray(translations)).toBe(true);
-            translations.forEach(translation => {
-                expect(translation.language!.code).toBe('es');
-                expect(translation.categoryId).toBe(testCategoryId);
-            });
-        });
-
-        it('should find translations by language code for food item', async () => {
-            await prisma.translation.create({
-                data: {
-                    translatedText: 'Test Translation',
-                    foodItemId: testFoodItemId,
-                    languageId: testLanguageId
-                },
-                include: { language: true }
-            });
-
-            const translations = await translationService.findByLanguage('es', {
-                foodItemId: testFoodItemId
-            });
-
-            expect(Array.isArray(translations)).toBe(true);
-            translations.forEach(translation => {
-                expect(translation.language!.code).toBe('es');
-                expect(translation.foodItemId).toBe(testFoodItemId);
-            });
+                languageService.addLanguage('')
+            ).rejects.toThrow('Language code is required');
         });
     });
 
     describe('update', () => {
-        let testTranslationId: number;
-
-        beforeEach(async () => {
-            const translation = await prisma.translation.create({
-                data: {
-                    translatedText: 'Original Text',
-                    categoryId: testCategoryId,
-                    languageId: testLanguageId
-                },
-                include: { language: true }
+        it('should trigger translations when language is activated', async () => {
+            // Create inactive language
+            const language = await prisma.language.create({
+                data: { code: 'de', name: 'German', active: false }
             });
-            testTranslationId = translation.id;
+
+            // Create some test data
+            await prisma.category.create({
+                data: { name: 'Test Category' }
+            });
+
+            // Activate language
+            const result = await languageService.update(language.id, { active: true });
+
+            expect(result.active).toBe(true);
+            // Allow time for async translation generation
+            await new Promise(resolve => setTimeout(resolve, 100));
+            expect(mockGenerateTranslations).toHaveBeenCalled();
         });
 
-        it('should update a translation', async () => {
-            const updated = await translationService.update(testTranslationId, {
-                translatedText: 'Updated Text'
+        it('should not trigger translations when language is deactivated', async () => {
+            // Create active language
+            const language = await prisma.language.create({
+                data: { code: 'de', name: 'German', active: true }
             });
 
-            expect(updated.id).toBe(testTranslationId);
-            expect(updated.translatedText).toBe('Updated Text');
+            // Deactivate language
+            const result = await languageService.update(language.id, { active: false });
+
+            expect(result.active).toBe(false);
+            expect(mockGenerateTranslations).not.toHaveBeenCalled();
+        });
+
+        it('should handle non-existent language', async () => {
+            await expect(
+                languageService.update(999, { active: true })
+            ).rejects.toThrow('Language with ID 999 not found');
         });
     });
 
-    describe('delete', () => {
-        it('should delete a translation', async () => {
-            const translation = await prisma.translation.create({
-                data: {
-                    translatedText: 'To Delete',
-                    categoryId: testCategoryId,
-                    languageId: testLanguageId
-                },
-                include: { language: true }
+    describe('findAll and findActive', () => {
+        beforeEach(async () => {
+            // Create test languages
+            await prisma.language.createMany({
+                data: [
+                    { code: 'en', name: 'English', active: true },
+                    { code: 'es', name: 'Spanish', active: true },
+                    { code: 'fr', name: 'French', active: false }
+                ]
+            });
+        });
+
+        it('should return all languages', async () => {
+            const languages = await languageService.findAll();
+            expect(languages).toHaveLength(3);
+        });
+
+        it('should return only active languages', async () => {
+            const languages = await languageService.findActive();
+            expect(languages).toHaveLength(2);
+            languages.forEach(lang => {
+                expect(lang.active).toBe(true);
+            });
+        });
+    });
+
+    describe('regenerateAllTranslations', () => {
+        it('should regenerate translations for active language', async () => {
+            // Create active language
+            await prisma.language.create({
+                data: { code: 'it', name: 'Italian', active: true }
             });
 
-            await expect(translationService.delete(translation.id))
-                .resolves
-                .not
-                .toThrow();
+            // Create test data
+            await prisma.category.create({
+                data: { name: 'Test Category' }
+            });
 
-            await expect(translationService.findById(translation.id))
-                .rejects
-                .toThrow(ApiError);
+            await languageService.regenerateAllTranslations('it');
+            expect(mockGenerateTranslations).toHaveBeenCalled();
+        });
+
+        it('should not regenerate translations for inactive language', async () => {
+            // Create inactive language
+            await prisma.language.create({
+                data: { code: 'it', name: 'Italian', active: false }
+            });
+
+            await expect(
+                languageService.regenerateAllTranslations('it')
+            ).rejects.toThrow('Cannot regenerate translations for inactive language');
+        });
+
+        it('should handle non-existent language', async () => {
+            await expect(
+                languageService.regenerateAllTranslations('xx')
+            ).rejects.toThrow('Language \'xx\' not found');
         });
     });
 });

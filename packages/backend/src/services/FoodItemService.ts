@@ -1,5 +1,6 @@
 import { PrismaClient, FoodItem } from '@prisma/client';
 import { ApiError } from '../utils/ApiError';
+import { TranslationService } from './TranslationService';
 
 interface CreateFoodItemData {
   name: string;
@@ -24,14 +25,23 @@ interface UpdateFoodItemData extends Partial<CreateFoodItemData> {}
 
 export class FoodItemService {
   private prisma: PrismaClient;
+  private translationService: TranslationService;
 
   constructor() {
     this.prisma = new PrismaClient();
+    this.translationService = new TranslationService();
+  }
+
+  private async generateTranslations(foodItemId: number): Promise<void> {
+    try {
+      await this.translationService.generateAutomaticTranslations(foodItemId, 'foodItem');
+    } catch (error) {
+      console.error(`Failed to generate translations for food item ${foodItemId}:`, error);
+    }
   }
 
   async create(data: CreateFoodItemData): Promise<FoodItem> {
     try {
-      // Verify category exists
       const category = await this.prisma.category.findUnique({
         where: { id: data.categoryId }
       });
@@ -42,17 +52,28 @@ export class FoodItemService {
 
       const { customFields, ...foodItemData } = data;
 
-      return await this.prisma.foodItem.create({
+      const foodItem = await this.prisma.foodItem.create({
         data: {
           ...foodItemData,
           customFields: customFields ? { create: customFields } : undefined
         },
         include: {
           category: true,
-          translations: true,
+          translations: {
+            include: {
+              language: true
+            }
+          },
           customFields: true
         }
       });
+
+      // Generate translations asynchronously
+      this.generateTranslations(foodItem.id).catch(error => {
+        console.error('Failed to generate translations for food item:', error);
+      });
+
+      return foodItem;
     } catch (error) {
       if (error instanceof ApiError) throw error;
       throw new ApiError(400, 'Error creating food item');
@@ -78,7 +99,11 @@ export class FoodItemService {
           where,
           include: {
             category: true,
-            translations: true,
+            translations: {
+              include: {
+                language: true
+              }
+            },
             customFields: true
           },
           skip: (page - 1) * limit,
@@ -99,7 +124,11 @@ export class FoodItemService {
         where: { id },
         include: {
           category: true,
-          translations: true,
+          translations: {
+            include: {
+              language: true
+            }
+          },
           customFields: true
         }
       });
@@ -126,7 +155,6 @@ export class FoodItemService {
         throw new ApiError(404, 'Food item not found');
       }
 
-      // If categoryId is being updated, verify new category exists
       if (data.categoryId && data.categoryId !== existingItem.categoryId) {
         const category = await this.prisma.category.findUnique({
           where: { id: data.categoryId }
@@ -137,26 +165,10 @@ export class FoodItemService {
       }
 
       const { customFields, ...itemData } = data;
-      const globalUpperLimit =  50
-      // For this example, we'll just ensure itemLimit remains as is if not provided.
 
-      // Merge existing item values with the new data, ensuring booleans and itemLimit are handled correctly
       const updatedData = {
-        name: itemData.name ?? existingItem.name,
-        categoryId: itemData.categoryId ?? existingItem.categoryId,
-        imageUrl: itemData.imageUrl ?? existingItem.imageUrl,
-        thumbnailUrl: itemData.thumbnailUrl ?? existingItem.thumbnailUrl,
-        itemLimit: (itemData.itemLimit !== undefined) ? itemData.itemLimit : existingItem.itemLimit,
-        inStock: (itemData.inStock !== undefined) ? itemData.inStock : existingItem.inStock,
-        mustGo: (itemData.mustGo !== undefined) ? itemData.mustGo : existingItem.mustGo,
-        lowSupply: (itemData.lowSupply !== undefined) ? itemData.lowSupply : existingItem.lowSupply,
-        kosher: (itemData.kosher !== undefined) ? itemData.kosher : existingItem.kosher,
-        halal: (itemData.halal !== undefined) ? itemData.halal : existingItem.halal,
-        vegetarian: (itemData.vegetarian !== undefined) ? itemData.vegetarian : existingItem.vegetarian,
-        vegan: (itemData.vegan !== undefined) ? itemData.vegan : existingItem.vegan,
-        glutenFree: (itemData.glutenFree !== undefined) ? itemData.glutenFree : existingItem.glutenFree,
-        organic: (itemData.organic !== undefined) ? itemData.organic : existingItem.organic,
-        readyToEat: (itemData.readyToEat !== undefined) ? itemData.readyToEat : existingItem.readyToEat,
+        ...existingItem,
+        ...itemData,
         updatedAt: new Date(),
         ...(customFields ? {
           customFields: {
@@ -171,10 +183,21 @@ export class FoodItemService {
         data: updatedData,
         include: {
           category: true,
-          translations: true,
+          translations: {
+            include: {
+              language: true
+            }
+          },
           customFields: true
         }
       });
+
+      // If name was updated, regenerate translations
+      if (data.name && data.name !== existingItem.name) {
+        this.generateTranslations(id).catch(error => {
+          console.error('Failed to update translations for food item:', error);
+        });
+      }
 
       return updatedItem;
     } catch (error) {
@@ -191,5 +214,14 @@ export class FoodItemService {
     } catch (error) {
       throw new ApiError(400, 'Error deleting food item');
     }
+  }
+
+  async regenerateTranslations(id: number): Promise<void> {
+    const item = await this.findById(id);
+    if (!item) {
+      throw new ApiError(404, 'Food item not found');
+    }
+
+    await this.generateTranslations(id);
   }
 }
