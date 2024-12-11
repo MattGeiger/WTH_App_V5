@@ -6,20 +6,43 @@ export class TranslationManager {
         this.filterSelect = document.getElementById('filterLanguage');
         this.tableBody = document.getElementById('translationTableBody');
         this.setupEventListeners();
+
+        // Initialize language filter on construction
+        this.initializeLanguageFilter();
+
+        // Listen for when languages are updated in LanguageManager
+        window.addEventListener('languagesUpdated', () => {
+            this.initializeLanguageFilter();
+        });
     }
 
     setupEventListeners() {
         this.typeRadios.forEach(radio => {
-            radio.addEventListener('change', () => this.loadTranslations());
+            radio.addEventListener('change', () => {
+                this.loadTranslations();
+                this.updateTranslationTargets();
+            });
         });
         this.filterSelect.addEventListener('change', () => this.loadTranslations());
+    }
+
+    getSelectedType() {
+        return document.querySelector('input[name="translationType"]:checked').value;
+    }
+
+    isTypeCategory() {
+        return this.getSelectedType() === 'category';
+    }
+
+    isTypeFoodItem() {
+        return this.getSelectedType() === 'foodItem';
     }
 
     async initializeLanguageFilter() {
         try {
             const data = await apiGet('/api/languages');
             const activeLanguages = data.data.filter(lang => lang.active);
-            
+
             this.filterSelect.innerHTML = `
                 <option value="">All Languages</option>
                 ${activeLanguages.map(lang => 
@@ -36,7 +59,7 @@ export class TranslationManager {
             const type = this.getSelectedType();
             const language = this.filterSelect.value;
             let url = '/api/translations';
-            
+
             if (language) {
                 url += `?languageCode=${language}`;
             }
@@ -46,13 +69,10 @@ export class TranslationManager {
 
             const data = await apiGet(url);
             this.displayTranslations(data.data);
+            this.updateTranslationTargets();
         } catch (error) {
             showMessage(error.message, 'error');
         }
-    }
-
-    getSelectedType() {
-        return document.querySelector('input[name="translationType"]:checked').value;
     }
 
     displayTranslations(translations) {
@@ -64,7 +84,7 @@ export class TranslationManager {
     createTranslationRow(translation) {
         const originalText = translation.category ? 
             translation.category.name : 
-            translation.foodItem?.name || 'Unknown';
+            (translation.foodItem?.name || 'Unknown');
         const type = translation.category ? 'Category' : 'Food Item';
 
         return `
@@ -99,7 +119,7 @@ export class TranslationManager {
         if (!confirm('Delete this translation? Note: It may be regenerated during the next translation update.')) {
             return;
         }
-        
+
         try {
             await apiDelete(`/api/translations/${id}`);
             showMessage('Translation deleted successfully', 'success');
@@ -107,5 +127,41 @@ export class TranslationManager {
         } catch (error) {
             showMessage(error.message, 'error');
         }
+    }
+
+    updateTranslationTargets() {
+        const type = this.getSelectedType();
+        const select = document.getElementById('translationTarget');
+        if (!select) return;
+
+        let items = [];
+        if (type === 'category') {
+            const categorySelect = document.getElementById('foodItemCategory');
+            if (categorySelect) {
+                items = Array.from(categorySelect.options).map(opt => ({
+                    id: opt.value,
+                    name: opt.text
+                }));
+            }
+        } else {
+            const foodItemTableBody = document.getElementById('foodItemTableBody');
+            if (foodItemTableBody) {
+                items = Array.from(foodItemTableBody.querySelectorAll('tr')).map(row => {
+                    const nameCell = row.cells[0];
+                    const editButton = row.querySelector('button');
+                    if (!nameCell || !editButton) return null;
+
+                    const idMatch = editButton.getAttribute('onclick')?.match(/\d+/);
+                    const id = idMatch ? idMatch[0] : null;
+                    const name = nameCell.textContent;
+
+                    return id ? { id, name } : null;
+                }).filter(item => item !== null);
+            }
+        }
+
+        select.innerHTML = items.map(item => 
+            `<option value="${item.id}">${item.name}</option>`
+        ).join('');
     }
 }

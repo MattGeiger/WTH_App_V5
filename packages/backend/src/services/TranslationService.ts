@@ -1,4 +1,4 @@
-import { PrismaClient, Translation } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { ApiError } from '../utils/ApiError';
 import { OpenAIService } from './openai/OpenAIService';
 import { LanguageConfig } from '../config/languageConfig';
@@ -12,21 +12,42 @@ export class TranslationService {
         this.openAI = new OpenAIService();
     }
 
-    // Existing findAll method remains the same
-    async findAll(params: { languageCode?: string; categoryId?: number; foodItemId?: number }) {
+    async findAll(params: { 
+        languageCode?: string; 
+        categoryId?: number; 
+        foodItemId?: number;
+        type?: 'category' | 'foodItem'; 
+    }) {
+        console.log('TranslationService findAll params:', params);
+
+        const whereClause: any = {
+            AND: [
+                params.languageCode ? { language: { code: params.languageCode } } : {},
+                params.categoryId ? { categoryId: params.categoryId } : {},
+                params.foodItemId ? { foodItemId: params.foodItemId } : {}
+            ]
+        };
+
+        if (params.type) {
+            if (params.type === 'category') {
+                whereClause.AND.push({ categoryId: { not: null }, foodItemId: null });
+            } else if (params.type === 'foodItem') {
+                whereClause.AND.push({ foodItemId: { not: null }, categoryId: null });
+            }
+        }
+
+        console.log('Final where clause:', whereClause);
+
         return await this.prisma.translation.findMany({
-            where: {
-                AND: [
-                    params.categoryId ? { categoryId: params.categoryId } : {},
-                    params.foodItemId ? { foodItemId: params.foodItemId } : {},
-                    params.languageCode ? { language: { code: params.languageCode } } : {}
-                ]
-            },
-            include: { language: true }
+            where: whereClause,
+            include: { 
+                language: true,
+                category: true,
+                foodItem: true
+            }
         });
     }
 
-    // Existing findById method remains the same
     async findById(id: number) {
         const translation = await this.prisma.translation.findUnique({
             where: { id },
@@ -40,7 +61,6 @@ export class TranslationService {
         return translation;
     }
 
-    // Updated to handle automatic translations
     async findByLanguage(languageCode: string, params: { categoryId?: number; foodItemId?: number }) {
         const language = await this.prisma.language.findFirst({
             where: { code: languageCode, active: true }
@@ -60,7 +80,6 @@ export class TranslationService {
         });
     }
 
-    // Updated to handle automatic translations
     async createForCategory(categoryId: number, data: { languageCode: string; translatedText: string; isAutomatic?: boolean }) {
         const category = await this.prisma.category.findUnique({
             where: { id: categoryId }
@@ -78,7 +97,6 @@ export class TranslationService {
             throw new ApiError(400, 'Invalid or inactive language code');
         }
 
-        // Check for existing translation
         const existingTranslation = await this.prisma.translation.findFirst({
             where: {
                 categoryId,
@@ -104,7 +122,6 @@ export class TranslationService {
         });
     }
 
-    // Similar update for food items
     async createForFoodItem(foodItemId: number, data: { languageCode: string; translatedText: string; isAutomatic?: boolean }) {
         const foodItem = await this.prisma.foodItem.findUnique({
             where: { id: foodItemId }
@@ -147,7 +164,6 @@ export class TranslationService {
         });
     }
 
-    // Updated update method
     async update(id: number, data: { translatedText: string; isAutomatic?: boolean }) {
         const translation = await this.prisma.translation.findUnique({
             where: { id }
@@ -167,7 +183,6 @@ export class TranslationService {
         });
     }
 
-    // New method for automatic translations
     async generateAutomaticTranslations(itemId: number, itemType: 'category' | 'foodItem') {
         const item = await this.prisma[itemType].findUnique({
             where: { id: itemId }
@@ -204,14 +219,12 @@ export class TranslationService {
                 results.push(savedTranslation);
             } catch (error) {
                 console.error(`Failed to generate translation for ${itemType} ${itemId} in ${language.code}:`, error);
-                // Continue with next language even if one fails
             }
         }
 
         return results;
     }
 
-    // Existing delete method remains the same
     async delete(id: number) {
         const translation = await this.prisma.translation.findUnique({
             where: { id }

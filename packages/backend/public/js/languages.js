@@ -93,6 +93,9 @@ export class LanguageManager {
             await apiPost('/api/languages/bulk', { languages: selectedLanguages });
             showMessage('Language settings updated successfully', 'success');
             await this.loadLanguages();
+
+            // Dispatch event so TranslationManager knows languages were updated
+            window.dispatchEvent(new CustomEvent('languagesUpdated'));
         } catch (error) {
             showMessage(error.message, 'error');
         }

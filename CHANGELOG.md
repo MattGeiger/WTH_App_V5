@@ -10,6 +10,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Production deployment configuration
 - Full system integration testing
 
+## [v0.5.2] - 2024-12-11
+### Fixed
+- Translation type classification in UI (categories vs food items)
+- Original text display in translation management
+- Language filter dropdown initialization
+- Translation filtering by type
+
+### Added
+- Automatic language filter updates when language settings change
+- Event-based synchronization between language and translation managers
+
+### Changed
+- Improved translation type handling in backend service
+- Enhanced translation filtering logic
+
 ## [v0.5.1] - 2024-12-06
 ### Added
 - Language model for managing supported languages
