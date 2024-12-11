@@ -9,19 +9,24 @@ const translationService = new TranslationService();
 // GET /translations
 router.get('/', async (req, res, next) => {
     try {
-        const { languageCode, categoryId, foodItemId } = req.query;
-        console.log('Translation query params:', { languageCode, categoryId, foodItemId });
-        
+        const { languageCode, categoryId, foodItemId, type } = req.query;
+        console.log('Translation query params:', { languageCode, categoryId, foodItemId, type });
+
+        if (type && !['category', 'foodItem'].includes(type as string)) {
+            throw new ApiError(400, 'Invalid type parameter. Must be either "category" or "foodItem"');
+        }
+
         const params = {
             languageCode: languageCode as string,
             categoryId: categoryId ? parseInt(categoryId as string) : undefined,
-            foodItemId: foodItemId ? parseInt(foodItemId as string) : undefined
+            foodItemId: foodItemId ? parseInt(foodItemId as string) : undefined,
+            type: type as 'category' | 'foodItem' | undefined
         };
         console.log('Processed params:', params);
 
         const translations = await translationService.findAll(params);
         console.log('Found translations:', translations);
-        
+
         res.json(ApiResponse.success(translations));
     } catch (error) {
         console.error('Translation error:', error);
@@ -95,7 +100,7 @@ router.post('/food-item/:foodItemId', async (req, res, next) => {
     }
 });
 
-// Generic ID-based routes last
+// GET /translations/:id
 router.get('/:id', async (req, res, next) => {
     try {
         const id = parseInt(req.params.id);
@@ -110,6 +115,7 @@ router.get('/:id', async (req, res, next) => {
     }
 });
 
+// PUT /translations/:id
 router.put('/:id', async (req, res, next) => {
     try {
         const id = parseInt(req.params.id);
@@ -134,6 +140,7 @@ router.put('/:id', async (req, res, next) => {
     }
 });
 
+// DELETE /translations/:id
 router.delete('/:id', async (req, res, next) => {
     try {
         const id = parseInt(req.params.id);
