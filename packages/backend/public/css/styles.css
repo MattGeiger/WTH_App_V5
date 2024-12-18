@@ -1,0 +1,108 @@
+.error {
+    color: red;
+}
+.success {
+    color: green;
+}
+
+#messageArea {
+    margin: 10px 0;
+}
+
+.section {
+    margin: 20px 0;
+    padding: 20px;
+    border: 1px solid #ccc;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+form div {
+    margin: 10px 0;
+}
+
+.translation-type-select {
+    margin-bottom: 10px;
+}
+
+.toggle-group {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.toggle-group label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.limit-options {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.lang-select-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.lang-select-container label {
+    width: 120px;
+}
+
+/* New Styles */
+.language-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.language-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9em;
+}
+
+.warning {
+    color: #856404;
+    background-color: #fff3cd;
+    padding: 10px;
+    border-radius: 4px;
+    margin: 10px 0;
+}
+
+/* Newly Added Classes */
+.filter-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.translation-type {
+    display: flex;
+    gap: 20px;
+}
+
+.note {
+    background-color: #e7f3fe;
+    padding: 10px;
+    border-radius: 4px;
+    margin: 10px 0;
+}

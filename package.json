@@ -1,0 +1,17 @@
+{
+  "name": "wth-food-shopping-lists",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=@sql-react-app/backend",
+    "build": "npm run build --workspace=@sql-react-app/backend",
+    "test": "npm run test --workspace=@sql-react-app/backend",
+    "lint": "npm run lint --workspace=@sql-react-app/backend"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}

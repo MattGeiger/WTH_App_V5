@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Food Pantry Management - Test UI</title>
+    <!-- External Stylesheet -->
+    <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+    <h1>Food Pantry Management - Test UI</h1>
+    <div id="messageArea"></div>
+
+    <!-- Global Settings -->
+    <div class="section">
+        <h2>Global Settings</h2>
+        <div>
+            <label for="globalUpperLimit">Global Upper Limit for "No Limit" Items:</label>
+            <input type="number" id="globalUpperLimit" value="40" min="1">
+            <button id="saveGlobalLimit">Save</button>
+        </div>
+        <p>This setting is now stored in the backend. Adjust it and click "Save" to persist. The "No Limit" items will consider this upper limit for future features.</p>
+    </div>
+
+    <!-- Language Management Section (Updated) -->
+    <div class="section">
+        <h2>Language Management</h2>
+        <p class="warning">Note: Language support varies by region and complexity. AI translations may contain errors and should be reviewed for accuracy.</p>
+        
+        <div class="language-grid">
+            <!-- Languages will be dynamically populated here -->
+        </div>
+        
+        <button id="updateLanguages">Update Language Settings</button>
+        
+        <div id="activeLanguages">
+            <h3>Active Languages</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Name</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="languageTableBody">
+                    <!-- Active languages will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Category Management Section -->
+    <div class="section">
+        <h2>Category Management</h2>
+        <form id="categoryForm">
+            <div>
+                <label for="categoryName">Category Name:</label>
+                <input type="text" id="categoryName" name="categoryName" required>
+            </div>
+            <input type="hidden" id="categoryId">
+            <button type="submit">Add Category</button>
+            <button type="button" id="resetForm">Clear Form</button>
+        </form>
+        <div id="categoryList">
+            <h3>Categories</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="categoryTableBody">
+                    <!-- Categories will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Food Items Section -->
+    <div class="section">
+        <h2>Food Item Management</h2>
+        <form id="foodItemForm">
+            <div>
+                <label for="foodItemName">Item Name:</label>
+                <input type="text" id="foodItemName" name="foodItemName" required>
+            </div>
+            <div>
+                <label for="foodItemCategory">Category:</label>
+                <select id="foodItemCategory" required></select>
+            </div>
+            <div>
+                <label for="foodItemInStock">In Stock:</label>
+                <input type="checkbox" id="foodItemInStock" name="foodItemInStock" checked>
+            </div>
+            <div>
+                <h4>Status Flags</h4>
+                <div class="toggle-group">
+                    <label>
+                        <input type="checkbox" id="foodItemMustGo" name="mustGo">
+                        Must Go
+                    </label>
+                    <label>
+                        <input type="checkbox" id="foodItemLowSupply" name="lowSupply">
+                        Low Supply
+                    </label>
+                    <label>
+                        <input type="checkbox" id="foodItemReadyToEat" name="readyToEat">
+                        Ready to Eat
+                    </label>
+                </div>
+            </div>
+            <div>
+                <h4>Dietary Flags</h4>
+                <div class="toggle-group">
+                    <label>
+                        <input type="checkbox" id="foodItemKosher" name="kosher">
+                        Kosher
+                    </label>
+                    <label>
+                        <input type="checkbox" id="foodItemHalal" name="halal">
+                        Halal
+                    </label>
+                    <label>
+                        <input type="checkbox" id="foodItemVegetarian" name="vegetarian">
+                        Vegetarian
+                    </label>
+                    <label>
+                        <input type="checkbox" id="foodItemVegan" name="vegan">
+                        Vegan
+                    </label>
+                    <label>
+                        <input type="checkbox" id="foodItemGlutenFree" name="glutenFree">
+                        Gluten Free
+                    </label>
+                    <label>
+                        <input type="checkbox" id="foodItemOrganic" name="organic">
+                        Organic
+                    </label>
+                </div>
+            </div>
+            <div>
+                <h4>Item Limit</h4>
+                <div class="limit-options">
+                    <label>
+                        <input type="radio" name="limitType" value="perHousehold" checked>
+                        Per Household
+                    </label>
+                    <label>
+                        <input type="radio" name="limitType" value="perPerson">
+                        Per Person
+                    </label>
+                    <div>
+                        <label for="itemLimitValue">Limit Value:</label>
+                        <input type="number" id="itemLimitValue" min="0" value="0">
+                        <p>Set to 0 for no limit. Global Upper Limit applies as a maximum threshold.</p>
+                    </div>
+                </div>
+            </div>
+            <input type="hidden" id="foodItemId">
+            <button type="submit">Add Food Item</button>
+            <button type="button" id="resetFoodItemForm">Clear Form</button>
+        </form>
+        <div id="foodItemList">
+            <h3>Food Items</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Status</th>
+                        <th>Dietary</th>
+                        <th>Limit</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="foodItemTableBody">
+                    <!-- Food items will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Translations Section -->
+    <div class="section">
+        <h2>Translation Management</h2>
+        <p class="note">Translations are automatically generated for all active languages. Manual edits may be overwritten during automated translation updates.</p>
+        
+        <div class="filter-controls">
+            <div class="translation-type">
+                <label>
+                    <input type="radio" name="translationType" value="category" checked>
+                    Categories
+                </label>
+                <label>
+                    <input type="radio" name="translationType" value="foodItem">
+                    Food Items
+                </label>
+            </div>
+    
+            <div class="language-filter">
+                <label for="filterLanguage">Filter By Language:</label>
+                <select id="filterLanguage">
+                    <option value="">All Languages</option>
+                </select>
+            </div>
+        </div>
+    
+        <div id="translationList">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Original Text</th>
+                        <th>Language</th>
+                        <th>Translation</th>
+                        <th>Type</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="translationTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Load main.js as a module, which will import other JS modules -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
