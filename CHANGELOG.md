@@ -4,11 +4,29 @@ All notable changes to this project will be documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# Changelog
+
 ## [Unreleased]
-### Planned
 - React-based user interface
 - Production deployment configuration
 - Full system integration testing
+
+## [0.5.3] - 2024-12-18
+### Added
+- Local development environment setup
+- Working database configuration for local SQLite
+- Test data initialization process
+- Updated documentation for local setup
+
+### Changed
+- Improved package.json configurations for monorepo structure
+- Enhanced Git configuration with proper ignores
+- Updated environment variable handling for security
+
+### Fixed
+- Package dependency issues for local development
+- Database path configuration for cross-platform compatibility
+- Git tracking of sensitive information
 
 ## [v0.5.2] - 2024-12-11
 ### Fixed
