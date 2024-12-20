@@ -1,4 +1,5 @@
 import { showMessage, apiGet, apiPut, apiDelete, formatDate } from './utils.js';
+import { managers } from './main.js';
 
 export class TranslationManager {
     constructor() {
@@ -95,8 +96,8 @@ export class TranslationManager {
                 <td>${type}</td>
                 <td>${formatDate(translation.createdAt)}</td>
                 <td>
-                    <button onclick="translationManager.editTranslation(${translation.id}, '${translation.translatedText.replace(/'/g, "\\'")}')">Edit</button>
-                    <button onclick="translationManager.deleteTranslation(${translation.id})">Delete</button>
+                    <button onclick="managers.translations.editTranslation(${translation.id}, '${translation.translatedText.replace(/'/g, "\\'")}')">Edit</button>
+                    <button onclick="managers.translations.deleteTranslation(${translation.id})">Delete</button>
                 </td>
             </tr>
         `;

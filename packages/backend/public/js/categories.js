@@ -1,4 +1,5 @@
 import { showMessage, apiGet, apiPost, apiPut, apiDelete } from './utils.js';
+import { managers } from './main.js';
 
 export class CategoryManager {
     constructor() {
@@ -29,8 +30,8 @@ export class CategoryManager {
             }
             this.resetForm();
             await this.loadCategories();
-            if (window.translationManager) {
-                window.translationManager.updateTranslationTargets();
+            if (managers.translations) {
+                managers.translations.updateTranslationTargets();
             }
         } catch (error) {
             showMessage(error.message, 'error');
@@ -42,8 +43,8 @@ export class CategoryManager {
             const data = await apiGet('/api/categories');
             this.displayCategories(data.data);
             this.updateCategorySelect(data.data);
-            if (window.translationManager?.isTypeCategory()) {
-                window.translationManager.updateTranslationTargets();
+            if (managers.translations?.isTypeCategory()) {
+                managers.translations.updateTranslationTargets();
             }
         } catch (error) {
             showMessage(error.message, 'error');
@@ -56,8 +57,8 @@ export class CategoryManager {
                 <td>${category.name}</td>
                 <td>${new Date(category.createdAt).toLocaleDateString()}</td>
                 <td>
-                    <button onclick="categoryManager.editCategory(${category.id}, '${category.name}')">Edit</button>
-                    <button onclick="categoryManager.deleteCategory(${category.id})">Delete</button>
+                    <button onclick="managers.categories.editCategory(${category.id}, '${category.name}')">Edit</button>
+                    <button onclick="managers.categories.deleteCategory(${category.id})">Delete</button>
                 </td>
             </tr>
         `).join('');
@@ -84,11 +85,11 @@ export class CategoryManager {
             await apiDelete(`/api/categories/${id}`);
             showMessage('Category deleted successfully', 'success');
             await this.loadCategories();
-            if (window.foodItemManager) {
-                await window.foodItemManager.loadFoodItems();
+            if (managers.foodItems) {
+                await managers.foodItems.loadFoodItems();
             }
-            if (window.translationManager) {
-                await window.translationManager.loadTranslations();
+            if (managers.translations) {
+                await managers.translations.loadTranslations();
             }
         } catch (error) {
             showMessage(error.message, 'error');
