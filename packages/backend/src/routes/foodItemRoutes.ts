@@ -99,15 +99,49 @@ router.put('/:id', async (req, res, next) => {
       throw new ApiError(400, 'Invalid food item ID');
     }
 
+    console.log('Update Food Item - Request Body:', req.body);
+    console.log('Update Food Item - ID:', id);
+
     // Check if the item exists
     const existingItem = await foodItemService.findById(id);
     if (!existingItem) {
       throw new ApiError(404, 'Food item not found');
     }
 
-    const foodItem = await foodItemService.update(id, req.body);
+    console.log('Existing Item Found:', existingItem);
+
+    // Type check categoryId
+    if (req.body.categoryId && typeof req.body.categoryId !== 'number') {
+      console.log('Invalid categoryId type:', typeof req.body.categoryId);
+      throw new ApiError(400, 'Category ID must be a number');
+    }
+
+    // Validate update data
+    const updateData = {
+      name: req.body.name,
+      categoryId: req.body.categoryId,
+      itemLimit: req.body.itemLimit,
+      limitType: req.body.limitType,
+      inStock: req.body.inStock,
+      mustGo: req.body.mustGo,
+      lowSupply: req.body.lowSupply,
+      kosher: req.body.kosher,
+      halal: req.body.halal,
+      vegetarian: req.body.vegetarian,
+      vegan: req.body.vegan,
+      glutenFree: req.body.glutenFree,
+      organic: req.body.organic,
+      readyToEat: req.body.readyToEat
+    };
+
+    console.log('Processed Update Data:', updateData);
+
+    const foodItem = await foodItemService.update(id, updateData);
+    console.log('Update Successful:', foodItem);
+
     res.json(ApiResponse.success(foodItem, 'Food item updated successfully'));
   } catch (error) {
+    console.error('Update Error:', error);
     next(error);
   }
 });

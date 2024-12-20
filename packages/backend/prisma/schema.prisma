@@ -29,6 +29,7 @@ model FoodItem {
   
   // Inventory management
   itemLimit     Int?
+  limitType     String        @default("perHousehold")  // "perHousehold" or "perPerson"
   inStock       Boolean       @default(true)
   mustGo        Boolean       @default(false)
   lowSupply     Boolean       @default(false)
