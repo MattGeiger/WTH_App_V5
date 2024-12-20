@@ -5,32 +5,28 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-### Changed
-- Major codebase cleanup and modernization
-- Frontend JavaScript modularization
-- Enhanced test coverage and organization
-- Removal of legacy script.js in favor of modular approach
-- Improved error handling in middleware
-- Refined TypeScript configurations
-- Improved Prisma type safety in FoodItemService
+- React-based user interface
+- Production deployment configuration
+- Full system integration testing
+
+## [0.5.4] - 2024-12-20
+### In Progress
+- Test UI refinement
+- Legacy code cleanup
+- Backend testing completion
 
 ### Added
-- Additional test coverage for OpenAIService
-- Enhanced integration tests for routes
-- Improved documentation for modular JavaScript structure
-- Added limitType field to FoodItem model for per-household/per-person limits
+- LimitType field to FoodItem model
 - Test suite for FoodItem limitType functionality
-- Test mode for FoodItemService to prevent translation side effects
+- Test mode for FoodItemService
+- Additional test coverage for OpenAIService
+- Improved documentation for modular JavaScript structure
 
 ### Fixed
-- Food item update functionality failure (#2)
-- Added missing limitType field in database schema
-- TypeScript validation errors in FoodItemService
+- Food item update functionality
 - Translation generation during testing
-
-### Removed
-- Legacy monolithic script.js
-- Deprecated code patterns and unused functions
+- TypeScript validation in FoodItemService
+- Documentation formatting inconsistencies
 
 ## [0.5.3] - 2024-12-18
 ### Added
@@ -49,7 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Database path configuration for cross-platform compatibility
 - Git tracking of sensitive information
 
-## [0.5.2] - 2024-12-11
+## [v0.5.2] - 2024-12-11
 ### Fixed
 - Translation type classification in UI (categories vs food items)
 - Original text display in translation management
@@ -64,7 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved translation type handling in backend service
 - Enhanced translation filtering logic
 
-## [0.5.1] - 2024-12-06
+## [v0.5.1] - 2024-12-06
 ### Added
 - Language model for managing supported languages
 - Comprehensive language management system
@@ -85,7 +81,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Category validation for empty names
 - Response status code consistency
 
-## [0.5.0] - 2024-12-06
+## [v0.5.0] - 2024-12-06
 ### Added
 - OpenAI-powered translation system using gpt-4o-mini model
 - Cost-effective automated translations
@@ -98,7 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Translation system from manual to automated
 
-## [0.4.0] - 2024-12-03
+## [v0.4.0] - 2024-12-03
 ### Added
 - Test UI for validating backend functionality
 - Category management interface
