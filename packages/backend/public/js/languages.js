@@ -1,6 +1,8 @@
 import { showMessage, apiGet, apiPost } from './utils.js';
 
 export class LanguageManager {
+    static languagesUpdatedEvent = new CustomEvent('languagesUpdated');
+    
     static baseLanguages = {
         "ar": "Arabic",
         "bn": "Bengali",
@@ -24,7 +26,6 @@ export class LanguageManager {
         "ur": "Urdu",
         "vi": "Vietnamese",
         "zh": "Chinese"
-        // Add others as needed
     };
 
     constructor() {
@@ -95,7 +96,7 @@ export class LanguageManager {
             await this.loadLanguages();
 
             // Dispatch event so TranslationManager knows languages were updated
-            window.dispatchEvent(new CustomEvent('languagesUpdated'));
+            document.dispatchEvent(LanguageManager.languagesUpdatedEvent);
         } catch (error) {
             showMessage(error.message, 'error');
         }

@@ -1,7 +1,6 @@
 import { showMessage, apiGet, apiPost, apiPut, apiDelete } from './utils.js';
+import { managers } from './main.js';
 
-// TODO: Fix food item update functionality (Issue #42)
-// Current issue: Update operation fails with error message
 export class FoodItemManager {
     constructor(settingsManager) {
         this.settingsManager = settingsManager;
@@ -43,8 +42,8 @@ export class FoodItemManager {
             }
             this.resetForm();
             await this.loadFoodItems();
-            if (window.translationManager) {
-                window.translationManager.updateTranslationTargets();
+            if (managers.translations) {
+                managers.translations.updateTranslationTargets();
             }
         } catch (error) {
             showMessage(error.message, 'error');
@@ -82,8 +81,8 @@ export class FoodItemManager {
         try {
             const data = await apiGet('/api/food-items?includeOutOfStock=true');
             this.displayFoodItems(data.data);
-            if (window.translationManager?.isTypeFoodItem()) {
-                window.translationManager.updateTranslationTargets();
+            if (managers.translations?.isTypeFoodItem()) {
+                managers.translations.updateTranslationTargets();
             }
         } catch (error) {
             showMessage(error.message, 'error');
@@ -128,9 +127,8 @@ export class FoodItemManager {
                 <td>${limitDisplay}</td>
                 <td>${new Date(item.createdAt).toLocaleDateString()}</td>
                 <td>
-                    <button data-item='${JSON.stringify(editData).replace(/'/g, "&apos;")}' 
-                            onclick="foodItemManager.editFoodItem(this.dataset.item)">Edit</button>
-                    <button onclick="foodItemManager.deleteFoodItem(${item.id})">Delete</button>
+                    <button onclick="managers.foodItems.editFoodItem('${JSON.stringify(editData).replace(/'/g, "\\'")}')">Edit</button>
+                    <button onclick="managers.foodItems.deleteFoodItem(${item.id})">Delete</button>
                 </td>
             </tr>
         `;
@@ -202,8 +200,8 @@ export class FoodItemManager {
             await apiDelete(`/api/food-items/${id}`);
             showMessage('Food item deleted successfully', 'success');
             await this.loadFoodItems();
-            if (window.translationManager) {
-                await window.translationManager.loadTranslations();
+            if (managers.translations) {
+                await managers.translations.loadTranslations();
             }
         } catch (error) {
             showMessage(error.message, 'error');
