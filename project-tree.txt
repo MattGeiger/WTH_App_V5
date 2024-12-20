@@ -6,6 +6,69 @@
 ├── package.json
 ├── packages
 │   ├── backend
+│   │   ├── coverage
+│   │   │   ├── lcov-report
+│   │   │   │   ├── base.css
+│   │   │   │   ├── block-navigation.js
+│   │   │   │   ├── config
+│   │   │   │   │   ├── index.html
+│   │   │   │   │   └── languageConfig.ts.html
+│   │   │   │   ├── favicon.png
+│   │   │   │   ├── index.html
+│   │   │   │   ├── prettify.css
+│   │   │   │   ├── prettify.js
+│   │   │   │   ├── public
+│   │   │   │   │   └── js
+│   │   │   │   │       ├── categories.js.html
+│   │   │   │   │       ├── foodItems.js.html
+│   │   │   │   │       ├── index.html
+│   │   │   │   │       ├── languages.js.html
+│   │   │   │   │       ├── main.js.html
+│   │   │   │   │       ├── settings.js.html
+│   │   │   │   │       ├── translations.js.html
+│   │   │   │   │       └── utils.js.html
+│   │   │   │   ├── services
+│   │   │   │   │   ├── FoodItemService.ts.html
+│   │   │   │   │   ├── TranslationService.ts.html
+│   │   │   │   │   ├── index.html
+│   │   │   │   │   └── openai
+│   │   │   │   │       ├── OpenAIService.ts.html
+│   │   │   │   │       └── index.html
+│   │   │   │   ├── sort-arrow-sprite.png
+│   │   │   │   ├── sorter.js
+│   │   │   │   ├── src
+│   │   │   │   │   ├── config
+│   │   │   │   │   │   ├── index.html
+│   │   │   │   │   │   └── languageConfig.ts.html
+│   │   │   │   │   ├── index.html
+│   │   │   │   │   ├── index.ts.html
+│   │   │   │   │   ├── middleware
+│   │   │   │   │   │   ├── errorHandler.ts.html
+│   │   │   │   │   │   ├── index.html
+│   │   │   │   │   │   └── requestLogger.ts.html
+│   │   │   │   │   ├── routes
+│   │   │   │   │   │   ├── categoryRoutes.ts.html
+│   │   │   │   │   │   ├── foodItemRoutes.ts.html
+│   │   │   │   │   │   ├── index.html
+│   │   │   │   │   │   ├── languageRoutes.ts.html
+│   │   │   │   │   │   ├── settingsRoutes.ts.html
+│   │   │   │   │   │   └── translationRoutes.ts.html
+│   │   │   │   │   ├── services
+│   │   │   │   │   │   ├── CategoryService.ts.html
+│   │   │   │   │   │   ├── FoodItemService.ts.html
+│   │   │   │   │   │   ├── LanguageService.ts.html
+│   │   │   │   │   │   ├── index.html
+│   │   │   │   │   │   └── openai
+│   │   │   │   │   │       ├── OpenAIService.ts.html
+│   │   │   │   │   │       └── index.html
+│   │   │   │   │   └── utils
+│   │   │   │   │       ├── ApiError.ts.html
+│   │   │   │   │       ├── ApiResponse.ts.html
+│   │   │   │   │       └── index.html
+│   │   │   │   └── utils
+│   │   │   │       ├── ApiError.ts.html
+│   │   │   │       └── index.html
+│   │   │   └── lcov.info
 │   │   ├── jest.config.js
 │   │   ├── package.json
 │   │   ├── prisma
@@ -16,6 +79,8 @@
 │   │   │   │   │   └── migration.sql
 │   │   │   │   ├── 20241209004222_add_settings_model
 │   │   │   │   │   └── migration.sql
+│   │   │   │   ├── 20241220064500_add_limit_type
+│   │   │   │   │   └── migration.sql
 │   │   │   │   └── migration_lock.toml
 │   │   │   └── schema.prisma
 │   │   ├── project-tree.txt
@@ -23,15 +88,14 @@
 │   │   │   ├── css
 │   │   │   │   └── styles.css
 │   │   │   ├── index.html
-│   │   │   ├── js
-│   │   │   │   ├── categories.js
-│   │   │   │   ├── foodItems.js
-│   │   │   │   ├── languages.js
-│   │   │   │   ├── main.js
-│   │   │   │   ├── settings.js
-│   │   │   │   ├── translations.js
-│   │   │   │   └── utils.js
-│   │   │   └── script.js
+│   │   │   └── js
+│   │   │       ├── categories.js
+│   │   │       ├── foodItems.js
+│   │   │       ├── languages.js
+│   │   │       ├── main.js
+│   │   │       ├── settings.js
+│   │   │       ├── translations.js
+│   │   │       └── utils.js
 │   │   ├── src
 │   │   │   ├── config
 │   │   │   │   └── languageConfig.ts
@@ -60,7 +124,15 @@
 │   │   │   │   ├── TranslationService.test.ts
 │   │   │   │   ├── categoryRoutes.test.ts
 │   │   │   │   ├── foodItemRoutes.test.ts
+│   │   │   │   ├── frontend
+│   │   │   │   │   ├── categories.test.js
+│   │   │   │   │   ├── foodItems.test.js
+│   │   │   │   │   ├── languages.test.js
+│   │   │   │   │   ├── settings.test.js
+│   │   │   │   │   ├── setup.js
+│   │   │   │   │   └── translations.test.js
 │   │   │   │   ├── languageRoutes.test.ts
+│   │   │   │   ├── limitType.test.ts
 │   │   │   │   ├── settings.test.ts
 │   │   │   │   ├── settingsRoutes.test.ts
 │   │   │   │   ├── setup.ts
@@ -69,11 +141,8 @@
 │   │   │       ├── ApiError.ts
 │   │   │       └── ApiResponse.ts
 │   │   └── tsconfig.json
-│   ├── data
-│   │   └── food-pantry.db
-│   ├── frontend
-│   │   └── package.json
-│   └── shared
+│   └── frontend
+│       └── package.json
 └── project-tree.txt
 
-23 directories, 54 files
+38 directories, 108 files
