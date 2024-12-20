@@ -17,12 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Additional test coverage for OpenAIService
 - Enhanced integration tests for routes
 - Improved documentation for modular JavaScript structure
+- Added limitType field to FoodItem model for per-household/per-person limits
+
+### Fixed
+- Food item update functionality failure (#42)
+- Added missing limitType field in database schema
 
 ### Removed
 - Legacy monolithic script.js
 - Deprecated code patterns and unused functions
-
-### Known Issues
-- Food item update functionality fails with "Error updating food item" message (#42)
 
 [Previous changelog entries remain the same...]
