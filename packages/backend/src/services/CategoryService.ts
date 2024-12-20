@@ -1,6 +1,8 @@
 import { PrismaClient, Category } from '@prisma/client';
 import { ApiError } from '../utils/ApiError';
 import { TranslationService } from './TranslationService';
+import { ErrorTypes, ErrorMessages } from '../utils/errorConstants';
+import { handleServiceError } from '../utils/errorHandler';
 
 export class CategoryService {
     private prisma: PrismaClient;
@@ -13,30 +15,23 @@ export class CategoryService {
 
     async create(data: { name: string }): Promise<Category> {
         try {
-            // Create the category first
             const category = await this.prisma.category.create({
-                data: {
-                    name: data.name,
+                data,
+                include: {
+                    translations: {
+                        include: {
+                            language: true
+                        }
+                    }
                 }
             });
 
-            // Generate translations asynchronously
-            this.generateTranslations(category.id).catch(error => {
-                console.error('Failed to generate translations for category:', error);
-            });
+            this.translationService.generateAutomaticTranslations(category.id, 'category')
+                .catch(error => console.error('Translation generation failed:', error));
 
             return category;
         } catch (error) {
-            throw new ApiError(400, 'Error creating category');
-        }
-    }
-
-    private async generateTranslations(categoryId: number): Promise<void> {
-        try {
-            await this.translationService.generateAutomaticTranslations(categoryId, 'category');
-        } catch (error) {
-            // Log error but don't throw - translation failures shouldn't block category creation
-            console.error(`Failed to generate translations for category ${categoryId}:`, error);
+            throw handleServiceError(error, ErrorMessages.CREATE_ERROR('category'));
         }
     }
 
@@ -52,7 +47,7 @@ export class CategoryService {
                 }
             });
         } catch (error) {
-            throw new ApiError(500, 'Error fetching categories');
+            throw handleServiceError(error, 'Error fetching categories');
         }
     }
 
@@ -70,63 +65,48 @@ export class CategoryService {
             });
 
             if (!category) {
-                throw new ApiError(404, 'Category not found');
+                throw new ApiError(ErrorTypes.NOT_FOUND, ErrorMessages.CATEGORY_NOT_FOUND);
             }
 
             return category;
         } catch (error) {
-            if (error instanceof ApiError) throw error;
-            throw new ApiError(500, 'Error fetching category');
+            throw handleServiceError(error, ErrorMessages.CATEGORY_NOT_FOUND);
         }
     }
 
     async update(id: number, data: { name: string }): Promise<Category> {
         try {
-            const category = await this.prisma.category.update({
+            const existingCategory = await this.findById(id);
+
+            const updated = await this.prisma.category.update({
                 where: { id },
-                data: {
-                    name: data.name,
-                    updatedAt: new Date()
+                data,
+                include: {
+                    translations: {
+                        include: {
+                            language: true
+                        }
+                    }
                 }
             });
 
-            // Regenerate translations after name update
-            this.generateTranslations(category.id).catch(error => {
-                console.error('Failed to update translations for category:', error);
-            });
+            if (existingCategory && data.name !== existingCategory.name) {
+                this.translationService.generateAutomaticTranslations(id, 'category')
+                    .catch(error => console.error('Translation update failed:', error));
+            }
 
-            return category;
+            return updated;
         } catch (error) {
-            throw new ApiError(400, 'Error updating category');
+            throw handleServiceError(error, ErrorMessages.UPDATE_ERROR('category'));
         }
     }
 
     async delete(id: number): Promise<void> {
         try {
-            const category = await this.prisma.category.findUnique({
-                where: { id }
-            });
-
-            if (!category) {
-                throw new ApiError(404, 'Category not found');
-            }
-
-            // Delete will cascade to translations due to Prisma schema relations
-            await this.prisma.category.delete({
-                where: { id }
-            });
+            await this.findById(id);
+            await this.prisma.category.delete({ where: { id } });
         } catch (error) {
-            if (error instanceof ApiError) throw error;
-            throw new ApiError(400, 'Error deleting category');
+            throw handleServiceError(error, ErrorMessages.DELETE_ERROR('category'));
         }
-    }
-
-    async regenerateTranslations(id: number): Promise<void> {
-        const category = await this.findById(id);
-        if (!category) {
-            throw new ApiError(404, 'Category not found');
-        }
-
-        await this.generateTranslations(id);
     }
 }

@@ -1,8 +1,9 @@
 import { PrismaClient, FoodItem, Prisma } from '@prisma/client';
 import { ApiError } from '../utils/ApiError';
 import { TranslationService } from './TranslationService';
+import { ErrorTypes, ErrorMessages } from '../utils/errorConstants';
+import { handleServiceError } from '../utils/errorHandler';
 
-// Use Prisma's types
 type FoodItemCreateInput = Prisma.FoodItemCreateInput;
 type FoodItemUpdateInput = Prisma.FoodItemUpdateInput;
 
@@ -18,8 +19,7 @@ export class FoodItemService {
   }
 
   private async generateTranslations(foodItemId: number): Promise<void> {
-    if (this.testMode) return; // Skip translations in test mode
-    
+    if (this.testMode) return;
     try {
       await this.translationService.generateAutomaticTranslations(foodItemId, 'foodItem');
     } catch (error) {
@@ -52,7 +52,7 @@ export class FoodItemService {
       });
 
       if (!category) {
-        throw new ApiError(400, 'Invalid category ID');
+        throw new ApiError(ErrorTypes.VALIDATION, ErrorMessages.INVALID_CATEGORY);
       }
 
       const { customFields, categoryId, ...foodItemData } = data;
@@ -81,13 +81,11 @@ export class FoodItemService {
         }
       });
 
-      // Generate translations asynchronously
       this.generateTranslations(foodItem.id);
 
       return foodItem;
     } catch (error) {
-      if (error instanceof ApiError) throw error;
-      throw new ApiError(400, 'Error creating food item');
+      throw handleServiceError(error, ErrorMessages.CREATE_ERROR('food item'));
     }
   }
 
@@ -110,17 +108,14 @@ export class FoodItemService {
     readyToEat?: boolean;
     customFields?: { key: string; value: string; }[];
   }): Promise<FoodItem> {
-    console.log('FoodItemService.update - Input Data:', { id, data });
     try {
       const existingItem = await this.prisma.foodItem.findUnique({
         where: { id },
         include: { customFields: true }
       });
 
-      console.log('FoodItemService.update - Existing Item:', existingItem);
-
       if (!existingItem) {
-        throw new ApiError(404, 'Food item not found');
+        throw new ApiError(ErrorTypes.NOT_FOUND, ErrorMessages.FOOD_ITEM_NOT_FOUND);
       }
 
       if (data.categoryId) {
@@ -129,7 +124,7 @@ export class FoodItemService {
         });
 
         if (!category) {
-          throw new ApiError(400, 'Invalid category ID');
+          throw new ApiError(ErrorTypes.VALIDATION, ErrorMessages.INVALID_CATEGORY);
         }
       }
 
@@ -144,86 +139,92 @@ export class FoodItemService {
         })
       };
 
-      console.log('FoodItemService.update - Final Update Data:', prismaUpdateData);
-
-      try {
-        const updatedItem = await this.prisma.foodItem.update({
-          where: { id },
-          data: prismaUpdateData,
-          include: {
-            category: true,
-            translations: {
-              include: {
-                language: true
-              }
-            },
-            customFields: true
-          }
-        });
-
-        console.log('FoodItemService.update - Update Success:', updatedItem);
-
-        // If name was updated, regenerate translations
-        if (data.name && data.name !== existingItem.name) {
-          this.generateTranslations(id);
+      const updatedItem = await this.prisma.foodItem.update({
+        where: { id },
+        data: prismaUpdateData,
+        include: {
+          category: true,
+          translations: {
+            include: {
+              language: true
+            }
+          },
+          customFields: true
         }
+      });
 
-        return updatedItem;
-      } catch (error) {
-        console.error('FoodItemService.update - Prisma Error:', error);
-        throw error;
+      if (data.name && data.name !== existingItem.name) {
+        this.generateTranslations(id);
       }
 
+      return updatedItem;
     } catch (error) {
-      console.error('FoodItemService.update - Error:', error);
-      if (error instanceof ApiError) throw error;
-      throw new ApiError(400, 'Error updating food item');
+      throw handleServiceError(error, ErrorMessages.UPDATE_ERROR('food item'));
     }
   }
 
   async findById(id: number): Promise<FoodItem | null> {
-    return await this.prisma.foodItem.findUnique({
-      where: { id },
-      include: {
-        category: true,
-        translations: {
-          include: {
-            language: true
+    try {
+      const item = await this.prisma.foodItem.findUnique({
+        where: { id },
+        include: {
+          category: true,
+          translations: {
+            include: {
+              language: true
+            }
           }
         }
+      });
+
+      if (!item) {
+        throw new ApiError(ErrorTypes.NOT_FOUND, ErrorMessages.FOOD_ITEM_NOT_FOUND);
       }
-    });
+
+      return item;
+    } catch (error) {
+      throw handleServiceError(error, ErrorMessages.FOOD_ITEM_NOT_FOUND);
+    }
   }
 
   async findAll(params: {
     categoryId?: number;
     includeOutOfStock?: boolean;
   } = {}): Promise<FoodItem[]> {
-    const { categoryId, includeOutOfStock = true } = params;
-    
-    return await this.prisma.foodItem.findMany({
-      where: {
-        ...(categoryId && { categoryId }),
-        ...(!includeOutOfStock && { inStock: true })
-      },
-      include: {
-        category: true,
-        translations: {
-          include: {
-            language: true
+    try {
+      const { categoryId, includeOutOfStock = true } = params;
+      
+      return await this.prisma.foodItem.findMany({
+        where: {
+          ...(categoryId && { categoryId }),
+          ...(!includeOutOfStock && { inStock: true })
+        },
+        include: {
+          category: true,
+          translations: {
+            include: {
+              language: true
+            }
           }
         }
-      }
-    });
+      });
+    } catch (error) {
+      throw handleServiceError(error, 'Error fetching food items');
+    }
   }
 
   async delete(id: number): Promise<void> {
     try {
+      const existingItem = await this.findById(id);
+      if (!existingItem) {
+        throw new ApiError(ErrorTypes.NOT_FOUND, ErrorMessages.FOOD_ITEM_NOT_FOUND);
+      }
+
       await this.prisma.foodItem.delete({
         where: { id }
       });
     } catch (error) {
-      throw new ApiError(400, 'Error deleting food item');
+      throw handleServiceError(error, ErrorMessages.DELETE_ERROR('food item'));
     }
   }
 }
