@@ -1,0 +1,26 @@
+.message {
+    padding: 10px;
+    border-radius: 4px;
+    margin: 10px 0;
+}
+
+.message--error {
+    color: red;
+}
+
+.message--success {
+    color: green;
+}
+
+.message--warning {
+    color: #856404;
+    background-color: #fff3cd;
+}
+
+.message--note {
+    background-color: #e7f3fe;
+}
+
+.message-area {
+    margin: 10px 0;
+}

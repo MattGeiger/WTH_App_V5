@@ -2,10 +2,10 @@
 export function showMessage(message, type) {
     const messageArea = document.getElementById('messageArea');
     messageArea.textContent = message;
-    messageArea.className = type;
+    messageArea.className = `message-area message message--${type}`;
     setTimeout(() => {
         messageArea.textContent = '';
-        messageArea.className = '';
+        messageArea.className = 'message-area';
     }, 3000);
 }
 
