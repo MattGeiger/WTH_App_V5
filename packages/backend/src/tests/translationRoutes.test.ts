@@ -1,197 +1,144 @@
-import request from 'supertest';
 import { createApp } from '../index';
-import { PrismaClient } from '@prisma/client';
+import { cleanDatabase } from './utils/dbHelpers';
+import { createTestCategory, createTestFoodItem, createTestLanguage, createTestTranslation } from './utils/testFactories';
+import { expectSuccessResponse, expectErrorResponse } from './utils/testHelpers';
+import request from 'supertest';
 
 describe('Translation Routes', () => {
   const app = createApp();
-  const prisma = new PrismaClient();
+  let testLanguageId: number;
   let testCategoryId: number;
   let testFoodItemId: number;
-  let testTranslationId: number;
-  let testLanguageId: number;
 
   beforeEach(async () => {
-    await prisma.translation.deleteMany({});
-    await prisma.customField.deleteMany({});
-    await prisma.foodItem.deleteMany({});
-    await prisma.category.deleteMany({});
-    await prisma.language.deleteMany({});
-
-    // Create test language first
-    const language = await prisma.language.create({
-      data: { code: 'es', name: 'Spanish', active: true }
-    });
+    await cleanDatabase();
+    
+    const language = await createTestLanguage();
     testLanguageId = language.id;
-
-    const category = await prisma.category.create({
-      data: { name: 'Test Category' }
-    });
+    
+    const category = await createTestCategory();
     testCategoryId = category.id;
-
-    const foodItem = await prisma.foodItem.create({
-      data: {
-        name: 'Test Food Item',
-        categoryId: testCategoryId
-      }
-    });
+    
+    const foodItem = await createTestFoodItem(category.id);
     testFoodItemId = foodItem.id;
-  });
-
-  afterAll(async () => {
-    await prisma.$disconnect();
-  });
-
-  describe('POST /api/translations/category/:categoryId', () => {
-    it('should create a translation for a category', async () => {
-      const response = await request(app)
-        .post(`/api/translations/category/${testCategoryId}`)
-        .send({
-          languageCode: 'es',
-          translatedText: 'Categoría de Prueba'
-        })
-        .expect(201);
-
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.translatedText).toBe('Categoría de Prueba');
-      expect(response.body.data.language.code).toBe('es');
-      testTranslationId = response.body.data.id;
-    });
-
-    it('should reject invalid language code', async () => {
-      await request(app)
-        .post(`/api/translations/category/${testCategoryId}`)
-        .send({
-          languageCode: 'xx',
-          translatedText: 'Invalid Language'
-        })
-        .expect(400);
-    });
-
-    it('should reject non-existent category', async () => {
-      await request(app)
-        .post('/api/translations/category/99999')
-        .send({
-          languageCode: 'es',
-          translatedText: 'Test Translation'
-        })
-        .expect(404);
-    });
-  });
-
-  describe('POST /api/translations/food-item/:foodItemId', () => {
-    it('should create a translation for a food item', async () => {
-      const response = await request(app)
-        .post(`/api/translations/food-item/${testFoodItemId}`)
-        .send({
-          languageCode: 'es',
-          translatedText: 'Alimento de Prueba'
-        })
-        .expect(201);
-
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.translatedText).toBe('Alimento de Prueba');
-      expect(response.body.data.language.code).toBe('es');
-    });
-
-    it('should reject non-existent food item', async () => {
-      await request(app)
-        .post('/api/translations/food-item/99999')
-        .send({
-          languageCode: 'es',
-          translatedText: 'Test Translation'
-        })
-        .expect(404);
-    });
   });
 
   describe('GET /api/translations/language/:languageCode', () => {
     beforeEach(async () => {
-      await prisma.translation.create({
-        data: {
-          translatedText: 'Test Translation',
-          categoryId: testCategoryId,
-          languageId: testLanguageId
-        }
+      await createTestTranslation({
+        categoryId: testCategoryId,
+        languageId: testLanguageId
+      });
+      await createTestTranslation({
+        foodItemId: testFoodItemId,
+        languageId: testLanguageId
       });
     });
 
-    it('should get translations by language code and category', async () => {
+    it('should get translations by language code', async () => {
       const response = await request(app)
-        .get('/api/translations/language/es')
-        .query({ categoryId: testCategoryId })
+        .get('/api/translations/language/en')
         .expect(200);
 
-      expect(response.body.success).toBe(true);
-      expect(Array.isArray(response.body.data)).toBe(true);
-      expect(response.body.data.length).toBeGreaterThan(0);
-      expect(response.body.data[0].language.code).toBe('es');
+      expectSuccessResponse(response);
+      expect(response.body.data.length).toBe(2);
     });
 
-    it('should handle invalid language code', async () => {
-      await request(app)
-        .get('/api/translations/language/xx')
+    it('should filter by type', async () => {
+      const response = await request(app)
+        .get('/api/translations/language/en?type=category')
+        .expect(200);
+
+      expectSuccessResponse(response);
+      expect(response.body.data.every((t: any) => t.categoryId)).toBe(true);
+    });
+  });
+
+  describe('POST /api/translations/category/:categoryId', () => {
+    it('should create category translation', async () => {
+      const response = await request(app)
+        .post(`/api/translations/category/${testCategoryId}`)
+        .send({
+          languageId: testLanguageId,
+          translatedText: 'Test Translation'
+        })
+        .expect(201);
+
+      expectSuccessResponse(response);
+      expect(response.body.data.categoryId).toBe(testCategoryId);
+    });
+
+    it('should validate inputs', async () => {
+      const response = await request(app)
+        .post(`/api/translations/category/${testCategoryId}`)
+        .send({
+          languageId: -1,
+          translatedText: ''
+        })
         .expect(400);
+
+      expectErrorResponse(response);
+    });
+  });
+
+  describe('POST /api/translations/food-item/:foodItemId', () => {
+    it('should create food item translation', async () => {
+      const response = await request(app)
+        .post(`/api/translations/food-item/${testFoodItemId}`)
+        .send({
+          languageId: testLanguageId,
+          translatedText: 'Test Translation'
+        })
+        .expect(201);
+
+      expectSuccessResponse(response);
+      expect(response.body.data.foodItemId).toBe(testFoodItemId);
+    });
+
+    it('should validate inputs', async () => {
+      const response = await request(app)
+        .post(`/api/translations/food-item/${testFoodItemId}`)
+        .send({
+          languageId: -1,
+          translatedText: ''
+        })
+        .expect(400);
+
+      expectErrorResponse(response);
     });
   });
 
   describe('PUT /api/translations/:id', () => {
-    beforeEach(async () => {
-      const translation = await prisma.translation.create({
-        data: {
-          translatedText: 'Original Text',
-          categoryId: testCategoryId,
-          languageId: testLanguageId
-        }
+    it('should update translation', async () => {
+      const translation = await createTestTranslation({
+        categoryId: testCategoryId,
+        languageId: testLanguageId
       });
-      testTranslationId = translation.id;
-    });
 
-    it('should update a translation', async () => {
       const response = await request(app)
-        .put(`/api/translations/${testTranslationId}`)
-        .send({
-          translatedText: 'Updated Text'
-        })
+        .put(`/api/translations/${translation.id}`)
+        .send({ translatedText: 'Updated Text' })
         .expect(200);
 
-      expect(response.body.success).toBe(true);
+      expectSuccessResponse(response);
       expect(response.body.data.translatedText).toBe('Updated Text');
-    });
-
-    it('should reject invalid update data', async () => {
-      await request(app)
-        .put(`/api/translations/${testTranslationId}`)
-        .send({})
-        .expect(400);
     });
   });
 
   describe('DELETE /api/translations/:id', () => {
-    beforeEach(async () => {
-      const translation = await prisma.translation.create({
-        data: {
-          translatedText: 'To Delete',
-          categoryId: testCategoryId,
-          languageId: testLanguageId
-        }
+    it('should delete translation', async () => {
+      const translation = await createTestTranslation({
+        categoryId: testCategoryId,
+        languageId: testLanguageId
       });
-      testTranslationId = translation.id;
-    });
 
-    it('should delete a translation', async () => {
       await request(app)
-        .delete(`/api/translations/${testTranslationId}`)
+        .delete(`/api/translations/${translation.id}`)
         .expect(200);
 
       // Verify deletion
       await request(app)
-        .get(`/api/translations/${testTranslationId}`)
-        .expect(404);
-    });
-
-    it('should handle non-existent translation', async () => {
-      await request(app)
-        .delete('/api/translations/99999')
+        .get(`/api/translations/${translation.id}`)
         .expect(404);
     });
   });

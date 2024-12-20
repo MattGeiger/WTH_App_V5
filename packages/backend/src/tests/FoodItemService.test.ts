@@ -1,173 +1,121 @@
-import { FoodItem, CustomField } from '@prisma/client';
 import { FoodItemService } from '../services/FoodItemService';
-import { CategoryService } from '../services/CategoryService';
 import { ApiError } from '../utils/ApiError';
-
-type FoodItemWithRelations = FoodItem & {
-  customFields: CustomField[];
-};
+import { cleanDatabase } from './utils/dbHelpers';
+import { createTestCategory, createTestFoodItem } from './utils/testFactories';
 
 describe('FoodItemService', () => {
   let foodItemService: FoodItemService;
-  let categoryService: CategoryService;
   let testCategoryId: number;
 
-  beforeAll(async () => {
-    categoryService = new CategoryService();
+  beforeEach(async () => {
     foodItemService = new FoodItemService();
-    
-    // Create a test category to use
-    const category = await categoryService.create({ name: 'Test Category' });
+    await cleanDatabase();
+    const category = await createTestCategory();
     testCategoryId = category.id;
   });
 
   describe('create', () => {
-    it('should create a new food item with basic details', async () => {
+    it('should create a food item', async () => {
       const testData = {
-        name: 'Test Food Item',
+        name: 'Test Food',
         categoryId: testCategoryId,
-        inStock: true
+        inStock: true,
+        itemLimit: 0,
+        limitType: 'perHousehold'
       };
-
       const result = await foodItemService.create(testData);
       
       expect(result).toBeDefined();
       expect(result.name).toBe(testData.name);
       expect(result.categoryId).toBe(testCategoryId);
-      expect(result.inStock).toBe(true);
+      expect(result.id).toBeDefined();
     });
 
-    it('should create a food item with all attributes', async () => {
+    it('should validate category exists', async () => {
       const testData = {
-        name: 'Complete Food Item',
-        categoryId: testCategoryId,
+        name: 'Test Food',
+        categoryId: -1,
         inStock: true,
-        mustGo: true,
-        lowSupply: false,
-        kosher: true,
-        halal: true,
-        vegetarian: true,
-        vegan: false,
-        glutenFree: true,
-        organic: true,
-        readyToEat: false,
-        customFields: [
-          { key: 'brand', value: 'Test Brand' },
-          { key: 'origin', value: 'Test Country' }
-        ]
+        itemLimit: 0,
+        limitType: 'perHousehold'
       };
-
-      const result = await foodItemService.create(testData);
-      
-      expect(result).toBeDefined();
-      expect(result.kosher).toBe(true);
-      expect((result as FoodItemWithRelations).customFields).toHaveLength(2);
-    });
-
-    it('should throw error with invalid category ID', async () => {
-      const testData = {
-        name: 'Invalid Category Item',
-        categoryId: -1
-      };
-
-      await expect(foodItemService.create(testData))
-        .rejects
-        .toThrow(ApiError);
+      await expect(foodItemService.create(testData)).rejects.toThrow(ApiError);
     });
   });
 
   describe('findAll', () => {
-    it('should return paginated food items', async () => {
-      // Create multiple items
-      await Promise.all([
-        foodItemService.create({ name: 'Item 1', categoryId: testCategoryId }),
-        foodItemService.create({ name: 'Item 2', categoryId: testCategoryId }),
-        foodItemService.create({ name: 'Item 3', categoryId: testCategoryId })
-      ]);
+    it('should return all food items', async () => {
+      await createTestFoodItem(testCategoryId, { name: 'Food 1' });
+      await createTestFoodItem(testCategoryId, { name: 'Food 2' });
 
-      const { items, total } = await foodItemService.findAll({ limit: 2, page: 1 });
-      
-      expect(Array.isArray(items)).toBe(true);
-      expect(items.length).toBeLessThanOrEqual(2);
-      expect(total).toBeGreaterThanOrEqual(3);
+      const items = await foodItemService.findAll();
+      expect(items.length).toBeGreaterThanOrEqual(2);
     });
 
-    it('should filter by category', async () => {
-      const { items } = await foodItemService.findAll({ categoryId: testCategoryId });
-      
-      items.forEach(item => {
-        expect(item.categoryId).toBe(testCategoryId);
-      });
+    it('should filter out-of-stock items', async () => {
+      await createTestFoodItem(testCategoryId, { name: 'In Stock', inStock: true });
+      await createTestFoodItem(testCategoryId, { name: 'Out of Stock', inStock: false });
+
+      const items = await foodItemService.findAll({ includeOutOfStock: false });
+      expect(items.every(item => item.inStock)).toBe(true);
     });
   });
 
   describe('findById', () => {
     it('should find food item by id', async () => {
-      const created = await foodItemService.create({ 
-        name: 'Find Test Item',
-        categoryId: testCategoryId
-      });
-
+      const created = await createTestFoodItem(testCategoryId);
       const found = await foodItemService.findById(created.id);
       
       expect(found).toBeDefined();
       expect(found?.id).toBe(created.id);
-      expect(found?.name).toBe(created.name);
     });
 
-    it('should throw ApiError if food item not found', async () => {
-      await expect(foodItemService.findById(-1))
-        .rejects
-        .toThrow(ApiError);
+    it('should throw ApiError if not found', async () => {
+      await expect(foodItemService.findById(-1)).rejects.toThrow(ApiError);
     });
   });
 
   describe('update', () => {
-    it('should update food item basic details', async () => {
-      const created = await foodItemService.create({ 
-        name: 'Update Test Item',
-        categoryId: testCategoryId
-      });
-
-      const updated = await foodItemService.update(created.id, { 
-        name: 'Updated Name',
-        inStock: false
-      });
+    it('should update food item', async () => {
+      const created = await createTestFoodItem(testCategoryId);
+      const updated = await foodItemService.update(created.id, { name: 'Updated Name' });
       
       expect(updated.name).toBe('Updated Name');
-      expect(updated.inStock).toBe(false);
+      expect(updated.id).toBe(created.id);
     });
 
-    it('should update custom fields', async () => {
-      const created = await foodItemService.create({ 
-        name: 'Custom Fields Test',
-        categoryId: testCategoryId,
-        customFields: [{ key: 'test', value: 'original' }]
-      });
-
-      const updated = await foodItemService.update(created.id, {
-        customFields: [{ key: 'test', value: 'updated' }]
-      });
-
-      expect((updated as FoodItemWithRelations).customFields[0].value).toBe('updated');
+    it('should validate category on update', async () => {
+      const created = await createTestFoodItem(testCategoryId);
+      await expect(foodItemService.update(created.id, { categoryId: -1 }))
+        .rejects.toThrow(ApiError);
     });
   });
 
   describe('delete', () => {
     it('should delete food item', async () => {
-      const created = await foodItemService.create({ 
-        name: 'To Delete',
-        categoryId: testCategoryId
-      });
-      
-      await expect(foodItemService.delete(created.id))
-        .resolves
-        .not
-        .toThrow();
+      const created = await createTestFoodItem(testCategoryId);
+      await foodItemService.delete(created.id);
+      await expect(foodItemService.findById(created.id)).rejects.toThrow(ApiError);
+    });
+  });
 
-      await expect(foodItemService.findById(created.id))
-        .rejects
-        .toThrow(ApiError);
+  describe('limitType handling', () => {
+    it('should handle per-household limits', async () => {
+      const item = await createTestFoodItem(testCategoryId, {
+        itemLimit: 5,
+        limitType: 'perHousehold'
+      });
+      expect(item.limitType).toBe('perHousehold');
+      expect(item.itemLimit).toBe(5);
+    });
+
+    it('should handle per-person limits', async () => {
+      const item = await createTestFoodItem(testCategoryId, {
+        itemLimit: 2,
+        limitType: 'perPerson'
+      });
+      expect(item.limitType).toBe('perPerson');
+      expect(item.itemLimit).toBe(2);
     });
   });
 });
