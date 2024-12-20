@@ -1,0 +1,79 @@
+.
+├── CHANGELOG.md
+├── LICENSE
+├── README.md
+├── package-lock.json
+├── package.json
+├── packages
+│   ├── backend
+│   │   ├── jest.config.js
+│   │   ├── package.json
+│   │   ├── prisma
+│   │   │   ├── migrations
+│   │   │   │   ├── 20241130003245_init
+│   │   │   │   │   └── migration.sql
+│   │   │   │   ├── 20241207052011_add_language_model_and_make_language_id_optional
+│   │   │   │   │   └── migration.sql
+│   │   │   │   ├── 20241209004222_add_settings_model
+│   │   │   │   │   └── migration.sql
+│   │   │   │   └── migration_lock.toml
+│   │   │   └── schema.prisma
+│   │   ├── project-tree.txt
+│   │   ├── public
+│   │   │   ├── css
+│   │   │   │   └── styles.css
+│   │   │   ├── index.html
+│   │   │   ├── js
+│   │   │   │   ├── categories.js
+│   │   │   │   ├── foodItems.js
+│   │   │   │   ├── languages.js
+│   │   │   │   ├── main.js
+│   │   │   │   ├── settings.js
+│   │   │   │   ├── translations.js
+│   │   │   │   └── utils.js
+│   │   │   └── script.js
+│   │   ├── src
+│   │   │   ├── config
+│   │   │   │   └── languageConfig.ts
+│   │   │   ├── index.ts
+│   │   │   ├── middleware
+│   │   │   │   ├── errorHandler.ts
+│   │   │   │   └── requestLogger.ts
+│   │   │   ├── routes
+│   │   │   │   ├── categoryRoutes.ts
+│   │   │   │   ├── foodItemRoutes.ts
+│   │   │   │   ├── languageRoutes.ts
+│   │   │   │   ├── settingsRoutes.ts
+│   │   │   │   └── translationRoutes.ts
+│   │   │   ├── services
+│   │   │   │   ├── CategoryService.ts
+│   │   │   │   ├── FoodItemService.ts
+│   │   │   │   ├── LanguageService.ts
+│   │   │   │   ├── TranslationService.ts
+│   │   │   │   └── openai
+│   │   │   │       ├── OpenAIService.ts
+│   │   │   │       └── __tests__
+│   │   │   │           └── OpenAIService.test.ts
+│   │   │   ├── tests
+│   │   │   │   ├── CategoryService.test.ts
+│   │   │   │   ├── FoodItemService.test.ts
+│   │   │   │   ├── TranslationService.test.ts
+│   │   │   │   ├── categoryRoutes.test.ts
+│   │   │   │   ├── foodItemRoutes.test.ts
+│   │   │   │   ├── languageRoutes.test.ts
+│   │   │   │   ├── settings.test.ts
+│   │   │   │   ├── settingsRoutes.test.ts
+│   │   │   │   ├── setup.ts
+│   │   │   │   └── translationRoutes.test.ts
+│   │   │   └── utils
+│   │   │       ├── ApiError.ts
+│   │   │       └── ApiResponse.ts
+│   │   └── tsconfig.json
+│   ├── data
+│   │   └── food-pantry.db
+│   ├── frontend
+│   │   └── package.json
+│   └── shared
+└── project-tree.txt
+
+23 directories, 54 files

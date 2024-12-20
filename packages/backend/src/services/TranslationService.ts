@@ -3,6 +3,14 @@ import { ApiError } from '../utils/ApiError';
 import { OpenAIService } from './openai/OpenAIService';
 import { LanguageConfig } from '../config/languageConfig';
 
+type ItemType = 'category' | 'foodItem';
+
+interface CreateTranslationData {
+    languageCode: string;
+    translatedText: string;
+    isAutomatic?: boolean;
+}
+
 export class TranslationService {
     private prisma: PrismaClient;
     private openAI: OpenAIService;
@@ -16,7 +24,7 @@ export class TranslationService {
         languageCode?: string; 
         categoryId?: number; 
         foodItemId?: number;
-        type?: 'category' | 'foodItem'; 
+        type?: ItemType;
     }) {
         console.log('TranslationService findAll params:', params);
 
@@ -80,7 +88,7 @@ export class TranslationService {
         });
     }
 
-    async createForCategory(categoryId: number, data: { languageCode: string; translatedText: string; isAutomatic?: boolean }) {
+    async createForCategory(categoryId: number, data: CreateTranslationData) {
         const category = await this.prisma.category.findUnique({
             where: { id: categoryId }
         });
@@ -122,7 +130,7 @@ export class TranslationService {
         });
     }
 
-    async createForFoodItem(foodItemId: number, data: { languageCode: string; translatedText: string; isAutomatic?: boolean }) {
+    async createForFoodItem(foodItemId: number, data: CreateTranslationData) {
         const foodItem = await this.prisma.foodItem.findUnique({
             where: { id: foodItemId }
         });
@@ -183,10 +191,10 @@ export class TranslationService {
         });
     }
 
-    async generateAutomaticTranslations(itemId: number, itemType: 'category' | 'foodItem') {
-        const item = await this.prisma[itemType].findUnique({
-            where: { id: itemId }
-        });
+    async generateAutomaticTranslations(itemId: number, itemType: ItemType) {
+        const item = itemType === 'category' 
+            ? await this.prisma.category.findUnique({ where: { id: itemId } })
+            : await this.prisma.foodItem.findUnique({ where: { id: itemId } });
 
         if (!item) {
             throw new ApiError(404, `${itemType} not found`);
@@ -207,7 +215,11 @@ export class TranslationService {
                     itemType
                 );
 
-                const savedTranslation = await this[`createFor${itemType.charAt(0).toUpperCase() + itemType.slice(1)}`](
+                const createMethod = itemType === 'category' 
+                    ? this.createForCategory.bind(this)
+                    : this.createForFoodItem.bind(this);
+
+                const savedTranslation = await createMethod(
                     itemId,
                     {
                         languageCode: language.code,
