@@ -19,23 +19,23 @@ export class SettingsManager {
             const data = await apiGet('/api/settings');
             this.globalUpperLimitInput.value = data.data.globalUpperLimit;
         } catch (error) {
-            showMessage(error.message, 'error');
+            showMessage(error.message, 'error', 'settings');
         }
     }
 
     async saveGlobalSettings() {
         const globalUpperLimit = parseInt(this.globalUpperLimitInput.value);
         if (isNaN(globalUpperLimit) || globalUpperLimit < 1) {
-            showMessage('Global upper limit must be at least 1', 'error');
+            showMessage('Global upper limit must be at least 1', 'error', 'settings');
             this.globalUpperLimitInput.value = 1;
             return;
         }
 
         try {
             await apiPost('/api/settings', { globalUpperLimit });
-            showMessage('Global upper limit saved successfully', 'success');
+            showMessage('Global upper limit saved successfully', 'success', 'settings');
         } catch (error) {
-            showMessage(error.message, 'error');
+            showMessage(error.message, 'error', 'settings');
         }
     }
 

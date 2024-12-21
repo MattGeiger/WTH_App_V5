@@ -11,17 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Production deployment configuration
 - Full system integration testing
 
-## [0.5.4] - 2024-12-20
-### In Progress
-- Test UI refinement
-- Legacy code cleanup
-- Backend testing completion
-
-### Changed
-- **Translations UI**: Removed inline `onclick` from Edit/Delete buttons, now using classes (`edit-translation-btn`, `delete-translation-btn`) and `data-*` attributes for ID and text.  
-- **Event Listeners**: Attached click handlers in `translations.js` after rendering the table, matching the approach for Categories and Food Items.  
-- **UI Consistency**: Ensured all CRUD sections share a consistent pattern (no inline `onclick`, separate classes, data attributes, etc.).
-
+## [0.5.5] - 2024-12-21
 ### Added
 - **LimitType** field to **FoodItem** model  
 - Test suite for FoodItem limitType functionality  
@@ -36,10 +26,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Documentation formatting inconsistencies  
 - **Food Items table display** and CRUD in Test UI (Edit/Delete now functional)
 
-<<<<<<< HEAD
-[Previous changelog entries remain the same...]
->>>>>>> fe70df25 (docs: update CHANGELOG with food item update fix (#2))
-=======
 ## [0.5.3] - 2024-12-18
 ### Added
 - Local development environment setup
@@ -48,9 +34,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated documentation for local setup
 
 ### Changed
-- Improved package.json configurations for monorepo structure
-- Enhanced Git configuration with proper ignores
-- Updated environment variable handling for security
+- Messages now display within their respective sections instead of global header
+- Fixed category dropdown in Food Item Management
+- Improved language filter to show all available languages
 
 ### Fixed
 - Package dependency issues for local development
@@ -160,4 +146,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Repository reset for fresh implementation
 - Updated technical stack documentation
->>>>>>> 1288904c (refactor: implement modular JS architecture and testing (#2))

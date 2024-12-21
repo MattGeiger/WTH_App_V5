@@ -1,215 +1,159 @@
-import { showMessage, apiGet, apiPut, apiDelete, formatDate } from './utils.js';
-import { managers } from './main.js';
+import { showMessage, apiGet, apiPut, apiDelete } from './utils.js';
 
 export class TranslationManager {
     constructor() {
-        this.typeRadios = document.getElementsByName('translationType');
-        this.filterSelect = document.getElementById('filterLanguage');
-        this.tableBody = document.getElementById('translationTableBody');
+        this.translationTableBody = document.getElementById('translationTableBody');
+        this.translationTypeRadios = document.querySelectorAll('input[name="translationType"]');
+        this.filterLanguageSelect = document.getElementById('filterLanguage');
         this.setupEventListeners();
-
-        // Initialize language filter on construction
-        this.initializeLanguageFilter();
-
-        // Listen for when languages are updated in LanguageManager
-        window.addEventListener('languagesUpdated', () => {
-            this.initializeLanguageFilter();
-        });
+        this.currentType = 'category';
+        this.loadLanguagesFilter();
     }
 
-    setupEventListeners() {
-        // Radio buttons for translation type
-        this.typeRadios.forEach(radio => {
-            radio.addEventListener('change', () => {
-                this.loadTranslations();
-                this.updateTranslationTargets();
-            });
-        });
-
-        // Language filter dropdown
-        this.filterSelect.addEventListener('change', () => this.loadTranslations());
+    async loadLanguagesFilter() {
+        try {
+            const data = await apiGet('/api/languages');
+            this.updateLanguageFilter(data.data);
+        } catch (error) {
+            showMessage(error.message, 'error', 'translation');
+        }
     }
 
-    getSelectedType() {
-        return document.querySelector('input[name="translationType"]:checked').value;
+    updateLanguageFilter(languages) {
+        if (!this.filterLanguageSelect) return;
+        
+        const currentValue = this.filterLanguageSelect.value;
+        this.filterLanguageSelect.innerHTML = `
+            <option value="">All Languages</option>
+            ${languages
+                .map(lang => `<option value="${lang.code}" ${lang.code === currentValue ? 'selected' : ''}>${lang.name}</option>`)
+                .join('')}
+        `;
     }
 
     isTypeCategory() {
-        return this.getSelectedType() === 'category';
+        return this.currentType === 'category';
     }
 
     isTypeFoodItem() {
-        return this.getSelectedType() === 'foodItem';
+        return this.currentType === 'foodItem';
     }
 
-    async initializeLanguageFilter() {
-        try {
-            const data = await apiGet('/api/languages');
-            const activeLanguages = data.data.filter(lang => lang.active);
+    setupEventListeners() {
+        this.translationTypeRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                this.currentType = radio.value;
+                this.loadTranslations();
+            });
+        });
 
-            this.filterSelect.innerHTML = `
-                <option value="">All Languages</option>
-                ${activeLanguages.map(lang => 
-                    `<option value="${lang.code}">${lang.name}</option>`
-                ).join('')}
-            `;
-        } catch (error) {
-            showMessage(error.message, 'error');
-        }
+        this.filterLanguageSelect.addEventListener('change', () => {
+            this.loadTranslations();
+        });
+
+        document.addEventListener('languagesUpdated', () => {
+            this.loadLanguagesFilter();
+            this.loadTranslations();
+        });
+
+        this.addTableEventListeners();
+    }
+
+    addTableEventListeners() {
+        this.translationTableBody.addEventListener('click', async (e) => {
+            const target = e.target;
+            if (target.classList.contains('edit-translation-btn')) {
+                await this.handleEditTranslation(target);
+            } else if (target.classList.contains('delete-translation-btn')) {
+                await this.handleDeleteTranslation(target);
+            }
+        });
     }
 
     async loadTranslations() {
         try {
-            const type = this.getSelectedType();
-            const language = this.filterSelect.value;
-            let url = '/api/translations';
-
-            if (language) {
-                url += `?languageCode=${language}`;
+            const type = this.currentType;
+            const languageCode = this.filterLanguageSelect.value;
+            const queryParams = new URLSearchParams({ type });
+            if (languageCode) {
+                queryParams.append('languageCode', languageCode);
             }
-            if (type) {
-                url += `${language ? '&' : '?'}type=${type}`;
-            }
-
-            const data = await apiGet(url);
-            this.displayTranslations(data.data);
-            this.updateTranslationTargets();
+            
+            const response = await apiGet(`/api/translations?${queryParams}`);
+            this.displayTranslations(response.data);
         } catch (error) {
-            showMessage(error.message, 'error');
+            showMessage(error.message, 'error', 'translation');
         }
     }
 
     displayTranslations(translations) {
-        if (!Array.isArray(translations) || translations.length === 0) {
-            this.tableBody.innerHTML = '<tr><td colspan="6">No translations found</td></tr>';
+        this.translationTableBody.innerHTML = '';
+        if (!translations || translations.length === 0) {
+            this.translationTableBody.innerHTML = '<tr><td colspan="6">No translations found</td></tr>';
             return;
         }
-
-        // Build table rows with no inline onclick
-        this.tableBody.innerHTML = translations
-            .map(translation => this.createTranslationRow(translation))
-            .join('');
-
-        // Attach event listeners for edit/delete after rendering
-        this.addTableEventListeners();
+        translations.forEach(translation => {
+            const row = this.createTranslationRow(translation);
+            this.translationTableBody.appendChild(row);
+        });
     }
 
     createTranslationRow(translation) {
-        const originalText = translation.category
-            ? translation.category.name
-            : (translation.foodItem?.name || 'Unknown');
-
-        const type = translation.category ? 'Category' : 'Food Item';
-        const safeText = translation.translatedText.replace(/'/g, "\\'");
-
-        return `
-            <tr>
-                <td>${originalText}</td>
-                <td>${translation.language.name}</td>
-                <td>${translation.translatedText}</td>
-                <td>${type}</td>
-                <td>${formatDate(translation.createdAt)}</td>
-                <td>
-                    <button class="edit-translation-btn"
-                            data-id="${translation.id}"
-                            data-current-text="${safeText}">
-                        Edit
-                    </button>
-                    <button class="delete-translation-btn"
-                            data-id="${translation.id}">
-                        Delete
-                    </button>
-                </td>
-            </tr>
+        const row = document.createElement('tr');
+        const originalText = translation.category ? translation.category.name : 
+                           (translation.foodItem ? translation.foodItem.name : '');
+        
+        row.innerHTML = `
+            <td class="table__cell">${originalText}</td>
+            <td class="table__cell">${translation.language.name}</td>
+            <td class="table__cell">${translation.translatedText}</td>
+            <td class="table__cell">${translation.category ? 'Category' : 'Food Item'}</td>
+            <td class="table__cell">${new Date(translation.createdAt).toLocaleDateString()}</td>
+            <td class="table__cell">
+                <button class="edit-translation-btn" 
+                        data-id="${translation.id}"
+                        data-current-text="${translation.translatedText}">
+                    Edit
+                </button>
+                <button class="delete-translation-btn" data-id="${translation.id}">
+                    Delete
+                </button>
+            </td>
         `;
+        
+        return row;
     }
 
-    addTableEventListeners() {
-        // Handle EDIT
-        const editButtons = this.tableBody.querySelectorAll('.edit-translation-btn');
-        editButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const id = parseInt(btn.dataset.id, 10);
-                const currentText = btn.dataset.currentText || '';
-                this.editTranslation(id, currentText);
-            });
-        });
-
-        // Handle DELETE
-        const deleteButtons = this.tableBody.querySelectorAll('.delete-translation-btn');
-        deleteButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const id = parseInt(btn.dataset.id, 10);
-                this.deleteTranslation(id);
-            });
-        });
-    }
-
-    async editTranslation(id, currentText) {
+    async handleEditTranslation(button) {
+        const id = button.dataset.id;
+        const currentText = button.dataset.currentText;
         const newText = prompt('Enter new translation:', currentText);
+        
         if (newText && newText !== currentText) {
             try {
                 await apiPut(`/api/translations/${id}`, { translatedText: newText });
-                showMessage('Translation updated successfully', 'success');
+                showMessage('Translation updated successfully', 'success', 'translation');
                 await this.loadTranslations();
             } catch (error) {
-                showMessage(error.message, 'error');
+                showMessage(error.message, 'error', 'translation');
             }
         }
     }
 
-    async deleteTranslation(id) {
-        if (!confirm('Delete this translation? Note: It may be regenerated during the next translation update.')) {
-            return;
-        }
-
-        try {
-            await apiDelete(`/api/translations/${id}`);
-            showMessage('Translation deleted successfully', 'success');
-            await this.loadTranslations();
-        } catch (error) {
-            showMessage(error.message, 'error');
+    async handleDeleteTranslation(button) {
+        const id = button.dataset.id;
+        if (confirm('Are you sure you want to delete this translation?')) {
+            try {
+                await apiDelete(`/api/translations/${id}`);
+                showMessage('Translation deleted successfully', 'success', 'translation');
+                await this.loadTranslations();
+            } catch (error) {
+                showMessage(error.message, 'error', 'translation');
+            }
         }
     }
 
     updateTranslationTargets() {
-        const type = this.getSelectedType();
-        const select = document.getElementById('translationTarget');
-        if (!select) return;
-
-        let items = [];
-
-        if (type === 'category') {
-            // Reuse the categories from the foodItemCategory select
-            const categorySelect = document.getElementById('foodItemCategory');
-            if (categorySelect) {
-                items = Array.from(categorySelect.options).map(opt => ({
-                    id: opt.value,
-                    name: opt.text
-                }));
-            }
-        } else {
-            // Attempt to read the #foodItemTableBody to gather IDs & names
-            const foodItemTableBody = document.getElementById('foodItemTableBody');
-            if (foodItemTableBody) {
-                items = Array.from(foodItemTableBody.querySelectorAll('tr'))
-                    .map(row => {
-                        const nameCell = row.cells[0];
-                        if (!nameCell) return null;
-
-                        // In this approach, we'd have .edit-food-item-btn or similar
-                        // but for simplicity, let's just read row 0 for name
-                        const name = nameCell.textContent;
-                        // If we wanted the ID, we'd store it in data-* somewhere
-                        // This is just placeholder logic from before
-                        return { id: row.dataset?.id || '', name };
-                    })
-                    .filter(item => item !== null);
-            }
-        }
-
-        select.innerHTML = items
-            .map(item => `<option value="${item.id}">${item.name}</option>`)
-            .join('');
+        this.loadTranslations();
     }
 }

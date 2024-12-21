@@ -1,5 +1,4 @@
 import { showMessage, apiGet, apiPost, apiPut, apiDelete } from './utils.js';
-import { managers } from './main.js';
 
 export class CategoryManager {
     constructor() {
@@ -12,31 +11,37 @@ export class CategoryManager {
     setupEventListeners() {
         this.form.addEventListener('submit', this.handleSubmit.bind(this));
         this.resetButton.addEventListener('click', () => this.resetForm());
+        this.addTableEventListeners();
+    }
+
+    addTableEventListeners() {
+        this.tableBody.addEventListener('click', (e) => {
+            const target = e.target;
+            if (target.classList.contains('edit-btn')) {
+                this.editCategory(target.dataset.id, target.dataset.name);
+            } else if (target.classList.contains('delete-btn')) {
+                this.deleteCategory(target.dataset.id);
+            }
+        });
     }
 
     async handleSubmit(e) {
         e.preventDefault();
-        const nameInput = document.getElementById('categoryName');
-        const categoryId = document.getElementById('categoryId');
-        const name = nameInput.value.trim();
+        const name = document.getElementById('categoryName').value.trim();
+        const id = document.getElementById('categoryId').value;
 
         try {
-            if (categoryId.value) {
-                // Update existing category
-                await apiPut(`/api/categories/${categoryId.value}`, { name });
-                showMessage('Category updated successfully', 'success');
+            if (id) {
+                await apiPut(`/api/categories/${id}`, { name });
+                showMessage('Category updated successfully', 'success', 'category');
             } else {
-                // Create new category
                 await apiPost('/api/categories', { name });
-                showMessage('Category created successfully', 'success');
+                showMessage('Category created successfully', 'success', 'category');
             }
             this.resetForm();
             await this.loadCategories();
-            if (managers.translations) {
-                managers.translations.updateTranslationTargets();
-            }
         } catch (error) {
-            showMessage(error.message, 'error');
+            showMessage(error.message, 'error', 'category');
         }
     }
 
@@ -44,87 +49,40 @@ export class CategoryManager {
         try {
             const data = await apiGet('/api/categories');
             this.displayCategories(data.data);
-            this.updateCategorySelect(data.data);
-
-            if (managers.translations?.isTypeCategory()) {
-                managers.translations.updateTranslationTargets();
-            }
         } catch (error) {
-            showMessage(error.message, 'error');
+            showMessage(error.message, 'error', 'category');
         }
     }
 
     displayCategories(categories) {
-        // Generate table rows without inline onclick handlers:
-        this.tableBody.innerHTML = categories
-            .map(category => `
-                <tr>
-                    <td>${category.name}</td>
-                    <td>${new Date(category.createdAt).toLocaleDateString()}</td>
-                    <td>
-                        <button class="edit-category-btn" data-id="${category.id}" data-name="${category.name}">
-                            Edit
-                        </button>
-                        <button class="delete-category-btn" data-id="${category.id}">
-                            Delete
-                        </button>
-                    </td>
-                </tr>
-            `)
-            .join('');
-
-        // Attach event listeners for edit buttons
-        const editButtons = this.tableBody.querySelectorAll('.edit-category-btn');
-        editButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const { id, name } = button.dataset;
-                this.editCategory(id, name);
-            });
-        });
-
-        // Attach event listeners for delete buttons
-        const deleteButtons = this.tableBody.querySelectorAll('.delete-category-btn');
-        deleteButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const { id } = button.dataset;
-                this.deleteCategory(id);
-            });
-        });
-    }
-
-    updateCategorySelect(categories) {
-        const select = document.getElementById('foodItemCategory');
-        if (select) {
-            select.innerHTML = categories
-                .map(category => `<option value="${category.id}">${category.name}</option>`)
-                .join('');
-        }
-    }
-
-    editCategory(id, name) {
-        // Populate the form for editing
-        document.getElementById('categoryId').value = id;
-        document.getElementById('categoryName').value = name;
-        this.form.querySelector('button[type="submit"]').textContent = 'Update Category';
+        this.tableBody.innerHTML = categories.map(category => `
+            <tr>
+                <td class="table__cell">${category.name}</td>
+                <td class="table__cell">${new Date(category.createdAt).toLocaleDateString()}</td>
+                <td class="table__cell">
+                    <button class="edit-btn" data-id="${category.id}" data-name="${category.name}">Edit</button>
+                    <button class="delete-btn" data-id="${category.id}">Delete</button>
+                </td>
+            </tr>
+        `).join('');
     }
 
     async deleteCategory(id) {
         if (!confirm('Are you sure you want to delete this category?')) return;
+
         try {
             await apiDelete(`/api/categories/${id}`);
-            showMessage('Category deleted successfully', 'success');
-
-            // Refresh lists
+            showMessage('Category deleted successfully', 'success', 'category');
             await this.loadCategories();
-            if (managers.foodItems) {
-                await managers.foodItems.loadFoodItems();
-            }
-            if (managers.translations) {
-                await managers.translations.loadTranslations();
-            }
         } catch (error) {
-            showMessage(error.message, 'error');
+            showMessage(error.message, 'error', 'category');
         }
+    }
+
+    editCategory(id, name) {
+        document.getElementById('categoryId').value = id;
+        document.getElementById('categoryName').value = name;
+        this.form.querySelector('button[type="submit"]').textContent = 'Update Category';
     }
 
     resetForm() {

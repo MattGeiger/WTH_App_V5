@@ -8,11 +8,11 @@
 </head>
 <body>
     <h1>Food Pantry Management - Test UI</h1>
-    <div id="messageArea" class="message-area"></div>
 
     <!-- Global Settings -->
-    <div class="section">
+    <div id="settingsSection" class="section">
         <h2>Global Settings</h2>
+        <div class="message-area"></div>
         <div class="form__group">
             <label for="globalUpperLimit">Global Upper Limit for "No Limit" Items:</label>
             <input type="number" id="globalUpperLimit" value="40" min="1">
@@ -25,8 +25,9 @@
     </div>
 
     <!-- Language Management Section -->
-    <div class="section">
+    <div id="languageSection" class="section">
         <h2>Language Management</h2>
+        <div class="message-area"></div>
         <p class="message message--warning">
             Note: Language support varies by region and complexity. AI translations may contain
             errors and should be reviewed for accuracy.
@@ -56,8 +57,9 @@
     </div>
 
     <!-- Category Management Section -->
-    <div class="section">
+    <div id="categorySection" class="section">
         <h2>Category Management</h2>
+        <div class="message-area"></div>
         <form id="categoryForm">
             <div class="form__group">
                 <label for="categoryName">Category Name:</label>
@@ -85,8 +87,9 @@
     </div>
 
     <!-- Food Items Section -->
-    <div class="section">
+    <div id="foodItemSection" class="section">
         <h2>Food Item Management</h2>
+        <div class="message-area"></div>
         <form id="foodItemForm">
             <div class="form__group">
                 <label for="foodItemName">Item Name:</label>
@@ -192,8 +195,9 @@
     </div>
 
     <!-- Translations Section -->
-    <div class="section">
+    <div id="translationSection" class="section">
         <h2>Translation Management</h2>
+        <div class="message-area"></div>
         <p class="message message--note">
             Translations are automatically generated for all active languages.
             Manual edits may be overwritten during automated translation updates.
