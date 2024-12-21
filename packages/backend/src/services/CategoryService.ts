@@ -13,10 +13,20 @@ export class CategoryService {
         this.translationService = new TranslationService();
     }
 
-    async create(data: { name: string }): Promise<Category> {
+    async create(data: { name: string; itemLimit?: number }): Promise<Category> {
         try {
+            // Validate itemLimit
+            if (data.itemLimit !== undefined) {
+                if (data.itemLimit < 0) {
+                    throw new ApiError(400, 'Item limit cannot be negative');
+                }
+            }
+
             const category = await this.prisma.category.create({
-                data,
+                data: {
+                    name: data.name,
+                    itemLimit: data.itemLimit || 0
+                },
                 include: {
                     translations: {
                         include: {
@@ -74,13 +84,23 @@ export class CategoryService {
         }
     }
 
-    async update(id: number, data: { name: string }): Promise<Category> {
+    async update(id: number, data: { name?: string; itemLimit?: number }): Promise<Category> {
         try {
             const existingCategory = await this.findById(id);
 
+            // Validate itemLimit
+            if (data.itemLimit !== undefined) {
+                if (data.itemLimit < 0) {
+                    throw new ApiError(400, 'Item limit cannot be negative');
+                }
+            }
+
             const updated = await this.prisma.category.update({
                 where: { id },
-                data,
+                data: {
+                    name: data.name,
+                    itemLimit: data.itemLimit
+                },
                 include: {
                     translations: {
                         include: {
@@ -90,7 +110,7 @@ export class CategoryService {
                 }
             });
 
-            if (existingCategory && data.name !== existingCategory.name) {
+            if (existingCategory && data.name && data.name !== existingCategory.name) {
                 this.translationService.generateAutomaticTranslations(id, 'category')
                     .catch(error => console.error('Translation update failed:', error));
             }

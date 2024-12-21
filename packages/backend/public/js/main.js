@@ -1,10 +1,3 @@
-import { SettingsManager } from './settings.js';
-import { LanguageManager } from './languages.js';
-import { CategoryManager } from './categories.js';
-import { FoodItemManager } from './foodItems.js';
-import { TranslationManager } from './translations.js';
-
-// Initialize managers and export them for module access
 export const managers = {
     settings: null,
     languages: null,
@@ -13,24 +6,38 @@ export const managers = {
     translations: null
 };
 
-// Initialize application
+// Create custom event for category changes
+export const EVENTS = {
+    CATEGORY_UPDATED: 'categoryUpdated'
+};
+
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        // Create instances
+        const { SettingsManager } = await import('./settings.js');
+        const { LanguageManager } = await import('./languages.js');
+        const { CategoryManager } = await import('./categories.js');
+        const { FoodItemManager } = await import('./foodItems.js');
+        const { TranslationManager } = await import('./translations.js');
+
         managers.settings = new SettingsManager();
         managers.languages = new LanguageManager();
         managers.categories = new CategoryManager();
         managers.foodItems = new FoodItemManager(managers.settings);
         managers.translations = new TranslationManager();
         
-        // Initial data loads
         await managers.settings.loadGlobalSettings();
         await managers.languages.loadLanguages();
         await managers.categories.loadCategories();
         await managers.foodItems.loadFoodItems();
         await managers.translations.loadTranslations();
 
-        console.log('Application initialized successfully');
+        // Set up event listeners for cross-manager communication
+        document.addEventListener(EVENTS.CATEGORY_UPDATED, async () => {
+            if (managers.foodItems) {
+                await managers.foodItems.loadCategories();
+            }
+        });
+
     } catch (error) {
         console.error('Error during initialization:', error);
     }

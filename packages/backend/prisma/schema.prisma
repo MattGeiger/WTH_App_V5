@@ -10,6 +10,7 @@ datasource db {
 model Category {
   id          Int           @id @default(autoincrement())
   name        String        // English name as base
+  itemLimit   Int          @default(0)  // New field for category item limit
   items       FoodItem[]
   translations Translation[]
   createdAt   DateTime      @default(now())

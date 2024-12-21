@@ -38,12 +38,21 @@ router.get('/:id', async (req, res, next) => {
 // POST /categories
 router.post('/', async (req, res, next) => {
     try {
-        const { name } = req.body;
+        const { name, itemLimit = 0 } = req.body;
         if (!name || name.trim() === '') {
-            return res.status(400).json(ApiResponse.error('Category name is required'));
+            throw new ApiError(400, 'Category name is required');
         }
 
-        const category = await categoryService.create({ name });
+        const parsedLimit = parseInt(itemLimit);
+        if (isNaN(parsedLimit) || parsedLimit < 0) {
+            throw new ApiError(400, 'Item limit must be a non-negative number');
+        }
+
+        const category = await categoryService.create({ 
+            name: name.trim(), 
+            itemLimit: parsedLimit 
+        });
+
         res.status(201).json(ApiResponse.success(category, 'Category created successfully'));
     } catch (error) {
         next(error);
@@ -58,12 +67,25 @@ router.put('/:id', async (req, res, next) => {
             throw new ApiError(400, 'Invalid category ID');
         }
 
-        const { name } = req.body;
-        if (!name || name.trim() === '') {
-            return res.status(400).json(ApiResponse.error('Category name is required'));
+        const { name, itemLimit } = req.body;
+        const updateData: { name?: string; itemLimit?: number } = {};
+
+        if (name !== undefined) {
+            if (name.trim() === '') {
+                throw new ApiError(400, 'Category name cannot be empty');
+            }
+            updateData.name = name.trim();
         }
 
-        const category = await categoryService.update(id, { name });
+        if (itemLimit !== undefined) {
+            const parsedLimit = parseInt(itemLimit);
+            if (isNaN(parsedLimit) || parsedLimit < 0) {
+                throw new ApiError(400, 'Item limit must be a non-negative number');
+            }
+            updateData.itemLimit = parsedLimit;
+        }
+
+        const category = await categoryService.update(id, updateData);
         res.json(ApiResponse.success(category, 'Category updated successfully'));
     } catch (error) {
         next(error);

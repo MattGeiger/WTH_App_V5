@@ -7,10 +7,13 @@ The Food Pantry Management System is a comprehensive web application designed to
 ## Business Goals
 
 1. **Efficient Inventory Management**
-   - Track food items and categories
+   - Track food items and categories with hierarchical limits
    - Monitor stock levels and dietary attributes
-   - Support item limits per household/person
+   - Support item limits per household/person 
+   - Support category-level limits that act as thresholds
+   - Global upper limit configuration for all items
    - Flag items that need attention (must go, low supply)
+   - Real-time updates between related components
 
 2. **Language Accessibility**
    - Support multiple languages for diverse communities
@@ -33,7 +36,7 @@ The Food Pantry Management System is a comprehensive web application designed to
    - Prisma ORM for type-safe database operations
    - Migrations system for version control
    - Modular data model supporting:
-     * Categories
+     * Categories (with limit values)
      * Food Items
      * Translations
      * Languages
@@ -57,8 +60,10 @@ The Food Pantry Management System is a comprehensive web application designed to
 1. **Current Implementation**
    - Test UI using vanilla JavaScript
    - Modular component organization
+   - Event-based communication between components
+   - Real-time updates and validation
    - CSS for styling
-   - Real-time updates
+   - Component synchronization for related data
 
 2. **Planned React Implementation**
    - TypeScript components
@@ -86,6 +91,7 @@ The Food Pantry Management System is a comprehensive web application designed to
 
 4. **Item Limits Implementation**
    - Global Upper Limit: Configurable maximum
+   - Category Limits: Threshold for items within category
    - Per-Item Limits: Both household and per-person
    - Default Values: Configurable through settings
 

@@ -10,6 +10,14 @@ export class FoodItemManager {
         this.resetButton = document.getElementById('resetFoodItemForm');
         this.categorySelect = document.getElementById('foodItemCategory');
         this.setupEventListeners();
+        this.init();
+    }
+
+    async init() {
+        await this.loadCategories();
+        if (this.categorySelect.options.length === 0) {
+            this.displayNoCategories();
+        }
     }
 
     setupEventListeners() {
@@ -18,12 +26,39 @@ export class FoodItemManager {
         this.itemLimitValue.addEventListener('input', this.handleLimitValidation.bind(this));
     }
 
+    displayNoCategories() {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'Please create a category first';
+        this.categorySelect.appendChild(option);
+        
+        this.form.querySelector('button[type="submit"]').disabled = true;
+        showMessage('Please create at least one category before adding food items', 'warning', 'foodItem');
+    }
+
     async loadCategories() {
         try {
             const data = await apiGet('/api/categories');
-            this.categorySelect.innerHTML = data.data
-                .map(category => `<option value="${category.id}">${category.name}</option>`)
-                .join('');
+            this.categorySelect.innerHTML = '';
+            
+            if (!data.data || data.data.length === 0) {
+                this.displayNoCategories();
+                return;
+            }
+
+            this.form.querySelector('button[type="submit"]').disabled = false;
+            
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Select a category';
+            this.categorySelect.appendChild(defaultOption);
+
+            data.data.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category.id;
+                option.textContent = category.name;
+                this.categorySelect.appendChild(option);
+            });
         } catch (error) {
             showMessage(error.message, 'error', 'foodItem');
         }
@@ -89,7 +124,7 @@ export class FoodItemManager {
 
     async loadFoodItems() {
         try {
-            await this.loadCategories(); // Load categories for the dropdown
+            await this.loadCategories();
             const data = await apiGet('/api/food-items?includeOutOfStock=true');
             this.displayFoodItems(data.data);
             if (managers.translations) {

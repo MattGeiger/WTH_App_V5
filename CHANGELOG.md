@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 # Changelog
 All notable changes to this project will be documented in this file.
 
@@ -7,9 +5,25 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-- React-based user interface
-- Production deployment configuration
-- Full system integration testing
+### Known Issues
+- Language Management section remains unpopulated with fresh database
+- Initial setup requires documentation for Prisma migrations
+
+## [0.5.6] - 2024-12-21
+### Added
+- Category limit feature
+  - Added itemLimit field to Category model
+  - Implemented UI controls for setting category limits
+  - Added validation against global upper limit
+  - Real-time updates between Category and Food Item sections
+- Event-based communication between managers
+  - Automatic dropdown updates for Food Items
+  - Cross-component synchronization
+
+### Fixed
+- Food Item category dropdown now updates automatically
+- Improved initial database state handling
+- Added proper validation for limit values
 
 ## [0.5.5] - 2024-12-21
 ### Added
