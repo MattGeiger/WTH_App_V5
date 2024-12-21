@@ -18,17 +18,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Backend testing completion
 
 ### Added
-- LimitType field to FoodItem model
-- Test suite for FoodItem limitType functionality
-- Test mode for FoodItemService
-- Additional test coverage for OpenAIService
+- **LimitType** field to **FoodItem** model  
+- Test suite for FoodItem limitType functionality  
+- **Test mode** for FoodItemService  
+- Additional test coverage for OpenAIService  
 - Improved documentation for modular JavaScript structure
 
 ### Fixed
-- Food item update functionality
-- Translation generation during testing
-- TypeScript validation in FoodItemService
-- Documentation formatting inconsistencies
+- Food item update functionality  
+- Translation generation during testing  
+- TypeScript validation in FoodItemService  
+- Documentation formatting inconsistencies  
+- **Food Items table display** and CRUD in Test UI (Edit/Delete now functional)
 
 <<<<<<< HEAD
 [Previous changelog entries remain the same...]
@@ -51,9 +52,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Database path configuration for cross-platform compatibility
 - Git tracking of sensitive information
 
-## [v0.5.2] - 2024-12-11
+## [0.5.2] - 2024-12-11
 ### Fixed
-- Translation type classification in UI (categories vs food items)
+- Translation type classification in UI (categories vs. food items)
 - Original text display in translation management
 - Language filter dropdown initialization
 - Translation filtering by type
@@ -66,7 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved translation type handling in backend service
 - Enhanced translation filtering logic
 
-## [v0.5.1] - 2024-12-06
+## [0.5.1] - 2024-12-06
 ### Added
 - Language model for managing supported languages
 - Comprehensive language management system
@@ -87,7 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Category validation for empty names
 - Response status code consistency
 
-## [v0.5.0] - 2024-12-06
+## [0.5.0] - 2024-12-06
 ### Added
 - OpenAI-powered translation system using gpt-4o-mini model
 - Cost-effective automated translations
@@ -100,7 +101,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Translation system from manual to automated
 
-## [v0.4.0] - 2024-12-03
+## [0.4.0] - 2024-12-03
 ### Added
 - Test UI for validating backend functionality
 - Category management interface
