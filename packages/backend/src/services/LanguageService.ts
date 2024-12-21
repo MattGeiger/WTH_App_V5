@@ -1,6 +1,7 @@
 import { PrismaClient, Language } from '@prisma/client';
 import { ApiError } from '../utils/ApiError';
 import { TranslationService } from './TranslationService';
+import { LanguageConfig, getDefaultLanguages } from '../config/languageConfig';
 
 export class LanguageService {
     private prisma: PrismaClient;
@@ -12,17 +13,43 @@ export class LanguageService {
     }
 
     /**
+     * Initializes the language table with default supported languages if empty
+     */
+    async initializeLanguages(): Promise<void> {
+        try {
+            const count = await this.prisma.language.count();
+            if (count === 0) {
+                console.log('Initializing default languages...');
+                const defaultLanguages = getDefaultLanguages();
+                const operations = defaultLanguages.map(lang => ({
+                    code: lang.code,
+                    name: lang.name,
+                    active: lang.active,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                }));
+
+                await this.prisma.language.createMany({
+                    data: operations
+                });
+                console.log('Default languages initialized successfully');
+            }
+        } catch (error) {
+            console.error('Error initializing languages:', error);
+            throw new ApiError(500, `Error initializing languages: ${error.message}`);
+        }
+    }
+
+    /**
      * Generates translations for all existing items when a language is activated
      */
     private async generateTranslationsForLanguage(languageCode: string): Promise<void> {
         try {
-            // Get all categories and food items
             const [categories, foodItems] = await Promise.all([
                 this.prisma.category.findMany(),
                 this.prisma.foodItem.findMany()
             ]);
 
-            // Generate translations for categories
             for (const category of categories) {
                 await this.translationService.generateAutomaticTranslations(
                     category.id,
@@ -32,7 +59,6 @@ export class LanguageService {
                 });
             }
 
-            // Generate translations for food items
             for (const item of foodItems) {
                 await this.translationService.generateAutomaticTranslations(
                     item.id,
@@ -47,80 +73,58 @@ export class LanguageService {
     }
 
     /**
-     * Adds a new language to the database.
-     * Throws ApiError if the language code already exists.
-     */
-    async addLanguage(code: string, name?: string): Promise<Language> {
-        if (!code || code.trim() === '') {
-            throw new ApiError(400, 'Language code is required');
-        }
-
-        const existing = await this.prisma.language.findUnique({ where: { code } });
-        if (existing) {
-            throw new ApiError(400, `Language code '${code}' already exists`);
-        }
-
-        try {
-            const lang = await this.prisma.language.create({
-                data: {
-                    code,
-                    name: name || code.toUpperCase(),
-                    active: true
-                }
-            });
-
-            // Generate translations for new language asynchronously
-            this.generateTranslationsForLanguage(code).catch(error => {
-                console.error(`Failed to generate initial translations for ${code}:`, error);
-            });
-
-            return lang;
-        } catch (error) {
-            throw new ApiError(500, 'Error creating language');
-        }
-    }
-
-    /**
-     * Updates a language's active status or name.
-     * Generates translations when a language is activated.
-     */
-    async update(id: number, data: { active?: boolean; name?: string }): Promise<Language> {
-        try {
-            const language = await this.prisma.language.update({
-                where: { id },
-                data
-            });
-
-            // If language is being activated, generate translations
-            if (data.active === true) {
-                this.generateTranslationsForLanguage(language.code).catch(error => {
-                    console.error(`Failed to generate translations after activating ${language.code}:`, error);
-                });
-            }
-
-            return language;
-        } catch (error) {
-            throw new ApiError(404, `Language with ID ${id} not found`);
-        }
-    }
-
-    /**
-     * Returns all languages.
+     * Returns all languages, creating default ones if none exist
      */
     async findAll(): Promise<Language[]> {
         try {
-            return await this.prisma.language.findMany();
+            await this.initializeLanguages();
+            const languages = await this.prisma.language.findMany({
+                orderBy: { name: 'asc' }
+            });
+            return languages;
         } catch (error) {
-            throw new ApiError(500, 'Error fetching languages');
+            console.error('Error in findAll:', error);
+            throw new ApiError(500, `Error fetching languages: ${error.message}`);
         }
     }
 
     /**
-     * Returns a language by code.
-     * Throws ApiError if not found.
+     * Updates languages in bulk, maintaining active status
      */
+    async bulkUpdate(languages: { code: string; name: string; }[]): Promise<Language[]> {
+        try {
+            await this.initializeLanguages();
+
+            await this.prisma.language.updateMany({
+                data: { active: false }
+            });
+
+            const operations = languages.map(lang => 
+                this.prisma.language.update({
+                    where: { code: lang.code },
+                    data: { 
+                        active: true,
+                        updatedAt: new Date()
+                    }
+                })
+            );
+
+            await this.prisma.$transaction(operations);
+
+            for (const lang of languages) {
+                await this.generateTranslationsForLanguage(lang.code);
+            }
+
+            return this.findAll();
+        } catch (error) {
+            console.error('Error in bulkUpdate:', error);
+            throw new ApiError(500, `Error updating languages: ${error.message}`);
+        }
+    }
+
     async findByCode(code: string): Promise<Language> {
         try {
+            await this.initializeLanguages();
             const lang = await this.prisma.language.findUnique({
                 where: { code }
             });
@@ -129,33 +133,22 @@ export class LanguageService {
             }
             return lang;
         } catch (error) {
+            console.error('Error in findByCode:', error);
             if (error instanceof ApiError) throw error;
-            throw new ApiError(500, 'Error fetching language');
+            throw new ApiError(500, `Error fetching language: ${error.message}`);
         }
     }
 
-    /**
-     * Fetches all languages that are active.
-     */
     async findActive(): Promise<Language[]> {
         try {
+            await this.initializeLanguages();
             return await this.prisma.language.findMany({
-                where: { active: true }
+                where: { active: true },
+                orderBy: { name: 'asc' }
             });
         } catch (error) {
-            throw new ApiError(500, 'Error fetching active languages');
+            console.error('Error in findActive:', error);
+            throw new ApiError(500, `Error fetching active languages: ${error.message}`);
         }
-    }
-
-    /**
-     * Regenerates all translations for a specific language
-     */
-    async regenerateAllTranslations(code: string): Promise<void> {
-        const language = await this.findByCode(code);
-        if (!language.active) {
-            throw new ApiError(400, 'Cannot regenerate translations for inactive language');
-        }
-
-        await this.generateTranslationsForLanguage(code);
     }
 }

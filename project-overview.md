@@ -2,30 +2,30 @@
 
 ## Introduction
 
-The Food Pantry Management System is a comprehensive web application designed to streamline food pantry inventory management while providing multilingual support through AI-powered translations. The system aims to improve accessibility and efficiency in food pantry operations.
+The Food Pantry Management System is a comprehensive web application designed to support non-profit food pantries through automated inventory management and multilingual accessibility. The system aims to reduce manual labor for volunteers while improving service accessibility for diverse communities.
 
 ## Business Goals
 
 1. **Efficient Inventory Management**
-   - Track food items and categories with hierarchical limits
-   - Monitor stock levels and dietary attributes
-   - Support item limits per household/person 
-   - Support category-level limits that act as thresholds
-   - Global upper limit configuration for all items
-   - Flag items that need attention (must go, low supply)
-   - Real-time updates between related components
+   - Automated tracking of food items and categories
+   - Simplified stock monitoring with status flags
+   - Flexible item limits (household/person)
+   - Category-level limits for bulk management
+   - Automated inventory alerts
+   - Real-time updates across components
 
 2. **Language Accessibility**
-   - Support multiple languages for diverse communities
-   - Provide automated translations for food items and categories
-   - Allow manual translation refinement
-   - Maintain translation quality through AI assistance
+   - Automated translations via AI integration
+   - Support for 60+ languages
+   - Manual translation refinement
+   - Zero-configuration language support
+   - Instant translation updates
 
 3. **Dietary Accommodation**
-   - Track multiple dietary restrictions (kosher, halal, etc.)
-   - Support allergen information
-   - Identify vegetarian and vegan options
-   - Flag gluten-free items
+   - Automated dietary restriction tracking
+   - Clear allergen information
+   - Quick dietary preference filtering
+   - Standardized attribute marking
 
 ## Technical Architecture
 
@@ -223,8 +223,10 @@ The Food Pantry Management System is a comprehensive web application designed to
    - Translation accuracy
    - Test coverage
 
-2. **Business Metrics**
-   - User adoption
+2. **Service Metrics**
+   - Volunteer time savings
    - Translation usage
    - Inventory accuracy
-   - System uptime
+   - System availability
+   - Client satisfaction
+   - Language accessibility reach

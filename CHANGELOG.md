@@ -6,8 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Known Issues
-- Language Management section remains unpopulated with fresh database
 - Initial setup requires documentation for Prisma migrations
+
+## [0.5.7] - 2024-12-21
+### Added
+- Language Management filter dropdown (All/Active/Inactive)
+- Enhanced language configuration robustness
+  - Default language initialization
+  - Automatic database population
+  - Full OpenAI model language support
+### Fixed
+- Language Management unpopulation issue with fresh database
+- Language table readability with filtering options
 
 ## [0.5.6] - 2024-12-21
 ### Added

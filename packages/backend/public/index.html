@@ -40,7 +40,15 @@
         <button id="updateLanguages">Update Language Settings</button>
         
         <div id="activeLanguages">
-            <h3>Active Languages</h3>
+            <div class="filter-controls">
+                <label for="languageFilter">Filter By:</label>
+                <select id="languageFilter">
+                    <option value="all">All Languages</option>
+                    <option value="active">Active Languages</option>
+                    <option value="inactive">Inactive Languages</option>
+                </select>
+            </div>
+
             <table class="table">
                 <thead>
                     <tr>

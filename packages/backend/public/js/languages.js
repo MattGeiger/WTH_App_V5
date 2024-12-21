@@ -5,20 +5,35 @@ export class LanguageManager {
         this.languageTableBody = document.getElementById('languageTableBody');
         this.updateLanguagesBtn = document.getElementById('updateLanguages');
         this.languageGrid = document.querySelector('.language-grid');
+        this.filterSelect = document.getElementById('languageFilter');
         this.setupEventListeners();
     }
 
     setupEventListeners() {
         this.updateLanguagesBtn.addEventListener('click', () => this.handleLanguageUpdate());
+        this.filterSelect.addEventListener('change', () => this.loadLanguages());
     }
 
     async loadLanguages() {
         try {
             const data = await apiGet('/api/languages');
-            this.displayLanguages(data.data);
+            const languages = this.filterLanguages(data.data);
+            this.displayLanguages(languages);
             this.displayLanguageToggles(data.data);
         } catch (error) {
             showMessage(error.message, 'error', 'language');
+        }
+    }
+
+    filterLanguages(languages) {
+        const filterValue = this.filterSelect.value;
+        switch (filterValue) {
+            case 'active':
+                return languages.filter(lang => lang.active);
+            case 'inactive':
+                return languages.filter(lang => !lang.active);
+            default:
+                return languages;
         }
     }
 

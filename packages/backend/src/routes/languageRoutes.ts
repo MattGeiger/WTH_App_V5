@@ -1,19 +1,20 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { LanguageService } from '../services/LanguageService';
 import { ApiResponse } from '../utils/ApiResponse';
 import { ApiError } from '../utils/ApiError';
 
 const router = Router();
-const prisma = new PrismaClient();
+const languageService = new LanguageService();
 
 // GET /api/languages
 router.get('/', async (req, res, next) => {
     try {
-        const languages = await prisma.language.findMany({
-            orderBy: { code: 'asc' }
-        });
+        console.log('GET /api/languages - Starting request');
+        const languages = await languageService.findAll();
+        console.log(`GET /api/languages - Found ${languages.length} languages`);
         res.json(ApiResponse.success(languages));
     } catch (error) {
+        console.error('GET /api/languages - Error:', error);
         next(error);
     }
 });
@@ -21,42 +22,31 @@ router.get('/', async (req, res, next) => {
 // POST /api/languages/bulk
 router.post('/bulk', async (req, res, next) => {
     try {
+        console.log('POST /api/languages/bulk - Starting request');
         const { languages } = req.body;
         
         if (!Array.isArray(languages)) {
             throw new ApiError(400, 'Invalid languages data');
         }
 
-        // Deactivate all languages first
-        await prisma.language.updateMany({
-            data: { active: false }
-        });
-
-        // Upsert each language
-        const operations = languages.map(lang => 
-            prisma.language.upsert({
-                where: { code: lang.code },
-                update: { 
-                    name: lang.name,
-                    active: true
-                },
-                create: {
-                    code: lang.code,
-                    name: lang.name,
-                    active: true
-                }
-            })
-        );
-
-        await prisma.$transaction(operations);
-
-        const updatedLanguages = await prisma.language.findMany({
-            where: { active: true },
-            orderBy: { code: 'asc' }
-        });
-
+        const updatedLanguages = await languageService.bulkUpdate(languages);
+        console.log(`POST /api/languages/bulk - Updated ${updatedLanguages.length} languages`);
         res.json(ApiResponse.success(updatedLanguages, 'Languages updated successfully'));
     } catch (error) {
+        console.error('POST /api/languages/bulk - Error:', error);
+        next(error);
+    }
+});
+
+// GET /api/languages/active
+router.get('/active', async (req, res, next) => {
+    try {
+        console.log('GET /api/languages/active - Starting request');
+        const languages = await languageService.findActive();
+        console.log(`GET /api/languages/active - Found ${languages.length} active languages`);
+        res.json(ApiResponse.success(languages));
+    } catch (error) {
+        console.error('GET /api/languages/active - Error:', error);
         next(error);
     }
 });
