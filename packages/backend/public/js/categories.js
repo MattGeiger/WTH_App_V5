@@ -22,9 +22,11 @@ export class CategoryManager {
 
         try {
             if (categoryId.value) {
+                // Update existing category
                 await apiPut(`/api/categories/${categoryId.value}`, { name });
                 showMessage('Category updated successfully', 'success');
             } else {
+                // Create new category
                 await apiPost('/api/categories', { name });
                 showMessage('Category created successfully', 'success');
             }
@@ -43,6 +45,7 @@ export class CategoryManager {
             const data = await apiGet('/api/categories');
             this.displayCategories(data.data);
             this.updateCategorySelect(data.data);
+
             if (managers.translations?.isTypeCategory()) {
                 managers.translations.updateTranslationTargets();
             }
@@ -52,28 +55,54 @@ export class CategoryManager {
     }
 
     displayCategories(categories) {
-        this.tableBody.innerHTML = categories.map(category => `
-            <tr>
-                <td>${category.name}</td>
-                <td>${new Date(category.createdAt).toLocaleDateString()}</td>
-                <td>
-                    <button onclick="managers.categories.editCategory(${category.id}, '${category.name}')">Edit</button>
-                    <button onclick="managers.categories.deleteCategory(${category.id})">Delete</button>
-                </td>
-            </tr>
-        `).join('');
+        // Generate table rows without inline onclick handlers:
+        this.tableBody.innerHTML = categories
+            .map(category => `
+                <tr>
+                    <td>${category.name}</td>
+                    <td>${new Date(category.createdAt).toLocaleDateString()}</td>
+                    <td>
+                        <button class="edit-category-btn" data-id="${category.id}" data-name="${category.name}">
+                            Edit
+                        </button>
+                        <button class="delete-category-btn" data-id="${category.id}">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            `)
+            .join('');
+
+        // Attach event listeners for edit buttons
+        const editButtons = this.tableBody.querySelectorAll('.edit-category-btn');
+        editButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const { id, name } = button.dataset;
+                this.editCategory(id, name);
+            });
+        });
+
+        // Attach event listeners for delete buttons
+        const deleteButtons = this.tableBody.querySelectorAll('.delete-category-btn');
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const { id } = button.dataset;
+                this.deleteCategory(id);
+            });
+        });
     }
 
     updateCategorySelect(categories) {
         const select = document.getElementById('foodItemCategory');
         if (select) {
-            select.innerHTML = categories.map(category => 
-                `<option value="${category.id}">${category.name}</option>`
-            ).join('');
+            select.innerHTML = categories
+                .map(category => `<option value="${category.id}">${category.name}</option>`)
+                .join('');
         }
     }
 
     editCategory(id, name) {
+        // Populate the form for editing
         document.getElementById('categoryId').value = id;
         document.getElementById('categoryName').value = name;
         this.form.querySelector('button[type="submit"]').textContent = 'Update Category';
@@ -84,6 +113,8 @@ export class CategoryManager {
         try {
             await apiDelete(`/api/categories/${id}`);
             showMessage('Category deleted successfully', 'success');
+
+            // Refresh lists
             await this.loadCategories();
             if (managers.foodItems) {
                 await managers.foodItems.loadFoodItems();

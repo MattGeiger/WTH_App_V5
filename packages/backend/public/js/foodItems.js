@@ -12,14 +12,18 @@ export class FoodItemManager {
     }
 
     setupEventListeners() {
+        // Form submission
         this.form.addEventListener('submit', this.handleSubmit.bind(this));
+        // Reset form
         this.resetButton.addEventListener('click', () => this.resetForm());
+        // Item limit validation
         this.itemLimitValue.addEventListener('input', this.handleLimitValidation.bind(this));
     }
 
     handleLimitValidation(e) {
         const globalUpperLimit = this.settingsManager.getCurrentLimit();
         let value = parseInt(e.target.value);
+
         if (isNaN(value) || value < 0) {
             e.target.value = 0;
         } else if (value > globalUpperLimit) {
@@ -34,14 +38,17 @@ export class FoodItemManager {
 
         try {
             if (id) {
+                // Update existing item
                 await apiPut(`/api/food-items/${id}`, data);
                 showMessage('Food item updated successfully', 'success');
             } else {
+                // Create new item
                 await apiPost('/api/food-items', data);
                 showMessage('Food item created successfully', 'success');
             }
             this.resetForm();
             await this.loadFoodItems();
+
             if (managers.translations) {
                 managers.translations.updateTranslationTargets();
             }
@@ -76,11 +83,23 @@ export class FoodItemManager {
             readyToEat: document.getElementById('foodItemReadyToEat').checked
         };
     }
+//DEBUGGING: add a quick debug log in loadFoodItems():
+    async loadFoodItems() {
+        try {
+          const data = await apiGet('/api/food-items?includeOutOfStock=true');
+          console.log('loadFoodItems =>', data.data); // See what the server returned
+          this.displayFoodItems(data.data);
+        } catch (error) {
+        }
+      }
 
+// Current function for calling table from db.    
+/*
     async loadFoodItems() {
         try {
             const data = await apiGet('/api/food-items?includeOutOfStock=true');
             this.displayFoodItems(data.data);
+
             if (managers.translations?.isTypeFoodItem()) {
                 managers.translations.updateTranslationTargets();
             }
@@ -88,11 +107,20 @@ export class FoodItemManager {
             showMessage(error.message, 'error');
         }
     }
-
+*/
     displayFoodItems(foodItems) {
-        this.tableBody.innerHTML = Array.isArray(foodItems) && foodItems.length > 0 ? 
-            foodItems.map(item => this.createFoodItemRow(item)).join('') :
-            '<tr><td colspan="7">No food items found</td></tr>';
+        // Generate table rows without inline onclick:
+        if (!Array.isArray(foodItems) || foodItems.length === 0) {
+            this.tableBody.innerHTML = '<tr><td colspan="7">No food items found</td></tr>';
+            return;
+        }
+
+        this.tableBody.innerHTML = foodItems
+            .map(item => this.createFoodItemRow(item))
+            .join('');
+
+        // Attach event listeners after rendering
+        this.addTableEventListeners();
     }
 
     createFoodItemRow(item) {
@@ -100,7 +128,8 @@ export class FoodItemManager {
         const dietary = this.formatDietary(item);
         const limitDisplay = this.formatLimit(item);
 
-        const editData = {
+        // We’ll store stringified item data in a data attribute for the Edit button.
+        const itemData = {
             id: item.id,
             name: item.name,
             categoryId: item.category?.id,
@@ -118,6 +147,8 @@ export class FoodItemManager {
             readyToEat: item.readyToEat
         };
 
+        const itemDataString = JSON.stringify(itemData).replace(/'/g, "\\'");
+
         return `
             <tr>
                 <td>${item.name}</td>
@@ -127,11 +158,35 @@ export class FoodItemManager {
                 <td>${limitDisplay}</td>
                 <td>${new Date(item.createdAt).toLocaleDateString()}</td>
                 <td>
-                    <button onclick="managers.foodItems.editFoodItem('${JSON.stringify(editData).replace(/'/g, "\\'")}')">Edit</button>
-                    <button onclick="managers.foodItems.deleteFoodItem(${item.id})">Delete</button>
+                    <button class="edit-food-item-btn" data-item='${itemDataString}'>
+                        Edit
+                    </button>
+                    <button class="delete-food-item-btn" data-id="${item.id}">
+                        Delete
+                    </button>
                 </td>
             </tr>
         `;
+    }
+
+    addTableEventListeners() {
+        // Edit buttons
+        const editButtons = this.tableBody.querySelectorAll('.edit-food-item-btn');
+        editButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const itemData = btn.getAttribute('data-item');
+                this.editFoodItem(itemData);
+            });
+        });
+
+        // Delete buttons
+        const deleteButtons = this.tableBody.querySelectorAll('.delete-food-item-btn');
+        deleteButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const { id } = btn.dataset;
+                this.deleteFoodItem(id);
+            });
+        });
     }
 
     formatStatus(item) {
@@ -155,12 +210,15 @@ export class FoodItemManager {
     }
 
     formatLimit(item) {
-        return item.itemLimit === 0 ?
-            'No Limit' :
-            `${item.itemLimit} ${item.limitType === 'perPerson' ? 'Per Person' : 'Per Household'}`;
+        if (item.itemLimit === 0) {
+            return 'No Limit';
+        }
+        const limitType = item.limitType === 'perPerson' ? 'Per Person' : 'Per Household';
+        return `${item.itemLimit} ${limitType}`;
     }
 
     editFoodItem(itemData) {
+        // Parse the stringified data from the button’s data attribute
         const data = typeof itemData === 'string' ? JSON.parse(itemData) : itemData;
         this.populateForm(data);
         this.form.querySelector('button[type="submit"]').textContent = 'Update Food Item';
@@ -184,13 +242,14 @@ export class FoodItemManager {
         const globalUpperLimit = this.settingsManager.getCurrentLimit();
         const limitTypeInputs = document.querySelectorAll('input[name="limitType"]');
         
-        if (data.limitType === 'perPerson') {
-            limitTypeInputs.forEach(r => { if (r.value === 'perPerson') r.checked = true; });
-        } else {
-            limitTypeInputs.forEach(r => { if (r.value === 'perHousehold') r.checked = true; });
-        }
+        // Set the correct limitType radio button
+        limitTypeInputs.forEach(r => {
+            r.checked = (r.value === data.limitType);
+        });
 
-        this.itemLimitValue.value = Math.min(data.itemLimit, globalUpperLimit);
+        // Adjust itemLimit if it exceeds the global limit
+        const limitValue = Math.min(data.itemLimit, globalUpperLimit);
+        this.itemLimitValue.value = limitValue;
     }
 
     async deleteFoodItem(id) {
@@ -199,6 +258,7 @@ export class FoodItemManager {
         try {
             await apiDelete(`/api/food-items/${id}`);
             showMessage('Food item deleted successfully', 'success');
+
             await this.loadFoodItems();
             if (managers.translations) {
                 await managers.translations.loadTranslations();

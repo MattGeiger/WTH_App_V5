@@ -6,69 +6,8 @@
 ├── package.json
 ├── packages
 │   ├── backend
-│   │   ├── coverage
-│   │   │   ├── lcov-report
-│   │   │   │   ├── base.css
-│   │   │   │   ├── block-navigation.js
-│   │   │   │   ├── config
-│   │   │   │   │   ├── index.html
-│   │   │   │   │   └── languageConfig.ts.html
-│   │   │   │   ├── favicon.png
-│   │   │   │   ├── index.html
-│   │   │   │   ├── prettify.css
-│   │   │   │   ├── prettify.js
-│   │   │   │   ├── public
-│   │   │   │   │   └── js
-│   │   │   │   │       ├── categories.js.html
-│   │   │   │   │       ├── foodItems.js.html
-│   │   │   │   │       ├── index.html
-│   │   │   │   │       ├── languages.js.html
-│   │   │   │   │       ├── main.js.html
-│   │   │   │   │       ├── settings.js.html
-│   │   │   │   │       ├── translations.js.html
-│   │   │   │   │       └── utils.js.html
-│   │   │   │   ├── services
-│   │   │   │   │   ├── FoodItemService.ts.html
-│   │   │   │   │   ├── TranslationService.ts.html
-│   │   │   │   │   ├── index.html
-│   │   │   │   │   └── openai
-│   │   │   │   │       ├── OpenAIService.ts.html
-│   │   │   │   │       └── index.html
-│   │   │   │   ├── sort-arrow-sprite.png
-│   │   │   │   ├── sorter.js
-│   │   │   │   ├── src
-│   │   │   │   │   ├── config
-│   │   │   │   │   │   ├── index.html
-│   │   │   │   │   │   └── languageConfig.ts.html
-│   │   │   │   │   ├── index.html
-│   │   │   │   │   ├── index.ts.html
-│   │   │   │   │   ├── middleware
-│   │   │   │   │   │   ├── errorHandler.ts.html
-│   │   │   │   │   │   ├── index.html
-│   │   │   │   │   │   └── requestLogger.ts.html
-│   │   │   │   │   ├── routes
-│   │   │   │   │   │   ├── categoryRoutes.ts.html
-│   │   │   │   │   │   ├── foodItemRoutes.ts.html
-│   │   │   │   │   │   ├── index.html
-│   │   │   │   │   │   ├── languageRoutes.ts.html
-│   │   │   │   │   │   ├── settingsRoutes.ts.html
-│   │   │   │   │   │   └── translationRoutes.ts.html
-│   │   │   │   │   ├── services
-│   │   │   │   │   │   ├── CategoryService.ts.html
-│   │   │   │   │   │   ├── FoodItemService.ts.html
-│   │   │   │   │   │   ├── LanguageService.ts.html
-│   │   │   │   │   │   ├── index.html
-│   │   │   │   │   │   └── openai
-│   │   │   │   │   │       ├── OpenAIService.ts.html
-│   │   │   │   │   │       └── index.html
-│   │   │   │   │   └── utils
-│   │   │   │   │       ├── ApiError.ts.html
-│   │   │   │   │       ├── ApiResponse.ts.html
-│   │   │   │   │       └── index.html
-│   │   │   │   └── utils
-│   │   │   │       ├── ApiError.ts.html
-│   │   │   │       └── index.html
-│   │   │   └── lcov.info
+│   │   ├── babel.config.js
+│   │   ├── jest-setup.js
 │   │   ├── jest.config.js
 │   │   ├── package.json
 │   │   ├── prisma
@@ -86,6 +25,13 @@
 │   │   ├── project-tree.txt
 │   │   ├── public
 │   │   │   ├── css
+│   │   │   │   ├── components
+│   │   │   │   │   ├── forms.css
+│   │   │   │   │   ├── languages.css
+│   │   │   │   │   ├── messages.css
+│   │   │   │   │   └── tables.css
+│   │   │   │   ├── layout
+│   │   │   │   │   └── sections.css
 │   │   │   │   └── styles.css
 │   │   │   ├── index.html
 │   │   │   └── js
@@ -125,24 +71,36 @@
 │   │   │   │   ├── categoryRoutes.test.ts
 │   │   │   │   ├── foodItemRoutes.test.ts
 │   │   │   │   ├── frontend
+│   │   │   │   │   ├── __mocks__
+│   │   │   │   │   │   ├── fileMock.js
+│   │   │   │   │   │   └── styleMock.js
 │   │   │   │   │   ├── categories.test.js
 │   │   │   │   │   ├── foodItems.test.js
 │   │   │   │   │   ├── languages.test.js
 │   │   │   │   │   ├── settings.test.js
 │   │   │   │   │   ├── setup.js
-│   │   │   │   │   └── translations.test.js
+│   │   │   │   │   ├── translations.test.js
+│   │   │   │   │   └── utils
+│   │   │   │   │       ├── mockHelpers.js
+│   │   │   │   │       └── testFactories.js
 │   │   │   │   ├── languageRoutes.test.ts
 │   │   │   │   ├── limitType.test.ts
 │   │   │   │   ├── settings.test.ts
 │   │   │   │   ├── settingsRoutes.test.ts
 │   │   │   │   ├── setup.ts
-│   │   │   │   └── translationRoutes.test.ts
+│   │   │   │   ├── translationRoutes.test.ts
+│   │   │   │   └── utils
+│   │   │   │       ├── dbHelpers.ts
+│   │   │   │       ├── testFactories.ts
+│   │   │   │       └── testHelpers.ts
 │   │   │   └── utils
 │   │   │       ├── ApiError.ts
-│   │   │       └── ApiResponse.ts
+│   │   │       ├── ApiResponse.ts
+│   │   │       ├── errorConstants.ts
+│   │   │       └── errorHandler.ts
 │   │   └── tsconfig.json
 │   └── frontend
 │       └── package.json
 └── project-tree.txt
 
-38 directories, 108 files
+28 directories, 76 files
