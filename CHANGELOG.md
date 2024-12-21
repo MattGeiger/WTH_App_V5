@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Legacy code cleanup
 - Backend testing completion
 
+### Changed
+- **Translations UI**: Removed inline `onclick` from Edit/Delete buttons, now using classes (`edit-translation-btn`, `delete-translation-btn`) and `data-*` attributes for ID and text.  
+- **Event Listeners**: Attached click handlers in `translations.js` after rendering the table, matching the approach for Categories and Food Items.  
+- **UI Consistency**: Ensured all CRUD sections share a consistent pattern (no inline `onclick`, separate classes, data attributes, etc.).
+
 ### Added
 - **LimitType** field to **FoodItem** model  
 - Test suite for FoodItem limitType functionality  

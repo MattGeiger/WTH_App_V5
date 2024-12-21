@@ -18,8 +18,8 @@ router.get('/', async (req, res, next) => {
       limit: limit ? parseInt(limit as string) : 50
     };
 
-    const { items, total } = await foodItemService.findAll(params);
-    res.json(ApiResponse.paginated(items, params.page, params.limit, total));
+    const items = await foodItemService.findAll(params);
+    return res.json(ApiResponse.success(items));
   } catch (error) {
     next(error);
   }
