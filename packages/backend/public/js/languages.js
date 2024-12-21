@@ -1,104 +1,78 @@
 import { showMessage, apiGet, apiPost } from './utils.js';
 
 export class LanguageManager {
-    static languagesUpdatedEvent = new CustomEvent('languagesUpdated');
-    
-    static baseLanguages = {
-        "ar": "Arabic",
-        "bn": "Bengali",
-        "de": "German",
-        "en": "English",
-        "es": "Spanish",
-        "fr": "French",
-        "hi": "Hindi",
-        "id": "Indonesian",
-        "it": "Italian",
-        "ja": "Japanese",
-        "ko": "Korean",
-        "ms": "Malay",
-        "pt": "Portuguese",
-        "ru": "Russian",
-        "sw": "Swahili",
-        "ta": "Tamil",
-        "th": "Thai",
-        "tr": "Turkish",
-        "uk": "Ukrainian",
-        "ur": "Urdu",
-        "vi": "Vietnamese",
-        "zh": "Chinese"
-    };
-
     constructor() {
+        this.languageTableBody = document.getElementById('languageTableBody');
+        this.updateLanguagesBtn = document.getElementById('updateLanguages');
         this.languageGrid = document.querySelector('.language-grid');
-        this.tableBody = document.getElementById('languageTableBody');
-        this.updateButton = document.getElementById('updateLanguages');
-        this.setupLanguageGrid();
         this.setupEventListeners();
     }
 
     setupEventListeners() {
-        this.updateButton.addEventListener('click', () => this.updateLanguageSettings());
-    }
-
-    setupLanguageGrid() {
-        this.languageGrid.innerHTML = Object.entries(LanguageManager.baseLanguages)
-            .map(([code, name]) => `
-                <div class="language-item">
-                    <input type="checkbox" 
-                           id="lang-${code}" 
-                           value="${code}" 
-                           data-name="${name}">
-                    <label for="lang-${code}">${code.toUpperCase()} - ${name}</label>
-                </div>
-            `).join('');
+        this.updateLanguagesBtn.addEventListener('click', () => this.handleLanguageUpdate());
     }
 
     async loadLanguages() {
         try {
             const data = await apiGet('/api/languages');
-            this.displayActiveLanguages(data.data);
-            this.updateCheckboxesFromActive(data.data);
+            this.displayLanguages(data.data);
+            this.displayLanguageToggles(data.data);
         } catch (error) {
-            showMessage(error.message, 'error');
+            showMessage(error.message, 'error', 'language');
         }
     }
 
-    updateCheckboxesFromActive(activeLanguages) {
-        activeLanguages.forEach(lang => {
-            const checkbox = document.getElementById(`lang-${lang.code}`);
-            if (checkbox) checkbox.checked = lang.active;
-        });
+    displayLanguageToggles(languages) {
+        this.languageGrid.innerHTML = languages.map(lang => `
+            <div class="language-toggle">
+                <label>
+                    <input type="checkbox" 
+                           class="language-checkbox" 
+                           data-code="${lang.code}"
+                           data-name="${lang.name}"
+                           ${lang.active ? 'checked' : ''}>
+                    ${lang.name}
+                </label>
+            </div>
+        `).join('');
     }
 
-    displayActiveLanguages(languages) {
-        this.tableBody.innerHTML = languages
-            .filter(lang => lang.active)
-            .map(lang => `
-                <tr>
-                    <td>${lang.code.toUpperCase()}</td>
-                    <td>${lang.name}</td>
-                    <td>Active</td>
-                </tr>
-            `).join('') || '<tr><td colspan="3">No active languages</td></tr>';
-    }
-
-    async updateLanguageSettings() {
-        const selectedLanguages = Array.from(this.languageGrid.querySelectorAll('input[type="checkbox"]:checked'))
-            .map(checkbox => ({
-                code: checkbox.value,
-                name: checkbox.dataset.name,
-                active: true
-            }));
-
+    async handleLanguageUpdate() {
         try {
-            await apiPost('/api/languages/bulk', { languages: selectedLanguages });
-            showMessage('Language settings updated successfully', 'success');
-            await this.loadLanguages();
+            const languages = Array.from(document.querySelectorAll('.language-checkbox'))
+                .filter(checkbox => checkbox.checked)
+                .map(checkbox => ({
+                    code: checkbox.dataset.code,
+                    name: checkbox.dataset.name
+                }));
 
-            // Dispatch event so TranslationManager knows languages were updated
-            document.dispatchEvent(LanguageManager.languagesUpdatedEvent);
+            await apiPost('/api/languages/bulk', { languages });
+            showMessage('Language settings updated successfully', 'success', 'language');
+            await this.loadLanguages();
+            document.dispatchEvent(new Event('languagesUpdated'));
         } catch (error) {
-            showMessage(error.message, 'error');
+            showMessage(error.message, 'error', 'language');
         }
+    }
+
+    displayLanguages(languages) {
+        if (!Array.isArray(languages)) {
+            showMessage('Invalid language data received', 'error', 'language');
+            return;
+        }
+
+        this.languageTableBody.innerHTML = languages
+            .map(lang => this.createLanguageRow(lang))
+            .join('');
+    }
+
+    createLanguageRow(language) {
+        return `
+            <tr>
+                <td class="table__cell">${language.code}</td>
+                <td class="table__cell">${language.name}</td>
+                <td class="table__cell">${language.active ? 'Active' : 'Inactive'}</td>
+            </tr>
+        `;
     }
 }

@@ -8,16 +8,25 @@ export class FoodItemManager {
         this.tableBody = document.getElementById('foodItemTableBody');
         this.itemLimitValue = document.getElementById('itemLimitValue');
         this.resetButton = document.getElementById('resetFoodItemForm');
+        this.categorySelect = document.getElementById('foodItemCategory');
         this.setupEventListeners();
     }
 
     setupEventListeners() {
-        // Form submission
         this.form.addEventListener('submit', this.handleSubmit.bind(this));
-        // Reset form
         this.resetButton.addEventListener('click', () => this.resetForm());
-        // Item limit validation
         this.itemLimitValue.addEventListener('input', this.handleLimitValidation.bind(this));
+    }
+
+    async loadCategories() {
+        try {
+            const data = await apiGet('/api/categories');
+            this.categorySelect.innerHTML = data.data
+                .map(category => `<option value="${category.id}">${category.name}</option>`)
+                .join('');
+        } catch (error) {
+            showMessage(error.message, 'error', 'foodItem');
+        }
     }
 
     handleLimitValidation(e) {
@@ -38,22 +47,16 @@ export class FoodItemManager {
 
         try {
             if (id) {
-                // Update existing item
                 await apiPut(`/api/food-items/${id}`, data);
-                showMessage('Food item updated successfully', 'success');
+                showMessage('Food item updated successfully', 'success', 'foodItem');
             } else {
-                // Create new item
                 await apiPost('/api/food-items', data);
-                showMessage('Food item created successfully', 'success');
+                showMessage('Food item created successfully', 'success', 'foodItem');
             }
             this.resetForm();
             await this.loadFoodItems();
-
-            if (managers.translations) {
-                managers.translations.updateTranslationTargets();
-            }
         } catch (error) {
-            showMessage(error.message, 'error');
+            showMessage(error.message, 'error', 'foodItem');
         }
     }
 
@@ -83,33 +86,21 @@ export class FoodItemManager {
             readyToEat: document.getElementById('foodItemReadyToEat').checked
         };
     }
-//DEBUGGING: add a quick debug log in loadFoodItems():
-    async loadFoodItems() {
-        try {
-          const data = await apiGet('/api/food-items?includeOutOfStock=true');
-          console.log('loadFoodItems =>', data.data); // See what the server returned
-          this.displayFoodItems(data.data);
-        } catch (error) {
-        }
-      }
 
-// Current function for calling table from db.    
-/*
     async loadFoodItems() {
         try {
+            await this.loadCategories(); // Load categories for the dropdown
             const data = await apiGet('/api/food-items?includeOutOfStock=true');
             this.displayFoodItems(data.data);
-
-            if (managers.translations?.isTypeFoodItem()) {
-                managers.translations.updateTranslationTargets();
+            if (managers.translations) {
+                await managers.translations.loadTranslations();
             }
         } catch (error) {
-            showMessage(error.message, 'error');
+            showMessage(error.message, 'error', 'foodItem');
         }
     }
-*/
+
     displayFoodItems(foodItems) {
-        // Generate table rows without inline onclick:
         if (!Array.isArray(foodItems) || foodItems.length === 0) {
             this.tableBody.innerHTML = '<tr><td colspan="7">No food items found</td></tr>';
             return;
@@ -119,7 +110,6 @@ export class FoodItemManager {
             .map(item => this.createFoodItemRow(item))
             .join('');
 
-        // Attach event listeners after rendering
         this.addTableEventListeners();
     }
 
@@ -128,7 +118,6 @@ export class FoodItemManager {
         const dietary = this.formatDietary(item);
         const limitDisplay = this.formatLimit(item);
 
-        // We’ll store stringified item data in a data attribute for the Edit button.
         const itemData = {
             id: item.id,
             name: item.name,
@@ -170,18 +159,14 @@ export class FoodItemManager {
     }
 
     addTableEventListeners() {
-        // Edit buttons
-        const editButtons = this.tableBody.querySelectorAll('.edit-food-item-btn');
-        editButtons.forEach(btn => {
+        this.tableBody.querySelectorAll('.edit-food-item-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const itemData = btn.getAttribute('data-item');
                 this.editFoodItem(itemData);
             });
         });
 
-        // Delete buttons
-        const deleteButtons = this.tableBody.querySelectorAll('.delete-food-item-btn');
-        deleteButtons.forEach(btn => {
+        this.tableBody.querySelectorAll('.delete-food-item-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const { id } = btn.dataset;
                 this.deleteFoodItem(id);
@@ -218,7 +203,6 @@ export class FoodItemManager {
     }
 
     editFoodItem(itemData) {
-        // Parse the stringified data from the button’s data attribute
         const data = typeof itemData === 'string' ? JSON.parse(itemData) : itemData;
         this.populateForm(data);
         this.form.querySelector('button[type="submit"]').textContent = 'Update Food Item';
@@ -242,12 +226,10 @@ export class FoodItemManager {
         const globalUpperLimit = this.settingsManager.getCurrentLimit();
         const limitTypeInputs = document.querySelectorAll('input[name="limitType"]');
         
-        // Set the correct limitType radio button
         limitTypeInputs.forEach(r => {
             r.checked = (r.value === data.limitType);
         });
 
-        // Adjust itemLimit if it exceeds the global limit
         const limitValue = Math.min(data.itemLimit, globalUpperLimit);
         this.itemLimitValue.value = limitValue;
     }
@@ -257,14 +239,10 @@ export class FoodItemManager {
         
         try {
             await apiDelete(`/api/food-items/${id}`);
-            showMessage('Food item deleted successfully', 'success');
-
+            showMessage('Food item deleted successfully', 'success', 'foodItem');
             await this.loadFoodItems();
-            if (managers.translations) {
-                await managers.translations.loadTranslations();
-            }
         } catch (error) {
-            showMessage(error.message, 'error');
+            showMessage(error.message, 'error', 'foodItem');
         }
     }
 

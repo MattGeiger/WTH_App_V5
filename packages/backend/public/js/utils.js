@@ -1,77 +1,91 @@
-// Message handling
-export function showMessage(message, type) {
-    const messageArea = document.getElementById('messageArea');
-    messageArea.textContent = message;
-    messageArea.className = `message-area message message--${type}`;
-    setTimeout(() => {
-        messageArea.textContent = '';
-        messageArea.className = 'message-area';
-    }, 3000);
+export function showMessage(message, type = 'info', section = null) {
+    const messageArea = section ? 
+        document.querySelector(`#${section}Section .message-area`) : 
+        document.getElementById('messageArea');
+    
+    if (!messageArea) return;
+
+    const messageElement = document.createElement('div');
+    messageElement.className = `message message--${type}`;
+    messageElement.textContent = message;
+    
+    messageArea.innerHTML = '';
+    messageArea.appendChild(messageElement);
+
+    if (type === 'success') {
+        setTimeout(() => messageElement.remove(), 5000);
+    }
 }
 
-// API helpers
-export async function apiGet(endpoint) {
-    console.log(`GET ${endpoint}`);
-    const response = await fetch(endpoint);
-    if (!response.ok) {
-        const error = await response.json();
-        console.error('GET Error:', error);
-        throw new Error(error.message || `Failed to fetch from ${endpoint}`);
+export function clearMessages(section = null) {
+    const messageArea = section ? 
+        document.querySelector(`#${section}Section .message-area`) : 
+        document.getElementById('messageArea');
+    
+    if (messageArea) {
+        messageArea.innerHTML = '';
     }
-    return response.json();
+}
+
+export async function apiGet(endpoint) {
+    try {
+        const response = await fetch(endpoint);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return await response.json();
+    } catch (error) {
+        console.error('API Get Error:', error);
+        throw error;
+    }
 }
 
 export async function apiPost(endpoint, data) {
-    console.log(`POST ${endpoint}`, data);
-    const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    });
-    if (!response.ok) {
-        const error = await response.json();
-        console.error('POST Error:', error);
-        throw new Error(error.message || 'API request failed');
+    try {
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return await response.json();
+    } catch (error) {
+        console.error('API Post Error:', error);
+        throw error;
     }
-    return response.json();
 }
 
 export async function apiPut(endpoint, data) {
-    console.log(`PUT ${endpoint}`, data);
-    const response = await fetch(endpoint, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    });
-    if (!response.ok) {
-        const error = await response.json();
-        console.error('PUT Error:', error);
-        throw new Error(error.message || 'Update failed');
+    try {
+        const response = await fetch(endpoint, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return await response.json();
+    } catch (error) {
+        console.error('API Put Error:', error);
+        throw error;
     }
-    return response.json();
 }
 
 export async function apiDelete(endpoint) {
-    console.log(`DELETE ${endpoint}`);
-    const response = await fetch(endpoint, {
-        method: 'DELETE'
-    });
-    if (!response.ok) {
-        const error = await response.json();
-        console.error('DELETE Error:', error);
-        throw new Error(error.message || 'Delete failed');
+    try {
+        const response = await fetch(endpoint, {
+            method: 'DELETE',
+        });
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return await response.json();
+    } catch (error) {
+        console.error('API Delete Error:', error);
+        throw error;
     }
 }
 
 export function formatDate(dateString) {
-    return new Date(dateString).toLocaleDateString();
-}
-
-export function resetFormButton(form, buttonText = 'Add') {
-    form.reset();
-    form.querySelector('button[type="submit"]').textContent = buttonText;
-}
-
-export function confirmAction(message = 'Are you sure?') {
-    return confirm(message);
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('default', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    }).format(date);
 }
