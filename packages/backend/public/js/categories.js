@@ -1,5 +1,6 @@
 import { showMessage, apiGet, apiPost, apiPut, apiDelete } from './utils.js';
 import { managers, EVENTS } from './main.js';
+import { SortableTable } from './utils/sortableTable.js';
 
 export class CategoryManager {
     constructor() {
@@ -9,6 +10,34 @@ export class CategoryManager {
         this.itemLimitValue = document.getElementById('categoryItemLimit');
         this.nameInput = document.getElementById('categoryName');
         this.setupEventListeners();
+        this.initSortableTable();
+    }
+
+    initSortableTable() {
+        this.sortableTable = new SortableTable('categoryTableBody', (row, key) => {
+            const index = this.getColumnIndex(key);
+            switch (key) {
+                case 'name':
+                    return row.cells[index].textContent.toLowerCase();
+                case 'itemLimit':
+                    return SortableTable.numberSortValue(row, index);
+                case 'created':
+                    return SortableTable.dateSortValue(row, index);
+                default:
+                    return row.cells[index].textContent.toLowerCase();
+            }
+        });
+        this.sortableTable.setupSortingControls();
+    }
+
+    getColumnIndex(key) {
+        const headers = this.tableBody.closest('table').querySelectorAll('th');
+        for (let i = 0; i < headers.length; i++) {
+            if (headers[i].getAttribute('data-sort') === key) {
+                return i;
+            }
+        }
+        return 0;
     }
 
     setupEventListeners() {
@@ -125,6 +154,10 @@ export class CategoryManager {
             const data = await apiGet('/api/categories');
             if (data && data.data) {
                 this.displayCategories(data.data);
+                // Apply current sort if any
+                if (this.sortableTable.currentSort.column) {
+                    this.sortableTable.sortTable();
+                }
             }
         } catch (error) {
             showMessage(error.message || 'Error loading categories', 'error', 'category');

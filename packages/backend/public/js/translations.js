@@ -1,4 +1,5 @@
 import { showMessage, apiGet, apiPut, apiDelete } from './utils.js';
+import { SortableTable } from './utils/sortableTable.js';
 
 export class TranslationManager {
     constructor() {
@@ -8,6 +9,35 @@ export class TranslationManager {
         this.setupEventListeners();
         this.currentType = 'category';
         this.loadLanguagesFilter();
+        this.initSortableTable();
+    }
+
+    initSortableTable() {
+        this.sortableTable = new SortableTable('translationTableBody', (row, key) => {
+            const index = this.getColumnIndex(key);
+            switch (key) {
+                case 'original':
+                case 'language':
+                case 'translation':
+                case 'type':
+                    return row.cells[index].textContent.toLowerCase();
+                case 'created':
+                    return SortableTable.dateSortValue(row, index);
+                default:
+                    return row.cells[index].textContent.toLowerCase();
+            }
+        });
+        this.sortableTable.setupSortingControls();
+    }
+
+    getColumnIndex(key) {
+        const headers = this.translationTableBody.closest('table').querySelectorAll('th');
+        for (let i = 0; i < headers.length; i++) {
+            if (headers[i].getAttribute('data-sort') === key) {
+                return i;
+            }
+        }
+        return 0;
     }
 
     async loadLanguagesFilter() {
@@ -81,6 +111,9 @@ export class TranslationManager {
             
             const response = await apiGet(`/api/translations?${queryParams}`);
             this.displayTranslations(response.data);
+            if (this.sortableTable.currentSort.column) {
+                this.sortableTable.sortTable();
+            }
         } catch (error) {
             showMessage(error.message, 'error', 'translation');
         }

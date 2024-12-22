@@ -1,4 +1,5 @@
 import { showMessage, apiGet, apiPost } from './utils.js';
+import { SortableTable } from './utils/sortableTable.js';
 
 export class LanguageManager {
     constructor() {
@@ -7,6 +8,33 @@ export class LanguageManager {
         this.languageGrid = document.querySelector('.language-grid');
         this.filterSelect = document.getElementById('languageFilter');
         this.setupEventListeners();
+        this.initSortableTable();
+    }
+
+    initSortableTable() {
+        this.sortableTable = new SortableTable('languageTableBody', (row, key) => {
+            const index = this.getColumnIndex(key);
+            switch (key) {
+                case 'code':
+                case 'name':
+                    return row.cells[index].textContent.toLowerCase();
+                case 'status':
+                    return row.cells[index].textContent === 'Active' ? 1 : 0;
+                default:
+                    return row.cells[index].textContent.toLowerCase();
+            }
+        });
+        this.sortableTable.setupSortingControls();
+    }
+
+    getColumnIndex(key) {
+        const headers = this.languageTableBody.closest('table').querySelectorAll('th');
+        for (let i = 0; i < headers.length; i++) {
+            if (headers[i].getAttribute('data-sort') === key) {
+                return i;
+            }
+        }
+        return 0;
     }
 
     setupEventListeners() {
@@ -19,6 +47,9 @@ export class LanguageManager {
             const data = await apiGet('/api/languages');
             const languages = this.filterLanguages(data.data);
             this.displayLanguages(languages);
+            if (this.sortableTable.currentSort.column) {
+                this.sortableTable.sortTable();
+            }
             this.displayLanguageToggles(data.data);
         } catch (error) {
             showMessage(error.message, 'error', 'language');

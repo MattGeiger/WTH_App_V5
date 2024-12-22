@@ -16,3 +16,23 @@
     text-align: left;
     background-color: #f8f9fa;
 }
+
+.table__header[data-sort] {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+}
+
+.table__header[data-sort]:hover {
+    background-color: #e9ecef;
+}
+
+.sort-indicator {
+    display: inline-block;
+    margin-left: 5px;
+    color: #6c757d;
+}
+
+.table__header[data-sort]:hover .sort-indicator {
+    color: #495057;
+}

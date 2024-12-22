@@ -1,5 +1,6 @@
 import { showMessage, apiGet, apiPost, apiPut, apiDelete } from './utils.js';
 import { managers } from './main.js';
+import { SortableTable } from './utils/sortableTable.js';
 
 export class FoodItemManager {
     constructor(settingsManager) {
@@ -11,7 +12,39 @@ export class FoodItemManager {
         this.categorySelect = document.getElementById('foodItemCategory');
         this.nameInput = document.getElementById('foodItemName');
         this.setupEventListeners();
+        this.initSortableTable();
         this.init();
+    }
+
+    initSortableTable() {
+        this.sortableTable = new SortableTable('foodItemTableBody', (row, key) => {
+            const index = this.getColumnIndex(key);
+            switch (key) {
+                case 'name':
+                case 'category':
+                    return row.cells[index].textContent.toLowerCase();
+                case 'status':
+                case 'dietary':
+                    return row.cells[index].textContent;
+                case 'limit':
+                    return SortableTable.numberSortValue(row, index);
+                case 'created':
+                    return SortableTable.dateSortValue(row, index);
+                default:
+                    return row.cells[index].textContent.toLowerCase();
+            }
+        });
+        this.sortableTable.setupSortingControls();
+    }
+
+    getColumnIndex(key) {
+        const headers = this.tableBody.closest('table').querySelectorAll('th');
+        for (let i = 0; i < headers.length; i++) {
+            if (headers[i].getAttribute('data-sort') === key) {
+                return i;
+            }
+        }
+        return 0;
     }
 
     async init() {
@@ -33,26 +66,22 @@ export class FoodItemManager {
         const input = e.target;
         const value = input.value;
 
-        // Client-side validation
         if (value.length > 36) {
             input.value = value.slice(0, 36);
             showMessage('Input cannot exceed 36 characters', 'warning', 'foodItem');
             return;
         }
 
-        // Remove consecutive spaces as they type
         if (/\s{2,}/.test(value)) {
             input.value = value.replace(/\s{2,}/g, ' ');
         }
 
-        // Check for repeated words
         const words = value.toLowerCase().split(' ');
         const uniqueWords = new Set(words);
         if (uniqueWords.size !== words.length) {
             showMessage('Input contains repeated words', 'warning', 'foodItem');
         }
 
-        // Convert to Title Case as they type
         input.value = value
             .split(' ')
             .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
@@ -125,7 +154,6 @@ export class FoodItemManager {
         e.preventDefault();
         const name = this.nameInput.value.trim();
         
-        // Client-side validation
         if (name.length < 3) {
             showMessage('Food item name must be at least three characters long', 'error', 'foodItem');
             return;
@@ -137,7 +165,6 @@ export class FoodItemManager {
             return;
         }
 
-        // Check for repeated words
         const words = name.toLowerCase().split(' ');
         const uniqueWords = new Set(words);
         if (uniqueWords.size !== words.length) {
@@ -200,6 +227,9 @@ export class FoodItemManager {
             await this.loadCategories();
             const data = await apiGet('/api/food-items?includeOutOfStock=true');
             this.displayFoodItems(data.data);
+            if (this.sortableTable.currentSort.column) {
+                this.sortableTable.sortTable();
+            }
             if (managers.translations) {
                 await managers.translations.loadTranslations();
             }
