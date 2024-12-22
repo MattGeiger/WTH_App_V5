@@ -5,48 +5,61 @@
 ├── packages/
 │   ├── backend/                    # Main backend application directory
 │   │   ├── prisma/                # Database configuration and migrations
-│   │   │   ├── migrations/        # Database migration history
-│   │   │   └── schema.prisma      # Prisma schema defining data models
+│   │   │   ├── migrations/        # Database version control
+│   │   │   │   ├── 20241130003245_init/                    # Initial schema
+│   │   │   │   ├── 20241207052011_add_language_model.../   # Language support
+│   │   │   │   ├── 20241209004222_add_settings_model/      # Settings features
+│   │   │   │   ├── 20241220064500_add_limit_type/          # Item limits
+│   │   │   │   ├── 20241221195000_add_category_limit/      # Category limits
+│   │   │   │   └── 20241222002000_add_unique_name.../      # Name constraints
+│   │   │   └── schema.prisma      # Database schema definition
 │   │   │
-│   │   ├── public/                # Static assets and test UI
-│   │   │   ├── css/              # Stylesheets for test UI
+│   │   ├── public/                # Frontend test interface
+│   │   │   ├── css/              # Stylesheet organization
 │   │   │   │   ├── components/    # Component-specific styles
-│   │   │   │   └── layout/        # Layout and structural styles
+│   │   │   │   └── layout/        # Structural styles
 │   │   │   ├── js/               # Frontend JavaScript modules
-│   │   │   └── index.html        # Test UI entry point
+│   │   │   │   ├── categories.js      # Category management
+│   │   │   │   ├── foodItems.js       # Food item operations
+│   │   │   │   ├── languages.js       # Language handling
+│   │   │   │   ├── main.js            # Application entry point
+│   │   │   │   ├── settings.js        # Settings management
+│   │   │   │   ├── translations.js    # Translation logic
+│   │   │   │   └── utils.js           # Shared utilities
+│   │   │   └── index.html        # Main test UI page
 │   │   │
 │   │   ├── src/                   # Backend source code
 │   │   │   ├── config/           # Application configuration
-│   │   │   │   └── languageConfig.ts    # Language initialization
+│   │   │   │   └── languageConfig.ts    # Language settings
 │   │   │   │
 │   │   │   ├── middleware/       # Express middleware
-│   │   │   │   ├── errorHandler.ts      # Global error handling
+│   │   │   │   ├── errorHandler.ts      # Error processing
 │   │   │   │   └── requestLogger.ts     # Request logging
 │   │   │   │
-│   │   │   ├── routes/           # API route handlers
-│   │   │   │   ├── categoryRoutes.ts    # Category endpoints
-│   │   │   │   ├── foodItemRoutes.ts    # Food item endpoints
-│   │   │   │   ├── languageRoutes.ts    # Language management
-│   │   │   │   ├── settingsRoutes.ts    # Global settings
-│   │   │   │   └── translationRoutes.ts # Translation endpoints
+│   │   │   ├── routes/           # API endpoints
+│   │   │   │   ├── categoryRoutes.ts    # Category API
+│   │   │   │   ├── foodItemRoutes.ts    # Food item API
+│   │   │   │   ├── languageRoutes.ts    # Language API
+│   │   │   │   ├── settingsRoutes.ts    # Settings API
+│   │   │   │   └── translationRoutes.ts # Translation API
 │   │   │   │
-│   │   │   ├── services/         # Business logic layer
-│   │   │   │   ├── openai/       # OpenAI integration
-│   │   │   │   ├── CategoryService.ts   # Category operations
-│   │   │   │   ├── FoodItemService.ts   # Food item operations
-│   │   │   │   ├── LanguageService.ts   # Language initialization
-│   │   │   │   └── TranslationService.ts # Translation operations
+│   │   │   ├── services/         # Business logic
+│   │   │   │   ├── openai/           # AI translation
+│   │   │   │   ├── CategoryService.ts   # Category logic
+│   │   │   │   ├── FoodItemService.ts   # Food item logic
+│   │   │   │   ├── LanguageService.ts   # Language logic
+│   │   │   │   └── TranslationService.ts # Translation logic
 │   │   │   │
 │   │   │   ├── tests/            # Test suites
-│   │   │   │   ├── utils/        # Test utilities
-│   │   │   │   └── setup.ts      # Test environment setup
+│   │   │   │   ├── utils/            # Test helpers
+│   │   │   │   └── setup.ts          # Test configuration
 │   │   │   │
-│   │   │   └── utils/            # Utility functions
+│   │   │   └── utils/            # Shared utilities
 │   │   │       ├── ApiError.ts         # Error handling
 │   │   │       ├── ApiResponse.ts      # Response formatting
-│   │   │       └── errorHandler.ts     # Error processing
+│   │   │       └── validationUtils.ts  # Input validation
 │   │   │
-│   │   ├── .env.example          # Environment template
+│   │   ├── .env.example          # Environment variables template
 │   │   ├── jest.config.js        # Test configuration
 │   │   ├── package.json          # Backend dependencies
 │   │   └── tsconfig.json         # TypeScript configuration
@@ -54,69 +67,48 @@
 │   └── frontend/                  # React frontend (planned)
 │       └── package.json          # Frontend dependencies
 │
-├── CHANGELOG.md                   # Project history
+├── CHANGELOG.md                   # Version history
 ├── LICENSE                       # MIT license
 ├── README.md                     # Project documentation
-└── package.json                  # Root package file
+└── package.json                  # Root package configuration
 ```
 
 ## Key Components
 
-### Backend Structure
+### Database Layer (`prisma/`)
+- Schema definition and migrations
+- Automated model generation
+- Data relationships and constraints
 
-- `prisma/`: Database setup
-  - Zero-configuration migrations
-  - Automated model generation
-  - Data relationships
+### Test Interface (`public/`)
+- JavaScript modules for CRUD operations
+- Component-specific styling
+- Real-time UI updates
 
-- `public/`: Test interface
-  - Modular JavaScript
-  - Component styling
-  - Real-time updates
+### Backend Core (`src/`)
+- TypeScript services for business logic
+- RESTful API endpoints
+- Error handling and validation
+- AI-powered translations
+- Comprehensive test coverage
 
-- `src/`: Application core
-  - TypeScript services
-  - API endpoints
-  - Business logic
-
-### Frontend Structure
-
-- React implementation planned
-- Component architecture
+### Frontend (Planned)
+- React-based UI
 - TypeScript integration
+- Component architecture
 
-## Core Files
+## Configuration Files
+- Environment setup (.env.example)
+- Package dependencies (package.json)
+- TypeScript configuration (tsconfig.json)
+- Test setup (jest.config.js)
 
-### Configuration
+## Documentation
+- Project overview (README.md)
+- Version tracking (CHANGELOG.md)
+- Licensing (LICENSE)
 
-- `schema.prisma`: Database models
-- `languageConfig.ts`: Language setup
-- `tsconfig.json`: TypeScript setup
-- `jest.config.js`: Test configuration
-
-### Services
-
-- `CategoryService.ts`: Category management
-- `FoodItemService.ts`: Inventory control
-- `LanguageService.ts`: Language initialization
-- `TranslationService.ts`: AI translations
-
-### API Routes
-
-- `categoryRoutes.ts`: Category API
-- `foodItemRoutes.ts`: Inventory API
-- `languageRoutes.ts`: Language management
-- `settingsRoutes.ts`: Global settings
-
-### Utilities
-
-- `ApiError.ts`: Error classes
-- `ApiResponse.ts`: Response format
-- `errorHandler.ts`: Error management
-
-### Components
-
-- `categories.js`: Category interface
-- `foodItems.js`: Inventory interface
-- `translations.js`: Language interface
-- `settings.js`: System settings
+## Development Setup
+- Monorepo structure with workspaces
+- Separate backend and frontend packages
+- Shared configuration and utilities

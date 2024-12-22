@@ -13,6 +13,7 @@ The Food Pantry Management System is a web application designed to support non-p
    - Flexible item limits system
    - Real-time synchronization
    - Reduced manual data entry
+   - Input validation and constraints
 
 2. **Multilingual Support**
    - Instant AI translations
@@ -49,12 +50,16 @@ The Food Pantry Management System is a web application designed to support non-p
    - Modular routing
    - Standard responses
    - Error handling
+   - Input validation
+   - Real-time feedback
 
 3. **Service Layer**
    - Business logic
    - OpenAI translation
    - CRUD operations
    - Data validation
+   - Duplicate detection
+   - Case-insensitive comparison
 
 ### Frontend Architecture
 
@@ -64,12 +69,17 @@ The Food Pantry Management System is a web application designed to support non-p
    - Real-time updates
    - UI validation
    - CSS styling
+   - Input constraints
+   - Error messages
+   - Auto-formatting
 
 2. **Planned React Implementation**
    - TypeScript
    - State management
    - Enhanced UI/UX
    - Component reuse
+   - Validation patterns
+   - Error boundaries
 
 ## Technical Decisions
 
@@ -77,12 +87,15 @@ The Food Pantry Management System is a web application designed to support non-p
    - Simple local deployment
    - Zero configuration
    - PostgreSQL upgrade path
+   - Case-insensitive searches
+   - Unique constraints
 
 2. **ORM: Prisma**
    - Type safety
    - Auto-generated types
    - Migration tools
    - Query building
+   - Validation support
 
 3. **Languages**
    - Automated initialization
@@ -96,22 +109,35 @@ The Food Pantry Management System is a web application designed to support non-p
    - Household/person options
    - Default settings
 
+5. **Input Validation**
+   - Character limits (3-36)
+   - Case-insensitive uniqueness
+   - Title case normalization
+   - Word repetition prevention
+   - Special character rules
+
 ## Security Measures
 
 1. **Input Validation**
-   - Request validation
-   - Type checking
-   - Input sanitization
+   - Length constraints
+   - Character restrictions
+   - Case normalization
+   - Duplicate prevention
+   - Cross-reference checks
+   - Real-time validation
 
 2. **Error Handling**
    - Custom errors
    - Standard responses
    - Error detail control
+   - User-friendly messages
+   - Validation feedback
 
 3. **API Security**
    - CORS setup
    - Rate limiting
    - Input cleaning
+   - Request validation
 
 ## Testing Strategy
 
@@ -119,16 +145,22 @@ The Food Pantry Management System is a web application designed to support non-p
    - Jest framework
    - Service coverage
    - Utility testing
+   - Validation testing
+   - Case handling
 
 2. **Integration Tests**
    - API endpoints
    - Database operations
    - Translation system
+   - Input constraints
+   - Error scenarios
 
 3. **Frontend Tests**
    - Component testing
    - User interaction
    - Browser compatibility
+   - Form validation
+   - Error handling
 
 ## Development Process
 
@@ -142,12 +174,14 @@ The Food Pantry Management System is a web application designed to support non-p
    - API documentation
    - Change logging
    - Structure docs
+   - Validation rules
 
 3. **Quality Control**
    - Code review
    - Automated tests
    - UI testing
    - Translation checks
+   - Input validation
 
 ## Roadmap
 
@@ -175,16 +209,19 @@ The Food Pantry Management System is a web application designed to support non-p
    - Index optimization
    - Query efficiency
    - Connection pooling
+   - Validation speed
 
 2. **API**
    - Response caching
    - Pagination
    - Efficient loading
+   - Fast validation
 
 3. **Frontend**
    - Code splitting
    - Asset optimization
    - Lazy loading
+   - Real-time validation
 
 ## Deployment
 
@@ -192,6 +229,7 @@ The Food Pantry Management System is a web application designed to support non-p
    - Local SQLite
    - Environment config
    - Dev server
+   - Test validation
 
 2. **Production**
    - Migration strategy
@@ -205,11 +243,13 @@ The Food Pantry Management System is a web application designed to support non-p
    - Regular backups
    - Migration management
    - Data cleanup
+   - Constraint checks
 
 2. **Code**
    - Dependency updates
    - Security patches
    - Performance monitoring
+   - Validation updates
 
 3. **Translations**
    - Quality checks
@@ -223,6 +263,8 @@ The Food Pantry Management System is a web application designed to support non-p
    - Error rates
    - Translation accuracy
    - Test coverage
+   - Validation speed
+   - Input quality
 
 2. **Service Impact**
    - Volunteer hours saved
@@ -230,3 +272,4 @@ The Food Pantry Management System is a web application designed to support non-p
    - Client satisfaction
    - System reliability
    - Community reach
+   - Data accuracy

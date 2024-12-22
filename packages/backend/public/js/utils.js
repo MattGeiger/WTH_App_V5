@@ -30,7 +30,10 @@ export function clearMessages(section = null) {
 export async function apiGet(endpoint) {
     try {
         const response = await fetch(endpoint);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        }
         return await response.json();
     } catch (error) {
         console.error('API Get Error:', error);
@@ -45,8 +48,14 @@ export async function apiPost(endpoint, data) {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(data),
         });
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        return await response.json();
+        
+        const responseData = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(responseData.message || `HTTP error! status: ${response.status}`);
+        }
+        
+        return responseData;
     } catch (error) {
         console.error('API Post Error:', error);
         throw error;
@@ -60,8 +69,14 @@ export async function apiPut(endpoint, data) {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(data),
         });
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        return await response.json();
+        
+        const responseData = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(responseData.message || `HTTP error! status: ${response.status}`);
+        }
+        
+        return responseData;
     } catch (error) {
         console.error('API Put Error:', error);
         throw error;
@@ -73,8 +88,14 @@ export async function apiDelete(endpoint) {
         const response = await fetch(endpoint, {
             method: 'DELETE',
         });
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        return await response.json();
+        
+        const responseData = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(responseData.message || `HTTP error! status: ${response.status}`);
+        }
+        
+        return responseData;
     } catch (error) {
         console.error('API Delete Error:', error);
         throw error;

@@ -3,6 +3,7 @@ import { ApiError } from '../utils/ApiError';
 import { TranslationService } from './TranslationService';
 import { ErrorTypes, ErrorMessages } from '../utils/errorConstants';
 import { handleServiceError } from '../utils/errorHandler';
+import { ValidationUtils } from '../utils/validationUtils';
 
 export class CategoryService {
     private prisma: PrismaClient;
@@ -15,6 +16,12 @@ export class CategoryService {
 
     async create(data: { name: string; itemLimit?: number }): Promise<Category> {
         try {
+            // Validate name
+            const validationResult = await ValidationUtils.validateInput(data.name, 'category');
+            if (!validationResult.isValid) {
+                throw new ApiError(400, validationResult.error || 'Invalid input');
+            }
+
             // Validate itemLimit
             if (data.itemLimit !== undefined) {
                 if (data.itemLimit < 0) {
@@ -24,7 +31,7 @@ export class CategoryService {
 
             const category = await this.prisma.category.create({
                 data: {
-                    name: data.name,
+                    name: validationResult.normalizedValue!,
                     itemLimit: data.itemLimit || 0
                 },
                 include: {
@@ -87,6 +94,15 @@ export class CategoryService {
     async update(id: number, data: { name?: string; itemLimit?: number }): Promise<Category> {
         try {
             const existingCategory = await this.findById(id);
+
+            if (data.name) {
+                // Validate name
+                const validationResult = await ValidationUtils.validateInput(data.name, 'category', id);
+                if (!validationResult.isValid) {
+                    throw new ApiError(400, validationResult.error || 'Invalid input');
+                }
+                data.name = validationResult.normalizedValue!;
+            }
 
             // Validate itemLimit
             if (data.itemLimit !== undefined) {

@@ -6,6 +6,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.9] - 2024-12-22
+### Added
+- Input validation and constraints
+  - Character max limit (36 characters)
+  - Character min limit (3 characters)
+  - Case-insensitive duplicate prevention
+  - Input trimming and normalization
+  - Special character/number restrictions
+  - Title case normalization
+  - Word repetition prevention
+  - Real-time validation feedback
+### Fixed
+- SQLite case-sensitivity handling
+- Database constraint enforcement
+- Validation error messages
+- Cross-entity duplicate detection
+
 ## [0.5.8] - 2024-12-21
 ### Fixed
 - Language initialization race condition resolved

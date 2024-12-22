@@ -10,6 +10,7 @@ A web application designed for non-profit food pantries. Features automated inve
 - Dietary and allergen tracking
 - Flexible item limits (per household/person)
 - Category-based limit management
+- Input validation and constraints
 
 ### Key Features
 
@@ -19,6 +20,12 @@ A web application designed for non-profit food pantries. Features automated inve
   - Category and item organization
   - Status flags (must go, low supply)
   - Real-time updates across components
+  - Input validation and constraints
+    - Character limits (3-36 characters)
+    - Case-insensitive duplicate prevention
+    - Input normalization
+    - Special character restrictions
+    - Title case standardization
 
 - **Language Support**
   - AI-powered translation system
@@ -40,13 +47,16 @@ A web application designed for non-profit food pantries. Features automated inve
   - TypeScript services
   - OpenAI integration
   - Automated testing
+  - Real-time validation
 
 - **Frontend**
   - Modular JavaScript architecture
   - Event-driven state management
   - Real-time synchronization
   - Component-based design
-  - Comprehensive test coverage
+  - Input constraints
+  - Form validation
+  - Error handling
 
 ## Getting Started
 
@@ -103,6 +113,33 @@ Access application:
 - API: http://localhost:3000
 - UI: http://localhost:3000/index.html
 
+## Input Validation Rules
+
+### Text Input Constraints
+- Minimum length: 3 characters
+- Maximum length: 36 characters
+- Must contain at least 3 letters
+- No consecutive spaces
+- No duplicate words
+- No leading/trailing spaces (auto-trimmed)
+- Automatically converted to Title Case
+
+### Duplicate Prevention
+- Case-insensitive uniqueness check
+- No duplicate categories allowed
+- No duplicate food items allowed
+- Cross-validation between categories and food items
+- Real-time validation feedback
+
+### Error Handling
+- Clear error messages for:
+  - Length violations
+  - Duplicate entries
+  - Special character restrictions
+  - Word repetition
+  - Format requirements
+- Real-time validation feedback
+
 ## API Documentation
 
 ### Categories
@@ -157,11 +194,13 @@ POST   /api/settings
 - Language initialization
 - Translation system
 - Testing framework
+- Input validation
+- Error handling
+- Data constraints
 
 🔄 In Progress
 - Documentation updates
 - Performance optimization
-- Error handling improvements
 
 📅 Planned
 - React frontend

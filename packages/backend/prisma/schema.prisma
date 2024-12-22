@@ -10,11 +10,13 @@ datasource db {
 model Category {
   id          Int           @id @default(autoincrement())
   name        String        // English name as base
-  itemLimit   Int          @default(0)  // New field for category item limit
+  itemLimit   Int          @default(0)
   items       FoodItem[]
   translations Translation[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+
+  @@unique([name])
 }
 
 model FoodItem {
@@ -24,35 +26,31 @@ model FoodItem {
   category      Category      @relation(fields: [categoryId], references: [id])
   translations  Translation[]
   
-  // Image handling
   imageUrl      String?
   thumbnailUrl  String?
   
-  // Inventory management
   itemLimit     Int?
-  limitType     String        @default("perHousehold")  // "perHousehold" or "perPerson"
+  limitType     String        @default("perHousehold")
   inStock       Boolean       @default(true)
   mustGo        Boolean       @default(false)
   lowSupply     Boolean       @default(false)
   
-  // Dietary attributes
   kosher        Boolean       @default(false)
   halal         Boolean       @default(false)
   vegetarian    Boolean       @default(false)
   vegan         Boolean       @default(false)
   glutenFree    Boolean       @default(false)
   
-  // Quality attributes
   organic       Boolean       @default(false)
   readyToEat    Boolean       @default(false)
   
-  // Custom fields for flexibility
   customFields  CustomField[]
   
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   
   @@index([categoryId])
+  @@unique([name])
 }
 
 model Translation {
@@ -74,8 +72,8 @@ model Translation {
 
 model Language {
   id           Int           @id @default(autoincrement())
-  code         String        @unique  // ISO 639-1 language code (e.g., "en", "es", "zh")
-  name         String        // Display name (e.g., "English", "Spanish", "Chinese")
+  code         String        @unique
+  name         String
   active       Boolean       @default(true)
   translations Translation[]
   createdAt    DateTime      @default(now())

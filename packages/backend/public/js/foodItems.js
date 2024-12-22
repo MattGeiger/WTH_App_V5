@@ -9,6 +9,7 @@ export class FoodItemManager {
         this.itemLimitValue = document.getElementById('itemLimitValue');
         this.resetButton = document.getElementById('resetFoodItemForm');
         this.categorySelect = document.getElementById('foodItemCategory');
+        this.nameInput = document.getElementById('foodItemName');
         this.setupEventListeners();
         this.init();
     }
@@ -24,6 +25,38 @@ export class FoodItemManager {
         this.form.addEventListener('submit', this.handleSubmit.bind(this));
         this.resetButton.addEventListener('click', () => this.resetForm());
         this.itemLimitValue.addEventListener('input', this.handleLimitValidation.bind(this));
+        this.nameInput.addEventListener('input', this.handleNameInput.bind(this));
+        this.addTableEventListeners();
+    }
+
+    handleNameInput(e) {
+        const input = e.target;
+        const value = input.value;
+
+        // Client-side validation
+        if (value.length > 36) {
+            input.value = value.slice(0, 36);
+            showMessage('Input cannot exceed 36 characters', 'warning', 'foodItem');
+            return;
+        }
+
+        // Remove consecutive spaces as they type
+        if (/\s{2,}/.test(value)) {
+            input.value = value.replace(/\s{2,}/g, ' ');
+        }
+
+        // Check for repeated words
+        const words = value.toLowerCase().split(' ');
+        const uniqueWords = new Set(words);
+        if (uniqueWords.size !== words.length) {
+            showMessage('Input contains repeated words', 'warning', 'foodItem');
+        }
+
+        // Convert to Title Case as they type
+        input.value = value
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
     }
 
     displayNoCategories() {
@@ -75,12 +108,52 @@ export class FoodItemManager {
         }
     }
 
+    addTableEventListeners() {
+        this.tableBody.addEventListener('click', async (e) => {
+            const target = e.target;
+            if (target.classList.contains('edit-food-item-btn')) {
+                const itemData = target.getAttribute('data-item');
+                this.editFoodItem(itemData);
+            } else if (target.classList.contains('delete-food-item-btn')) {
+                const id = target.dataset.id;
+                await this.deleteFoodItem(id);
+            }
+        });
+    }
+
     async handleSubmit(e) {
         e.preventDefault();
+        const name = this.nameInput.value.trim();
+        
+        // Client-side validation
+        if (name.length < 3) {
+            showMessage('Food item name must be at least three characters long', 'error', 'foodItem');
+            return;
+        }
+
+        const letterCount = (name.match(/[a-zA-Z]/g) || []).length;
+        if (letterCount < 3) {
+            showMessage('Food item name must include at least three letters', 'error', 'foodItem');
+            return;
+        }
+
+        // Check for repeated words
+        const words = name.toLowerCase().split(' ');
+        const uniqueWords = new Set(words);
+        if (uniqueWords.size !== words.length) {
+            showMessage('Food item name contains repeated words', 'error', 'foodItem');
+            return;
+        }
+
         const data = this.collectFormData();
-        const id = document.getElementById('foodItemId').value;
 
         try {
+            if (data.categoryId === '') {
+                showMessage('Please select a category', 'error', 'foodItem');
+                return;
+            }
+
+            const id = document.getElementById('foodItemId').value;
             if (id) {
                 await apiPut(`/api/food-items/${id}`, data);
                 showMessage('Food item updated successfully', 'success', 'foodItem');
@@ -91,7 +164,7 @@ export class FoodItemManager {
             this.resetForm();
             await this.loadFoodItems();
         } catch (error) {
-            showMessage(error.message, 'error', 'foodItem');
+            showMessage(error.message || 'An error occurred', 'error', 'foodItem');
         }
     }
 
@@ -105,8 +178,8 @@ export class FoodItemManager {
         if (itemLimit > globalUpperLimit) itemLimit = globalUpperLimit;
 
         return {
-            name: document.getElementById('foodItemName').value.trim(),
-            categoryId: parseInt(document.getElementById('foodItemCategory').value),
+            name: this.nameInput.value.trim(),
+            categoryId: parseInt(this.categorySelect.value),
             itemLimit,
             limitType,
             inStock: document.getElementById('foodItemInStock').checked,
@@ -144,8 +217,6 @@ export class FoodItemManager {
         this.tableBody.innerHTML = foodItems
             .map(item => this.createFoodItemRow(item))
             .join('');
-
-        this.addTableEventListeners();
     }
 
     createFoodItemRow(item) {
@@ -193,22 +264,6 @@ export class FoodItemManager {
         `;
     }
 
-    addTableEventListeners() {
-        this.tableBody.querySelectorAll('.edit-food-item-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const itemData = btn.getAttribute('data-item');
-                this.editFoodItem(itemData);
-            });
-        });
-
-        this.tableBody.querySelectorAll('.delete-food-item-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const { id } = btn.dataset;
-                this.deleteFoodItem(id);
-            });
-        });
-    }
-
     formatStatus(item) {
         return [
             item.inStock ? 'In Stock' : 'Out of Stock',
@@ -245,8 +300,8 @@ export class FoodItemManager {
 
     populateForm(data) {
         document.getElementById('foodItemId').value = data.id;
-        document.getElementById('foodItemName').value = data.name;
-        document.getElementById('foodItemCategory').value = data.categoryId;
+        this.nameInput.value = data.name;
+        this.categorySelect.value = data.categoryId;
         document.getElementById('foodItemInStock').checked = data.inStock;
         document.getElementById('foodItemMustGo').checked = data.mustGo;
         document.getElementById('foodItemLowSupply').checked = data.lowSupply;

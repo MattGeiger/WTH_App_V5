@@ -7,6 +7,7 @@ export class CategoryManager {
         this.tableBody = document.getElementById('categoryTableBody');
         this.resetButton = document.getElementById('resetForm');
         this.itemLimitValue = document.getElementById('categoryItemLimit');
+        this.nameInput = document.getElementById('categoryName');
         this.setupEventListeners();
     }
 
@@ -14,7 +15,38 @@ export class CategoryManager {
         this.form.addEventListener('submit', this.handleSubmit.bind(this));
         this.resetButton.addEventListener('click', () => this.resetForm());
         this.itemLimitValue.addEventListener('input', this.handleLimitValidation.bind(this));
+        this.nameInput.addEventListener('input', this.handleNameInput.bind(this));
         this.addTableEventListeners();
+    }
+
+    handleNameInput(e) {
+        const input = e.target;
+        const value = input.value;
+
+        // Client-side validation
+        if (value.length > 36) {
+            input.value = value.slice(0, 36);
+            showMessage('Input cannot exceed 36 characters', 'warning', 'category');
+            return;
+        }
+
+        // Remove consecutive spaces as they type
+        if (/\s{2,}/.test(value)) {
+            input.value = value.replace(/\s{2,}/g, ' ');
+        }
+
+        // Check for repeated words
+        const words = value.toLowerCase().split(' ');
+        const uniqueWords = new Set(words);
+        if (uniqueWords.size !== words.length) {
+            showMessage('Input contains repeated words', 'warning', 'category');
+        }
+
+        // Convert to Title Case as they type
+        input.value = value
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
     }
 
     handleLimitValidation(e) {
@@ -45,9 +77,29 @@ export class CategoryManager {
 
     async handleSubmit(e) {
         e.preventDefault();
-        const name = document.getElementById('categoryName').value.trim();
-        const itemLimit = parseInt(document.getElementById('categoryItemLimit').value) || 0;
+        const name = this.nameInput.value.trim();
+        const itemLimit = parseInt(this.itemLimitValue.value) || 0;
         const id = document.getElementById('categoryId').value;
+
+        // Client-side validation
+        if (name.length < 3) {
+            showMessage('Category name must be at least three characters long', 'error', 'category');
+            return;
+        }
+
+        const letterCount = (name.match(/[a-zA-Z]/g) || []).length;
+        if (letterCount < 3) {
+            showMessage('Category name must include at least three letters', 'error', 'category');
+            return;
+        }
+
+        // Check for repeated words
+        const words = name.toLowerCase().split(' ');
+        const uniqueWords = new Set(words);
+        if (uniqueWords.size !== words.length) {
+            showMessage('Category name contains repeated words', 'error', 'category');
+            return;
+        }
 
         try {
             const data = { name, itemLimit };
@@ -123,15 +175,15 @@ export class CategoryManager {
 
     editCategory(id, name, itemLimit) {
         document.getElementById('categoryId').value = id;
-        document.getElementById('categoryName').value = name || '';
-        document.getElementById('categoryItemLimit').value = itemLimit || 0;
+        this.nameInput.value = name || '';
+        this.itemLimitValue.value = itemLimit || 0;
         this.form.querySelector('button[type="submit"]').textContent = 'Update Category';
     }
 
     resetForm() {
         this.form.reset();
         document.getElementById('categoryId').value = '';
-        document.getElementById('categoryItemLimit').value = '0';
+        this.itemLimitValue.value = '0';
         this.form.querySelector('button[type="submit"]').textContent = 'Add Category';
     }
 }

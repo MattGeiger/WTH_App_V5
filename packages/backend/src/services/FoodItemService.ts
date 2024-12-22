@@ -3,6 +3,7 @@ import { ApiError } from '../utils/ApiError';
 import { TranslationService } from './TranslationService';
 import { ErrorTypes, ErrorMessages } from '../utils/errorConstants';
 import { handleServiceError } from '../utils/errorHandler';
+import { ValidationUtils } from '../utils/validationUtils';
 
 type FoodItemCreateInput = Prisma.FoodItemCreateInput;
 type FoodItemUpdateInput = Prisma.FoodItemUpdateInput;
@@ -47,6 +48,12 @@ export class FoodItemService {
     customFields?: { key: string; value: string; }[];
   }): Promise<FoodItem> {
     try {
+      // Validate name
+      const validationResult = await ValidationUtils.validateInput(data.name, 'foodItem');
+      if (!validationResult.isValid) {
+        throw new ApiError(400, validationResult.error || 'Invalid input');
+      }
+
       const category = await this.prisma.category.findUnique({
         where: { id: data.categoryId }
       });
@@ -59,6 +66,7 @@ export class FoodItemService {
 
       const createData: FoodItemCreateInput = {
         ...foodItemData,
+        name: validationResult.normalizedValue!,
         limitType: foodItemData.limitType || 'perHousehold',
         category: {
           connect: { id: categoryId }
@@ -116,6 +124,14 @@ export class FoodItemService {
 
       if (!existingItem) {
         throw new ApiError(ErrorTypes.NOT_FOUND, ErrorMessages.FOOD_ITEM_NOT_FOUND);
+      }
+
+      if (data.name) {
+        const validationResult = await ValidationUtils.validateInput(data.name, 'foodItem', id);
+        if (!validationResult.isValid) {
+          throw new ApiError(400, validationResult.error || 'Invalid input');
+        }
+        data.name = validationResult.normalizedValue!;
       }
 
       if (data.categoryId) {
