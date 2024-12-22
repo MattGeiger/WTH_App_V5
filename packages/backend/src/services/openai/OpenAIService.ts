@@ -50,12 +50,15 @@ export class OpenAIService {
 
     private buildSystemPrompt(context: 'category' | 'foodItem', languageName: string): string {
         const contextPrompts = {
-            category: `You are a professional translator specializing in food categories. 
+            category: `You are a professional translator specializing in grocery, pharmacy, and department store categories. 
                       Translate the following category name to ${languageName}. 
-                      Keep the translation concise and commonly used in food contexts.`,
-            foodItem: `You are a professional translator specializing in food items. 
-                      Translate the following food item name to ${languageName}. 
-                      Use the most common term that would be recognized by native speakers.`
+                      Keep the translation concise and commonly used in grocery, pharmacy, and department store contexts.
+                      Use the most common term that would be recognized by native speakers.
+                      Do not comment on the translation, only output the translation itself.`,
+            foodItem: `You are a professional translator specializing in grocery, pharmacy, and department store items. 
+                      Translate the following store item name to ${languageName}. 
+                      Use the most common term that would be recognized by native speakers.
+                      Do not comment on the translation, only output the translation itself`
         };
 
         return contextPrompts[context];
