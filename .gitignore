@@ -6,3 +6,7 @@ data/
 .repomixignore
 repomix-output.xml
 repomix.config.json
+coding-prompt.md
+codebase.md
+project-overview.md
+project-structure.md
