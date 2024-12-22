@@ -6,7 +6,7 @@
 │   ├── backend/                    # Main backend application directory
 │   │   ├── prisma/                # Database configuration and migrations
 │   │   │   ├── migrations/        # Database migration history
-│   │   │   └── schema.prisma      # Prisma schema defining data models and relationships
+│   │   │   └── schema.prisma      # Prisma schema defining data models
 │   │   │
 │   │   ├── public/                # Static assets and test UI
 │   │   │   ├── css/              # Stylesheets for test UI
@@ -17,7 +17,7 @@
 │   │   │
 │   │   ├── src/                   # Backend source code
 │   │   │   ├── config/           # Application configuration
-│   │   │   │   └── languageConfig.ts    # Language support configuration
+│   │   │   │   └── languageConfig.ts    # Language initialization
 │   │   │   │
 │   │   │   ├── middleware/       # Express middleware
 │   │   │   │   ├── errorHandler.ts      # Global error handling
@@ -34,7 +34,7 @@
 │   │   │   │   ├── openai/       # OpenAI integration
 │   │   │   │   ├── CategoryService.ts   # Category operations
 │   │   │   │   ├── FoodItemService.ts   # Food item operations
-│   │   │   │   ├── LanguageService.ts   # Language management
+│   │   │   │   ├── LanguageService.ts   # Language initialization
 │   │   │   │   └── TranslationService.ts # Translation operations
 │   │   │   │
 │   │   │   ├── tests/            # Test suites
@@ -46,66 +46,77 @@
 │   │   │       ├── ApiResponse.ts      # Response formatting
 │   │   │       └── errorHandler.ts     # Error processing
 │   │   │
-│   │   ├── .env.example          # Environment variables template
-│   │   ├── jest.config.js        # Jest testing configuration
+│   │   ├── .env.example          # Environment template
+│   │   ├── jest.config.js        # Test configuration
 │   │   ├── package.json          # Backend dependencies
 │   │   └── tsconfig.json         # TypeScript configuration
 │   │
 │   └── frontend/                  # React frontend (planned)
 │       └── package.json          # Frontend dependencies
 │
-├── CHANGELOG.md                   # Project history and changes
+├── CHANGELOG.md                   # Project history
 ├── LICENSE                       # MIT license
 ├── README.md                     # Project documentation
-└── package.json                  # Root package file for workspaces
+└── package.json                  # Root package file
 ```
 
-## Key Directories
+## Key Components
 
 ### Backend Structure
 
-- `prisma/`: Database layer with Prisma ORM setup and migrations
-- `public/`: Test UI implementation with modular JavaScript
-- `src/`: Core backend application code with TypeScript
-- `tests/`: Comprehensive test suites for all components
+- `prisma/`: Database setup
+  - Zero-configuration migrations
+  - Automated model generation
+  - Data relationships
+
+- `public/`: Test interface
+  - Modular JavaScript
+  - Component styling
+  - Real-time updates
+
+- `src/`: Application core
+  - TypeScript services
+  - API endpoints
+  - Business logic
 
 ### Frontend Structure
 
-- Currently placeholder for planned React implementation
-- Will follow similar modular organization to backend
+- React implementation planned
+- Component architecture
+- TypeScript integration
 
-## File Purposes
+## Core Files
 
-### Configuration Files
+### Configuration
 
-- `schema.prisma`: Defines database models for categories, food items, translations
-- `languageConfig.ts`: Supported languages and language-specific settings
-- `tsconfig.json`: TypeScript compiler configuration
-- `jest.config.js`: Test runner setup
+- `schema.prisma`: Database models
+- `languageConfig.ts`: Language setup
+- `tsconfig.json`: TypeScript setup
+- `jest.config.js`: Test configuration
 
-### Core Services
+### Services
 
-- `CategoryService.ts`: Category CRUD operations
-- `FoodItemService.ts`: Food item management with dietary flags
-- `TranslationService.ts`: Multi-language support
-- `OpenAIService.ts`: AI-powered translation integration
+- `CategoryService.ts`: Category management
+- `FoodItemService.ts`: Inventory control
+- `LanguageService.ts`: Language initialization
+- `TranslationService.ts`: AI translations
 
 ### API Routes
 
-- `categoryRoutes.ts`: Category endpoints
-- `foodItemRoutes.ts`: Food item endpoints
-- `translationRoutes.ts`: Translation management
-- `settingsRoutes.ts`: Global settings configuration
+- `categoryRoutes.ts`: Category API
+- `foodItemRoutes.ts`: Inventory API
+- `languageRoutes.ts`: Language management
+- `settingsRoutes.ts`: Global settings
 
 ### Utilities
 
-- `ApiError.ts`: Custom error classes
-- `ApiResponse.ts`: Standardized response formatting
-- `errorHandler.ts`: Global error processing
+- `ApiError.ts`: Error classes
+- `ApiResponse.ts`: Response format
+- `errorHandler.ts`: Error management
 
-### Test UI Components
+### Components
 
-- `categories.js`: Category management interface
-- `foodItems.js`: Food item management
-- `translations.js`: Translation interface
-- `settings.js`: Global settings management
+- `categories.js`: Category interface
+- `foodItems.js`: Inventory interface
+- `translations.js`: Language interface
+- `settings.js`: System settings

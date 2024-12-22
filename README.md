@@ -1,174 +1,194 @@
-# SQL-React-App
+# Food Pantry Management System 
 
-A web application providing food pantry inventory management through a SQL database backend with automated translations via OpenAI integration.
+A web application designed for non-profit food pantries. Features automated inventory management, AI-powered translations, and multilingual accessibility.
 
-## Project Overview
+## System Overview
 
-This application is designed to:
-- Manage food pantry inventory items and categories  
-- Support multiple languages through automated translations  
-- Track dietary restrictions and food attributes  
-- Offer a responsive, user-friendly interface
+- Automated inventory management for food pantries
+- Zero-configuration multilingual support (60+ languages)
+- AI-powered instant translations
+- Dietary and allergen tracking
+- Flexible item limits (per household/person)
+- Category-based limit management
 
 ### Key Features
 
-#### Implemented
-- **Database Management**  
-  - SQL backend using Prisma ORM  
-  - Category and food item CRUD operations  
-  - Language management system  
-  - Translation relationships  
-  - Dietary attribute tracking  
-  - Custom fields for flexibility  
-  - Comprehensive error handling
+#### Core Functionality
+- **Automated Management**
+  - Inventory tracking and monitoring
+  - Category and item organization
+  - Status flags (must go, low supply)
+  - Real-time updates across components
 
-- **API Endpoints**  
-  - Categories API with validation  
-  - Food Items API (now returning an array instead of paginated by default)  
-  - Languages API for localization  
-  - Translations API with relationships  
-  - Settings API for global configuration  
-  - Standardized response formatting
+- **Language Support**
+  - AI-powered translation system
+  - Automatic language initialization
+  - Manual translation refinement
+  - Race condition protection
+  - Instant updates across UI
 
-#### Planned
-- **React Frontend**  
-  - Rewrite the test UI in React  
-  - Incorporate TypeScript throughout  
-  - Full system integration tests  
-  - Production deployment configuration
+- **Dietary System**
+  - Automated dietary flags
+  - Allergen tracking
+  - Preference filtering
+  - Standardized attributes
 
-## Technical Stack
+#### Technical Implementation
+- **Backend**
+  - SQLite with Prisma ORM
+  - Express.js REST API
+  - TypeScript services
+  - OpenAI integration
+  - Automated testing
 
-### Backend
-- SQLite database
-- Prisma ORM
-- Node.js / Express
-- TypeScript
-- Jest testing framework
-- Standardized error handling
-
-### Frontend (Current)
-- Test UI using plain HTML + modular JavaScript
-- Uses `fetch`-based utilities (`apiGet`, `apiPost`, etc.)
-- Focused on verifying backend routes and data flow
-
-### Frontend (Future Plans)
-- React with TypeScript
-- Component-based UI
-- Enhanced styling and user experience
-
-## Development Status
-
-- **Repository Setup**: Complete  
-- **Development Environment**: Complete  
-- **Backend Implementation**: Ongoing  
-- **Test UI Development**: Ongoing  
-- **OpenAI Integration**: Complete  
-- **Language Management System**: Complete  
-- **Translation System**: Complete  
-- **Backend Testing Setup**: Mostly complete  
-- **React Setup**: Planned  
-- **React UI Development**: Planned  
-- **System Integration**: Planned  
-- **Documentation**: Ongoing  
+- **Frontend**
+  - Modular JavaScript architecture
+  - Event-driven state management
+  - Real-time synchronization
+  - Component-based design
+  - Comprehensive test coverage
 
 ## Getting Started
 
-### Prerequisites
+### Requirements
+- Node.js v14+
+- npm/yarn
+- SQLite 3
+- Git
+- OpenAI API key
 
-- **Node.js** v14+  
-- **npm** or **yarn**  
-- **SQLite 3**  
-- **Git**
+### Installation
 
-### Initial Setup
+1. Clone and enter directory:
+```bash
+git clone https://github.com/MattGeiger/food-pantry-app.git
+cd food-pantry-app
+```
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/MattGeiger/WTH_App_V5.git
-   cd WTH_App_V5
-
-	2.	Install dependencies:
-
+2. Install dependencies:
+```bash
 npm install
 cd packages/backend
 npm install
+```
 
-
-	3.	Configure environment:
-
+3. Set up environment:
+```bash
 cp .env.example .env
-# Edit .env with your settings
+# Add your OpenAI API key to .env
+```
 
-
-	4.	Initialize database:
-
+4. Initialize database:
+```bash
 npx prisma generate
-npx prisma migrate dev
+npx prisma migrate reset --force
+```
 
+### Development
 
-
-Development
-	1.	Start the backend server:
-
+Start server:
+```bash
 npm run dev
+```
 
+Run tests:
+```bash
+npm test                 # All tests
+npm run test:unit       # Unit tests
+npm run test:watch      # Watch mode
+npm run test:coverage   # Coverage report
+```
 
-	2.	Run tests:
+Access application:
+- API: http://localhost:3000
+- UI: http://localhost:3000/index.html
 
-npm test               # Run all tests
-npm run test:unit      # Run a specific test suite
-npm run test:watch     # Run tests in watch mode
-npm run test:coverage  # Generate coverage report
+## API Documentation
 
-
-	3.	Access the API:
-	•	API: http://localhost:3000
-	•	Test UI: http://localhost:3000/index.html
-
-API Documentation
-
-Categories
-
+### Categories
+```
 GET    /api/categories
 POST   /api/categories
 GET    /api/categories/:id
 PUT    /api/categories/:id
 DELETE /api/categories/:id
+```
 
-Food Items
-
+### Food Items
+```
 GET    /api/food-items
 POST   /api/food-items
 GET    /api/food-items/:id
 PUT    /api/food-items/:id
 DELETE /api/food-items/:id
+```
 
-Languages
-
+### Languages
+```
 GET    /api/languages
-POST   /api/languages
-PUT    /api/languages/:id
-DELETE /api/languages/:id
+POST   /api/languages/bulk
+GET    /api/languages/active
+```
 
-Translations
-
+### Translations
+```
 GET    /api/translations
 GET    /api/translations/language/:languageCode
 POST   /api/translations/category/:categoryId
 POST   /api/translations/food-item/:foodItemId
 PUT    /api/translations/:id
 DELETE /api/translations/:id
+```
 
-Settings
-
+### Settings
+```
 GET    /api/settings
 POST   /api/settings
+```
 
-Contributing
+## Development Status
 
-This project is in active development. Refer to the Current Branch Goals in the CHANGELOG for ongoing work.
+✅ Complete
+- Repository setup
+- Development environment
+- Backend implementation
+- Test UI development
+- OpenAI integration
+- Language initialization
+- Translation system
+- Testing framework
 
-License
+🔄 In Progress
+- Documentation updates
+- Performance optimization
+- Error handling improvements
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+📅 Planned
+- React frontend
+- User authentication
+- Analytics dashboard
+- Mobile interface
+
+## Project Structure
+
+```
+packages/
+├── backend/           # Main application
+│   ├── prisma/       # Database layer
+│   ├── public/       # Test UI
+│   └── src/          # Backend source
+└── frontend/         # React app (planned)
+```
+
+## Contributing
+
+This project accepts contributions. See CHANGELOG.md for current development focus.
+
+## License
+
+MIT License - see LICENSE file for details.
+
+## Support
+
+For issues: [GitHub Issues](https://github.com/MattGeiger/food-pantry-app/issues)  
+Documentation: [Project Wiki](https://github.com/MattGeiger/food-pantry-app/wiki)

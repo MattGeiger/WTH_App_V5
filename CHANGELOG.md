@@ -5,8 +5,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-### Known Issues
-- Initial setup requires documentation for Prisma migrations
+
+## [0.5.8] - 2024-12-21
+### Fixed
+- Language initialization race condition resolved
+  - Added static initialization promise
+  - Implemented proper promise handling
+  - Resolved database constraint violations
+  - Eliminated page refresh requirement
+- Fresh database initialization now works correctly
 
 ## [0.5.7] - 2024-12-21
 ### Added

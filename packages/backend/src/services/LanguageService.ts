@@ -6,91 +6,65 @@ import { LanguageConfig, getDefaultLanguages } from '../config/languageConfig';
 export class LanguageService {
     private prisma: PrismaClient;
     private translationService: TranslationService;
+    private static initializationPromise: Promise<void> | null = null;
 
     constructor() {
         this.prisma = new PrismaClient();
         this.translationService = new TranslationService();
     }
 
-    /**
-     * Initializes the language table with default supported languages if empty
-     */
-    async initializeLanguages(): Promise<void> {
-        try {
-            const count = await this.prisma.language.count();
-            if (count === 0) {
-                console.log('Initializing default languages...');
-                const defaultLanguages = getDefaultLanguages();
-                const operations = defaultLanguages.map(lang => ({
-                    code: lang.code,
-                    name: lang.name,
-                    active: lang.active,
-                    createdAt: new Date(),
-                    updatedAt: new Date()
-                }));
-
-                await this.prisma.language.createMany({
-                    data: operations
-                });
-                console.log('Default languages initialized successfully');
-            }
-        } catch (error) {
-            console.error('Error initializing languages:', error);
-            throw new ApiError(500, `Error initializing languages: ${error.message}`);
+    private async initializeLanguages(): Promise<void> {
+        if (LanguageService.initializationPromise) {
+            await LanguageService.initializationPromise;
+            return;
         }
+
+        LanguageService.initializationPromise = (async () => {
+            try {
+                const count = await this.prisma.language.count();
+                if (count === 0) {
+                    console.log('Initializing default languages...');
+                    const defaultLanguages = getDefaultLanguages();
+                    
+                    // Insert languages one by one to handle race conditions
+                    for (const lang of defaultLanguages) {
+                        await this.prisma.language.upsert({
+                            where: { code: lang.code },
+                            create: {
+                                code: lang.code,
+                                name: lang.name,
+                                active: lang.active,
+                                createdAt: new Date(),
+                                updatedAt: new Date()
+                            },
+                            update: {} // No updates if exists
+                        });
+                    }
+                    console.log('Default languages initialized successfully');
+                }
+            } catch (error) {
+                console.error('Error initializing languages:', error);
+                throw new ApiError(500, 'Error initializing languages');
+            } finally {
+                LanguageService.initializationPromise = null;
+            }
+        })();
+
+        await LanguageService.initializationPromise;
     }
 
-    /**
-     * Generates translations for all existing items when a language is activated
-     */
-    private async generateTranslationsForLanguage(languageCode: string): Promise<void> {
-        try {
-            const [categories, foodItems] = await Promise.all([
-                this.prisma.category.findMany(),
-                this.prisma.foodItem.findMany()
-            ]);
-
-            for (const category of categories) {
-                await this.translationService.generateAutomaticTranslations(
-                    category.id,
-                    'category'
-                ).catch(error => {
-                    console.error(`Failed to translate category ${category.id} to ${languageCode}:`, error);
-                });
-            }
-
-            for (const item of foodItems) {
-                await this.translationService.generateAutomaticTranslations(
-                    item.id,
-                    'foodItem'
-                ).catch(error => {
-                    console.error(`Failed to translate food item ${item.id} to ${languageCode}:`, error);
-                });
-            }
-        } catch (error) {
-            console.error(`Failed to generate translations for language ${languageCode}:`, error);
-        }
-    }
-
-    /**
-     * Returns all languages, creating default ones if none exist
-     */
     async findAll(): Promise<Language[]> {
         try {
             await this.initializeLanguages();
-            const languages = await this.prisma.language.findMany({
+            return await this.prisma.language.findMany({
                 orderBy: { name: 'asc' }
             });
-            return languages;
         } catch (error) {
             console.error('Error in findAll:', error);
-            throw new ApiError(500, `Error fetching languages: ${error.message}`);
+            throw new ApiError(500, 'Error fetching languages');
         }
     }
 
-    /**
-     * Updates languages in bulk, maintaining active status
-     */
     async bulkUpdate(languages: { code: string; name: string; }[]): Promise<Language[]> {
         try {
             await this.initializeLanguages();
@@ -149,6 +123,35 @@ export class LanguageService {
         } catch (error) {
             console.error('Error in findActive:', error);
             throw new ApiError(500, `Error fetching active languages: ${error.message}`);
+        }
+    }
+
+    private async generateTranslationsForLanguage(languageCode: string): Promise<void> {
+        try {
+            const [categories, foodItems] = await Promise.all([
+                this.prisma.category.findMany(),
+                this.prisma.foodItem.findMany()
+            ]);
+
+            for (const category of categories) {
+                await this.translationService.generateAutomaticTranslations(
+                    category.id,
+                    'category'
+                ).catch(error => {
+                    console.error(`Failed to translate category ${category.id} to ${languageCode}:`, error);
+                });
+            }
+
+            for (const item of foodItems) {
+                await this.translationService.generateAutomaticTranslations(
+                    item.id,
+                    'foodItem'
+                ).catch(error => {
+                    console.error(`Failed to translate food item ${item.id} to ${languageCode}:`, error);
+                });
+            }
+        } catch (error) {
+            console.error(`Failed to generate translations for language ${languageCode}:`, error);
         }
     }
 }

@@ -2,41 +2,42 @@
 
 ## Introduction
 
-The Food Pantry Management System is a comprehensive web application designed to support non-profit food pantries through automated inventory management and multilingual accessibility. The system aims to reduce manual labor for volunteers while improving service accessibility for diverse communities.
+The Food Pantry Management System is a web application designed to support non-profit food pantries through automated inventory management and AI-powered multilingual accessibility. The system reduces volunteer workload while improving service delivery to diverse communities.
 
-## Business Goals
+## Core Goals
 
-1. **Efficient Inventory Management**
-   - Automated tracking of food items and categories
-   - Simplified stock monitoring with status flags
-   - Flexible item limits (household/person)
-   - Category-level limits for bulk management
-   - Automated inventory alerts
-   - Real-time updates across components
+1. **Automated Inventory Management**
+   - Zero-configuration database setup
+   - Automated item and category tracking
+   - Smart inventory status flags
+   - Flexible item limits system
+   - Real-time synchronization
+   - Reduced manual data entry
 
-2. **Language Accessibility**
-   - Automated translations via AI integration
-   - Support for 60+ languages
-   - Manual translation refinement
-   - Zero-configuration language support
-   - Instant translation updates
+2. **Multilingual Support**
+   - Instant AI translations
+   - 60+ language support
+   - Zero-configuration initialization
+   - Race-condition prevention
+   - Translation refinement tools
+   - Automatic updates
 
-3. **Dietary Accommodation**
-   - Automated dietary restriction tracking
-   - Clear allergen information
-   - Quick dietary preference filtering
-   - Standardized attribute marking
+3. **Dietary Tracking**
+   - Automated restriction flags
+   - Clear allergen labeling
+   - Quick filtering tools
+   - Standardized attributes
 
 ## Technical Architecture
 
 ### Backend Architecture
 
 1. **Database Layer**
-   - SQLite database for local deployment simplicity
-   - Prisma ORM for type-safe database operations
-   - Migrations system for version control
-   - Modular data model supporting:
-     * Categories (with limit values)
+   - SQLite for local deployment
+   - Prisma ORM
+   - Automated migrations
+   - Models:
+     * Categories
      * Food Items
      * Translations
      * Languages
@@ -44,189 +45,188 @@ The Food Pantry Management System is a comprehensive web application designed to
 
 2. **API Layer**
    - Express.js REST API
-   - TypeScript for type safety
-   - Modular routing structure
-   - Standardized response formatting
-   - Comprehensive error handling
+   - TypeScript integration
+   - Modular routing
+   - Standard responses
+   - Error handling
 
 3. **Service Layer**
-   - Business logic separation
-   - OpenAI integration for translations
-   - CRUD operations for all entities
-   - Validation and error handling
+   - Business logic
+   - OpenAI translation
+   - CRUD operations
+   - Data validation
 
 ### Frontend Architecture
 
 1. **Current Implementation**
-   - Test UI using vanilla JavaScript
-   - Modular component organization
-   - Event-based communication between components
-   - Real-time updates and validation
-   - CSS for styling
-   - Component synchronization for related data
+   - Modular JavaScript
+   - Event communication
+   - Real-time updates
+   - UI validation
+   - CSS styling
 
 2. **Planned React Implementation**
-   - TypeScript components
+   - TypeScript
    - State management
    - Enhanced UI/UX
-   - Component reusability
+   - Component reuse
 
-## Key Technical Decisions
+## Technical Decisions
 
-1. **Database Selection: SQLite**
-   - Rationale: Simplifies local deployment
-   - Benefits: Zero-configuration, file-based
-   - Considerations: May need migration path to PostgreSQL for scaling
+1. **Database: SQLite**
+   - Simple local deployment
+   - Zero configuration
+   - PostgreSQL upgrade path
 
-2. **ORM Choice: Prisma**
-   - Rationale: Type safety, developer experience
-   - Benefits: Auto-generated types, migration management
-   - Features: Relationship handling, query building
+2. **ORM: Prisma**
+   - Type safety
+   - Auto-generated types
+   - Migration tools
+   - Query building
 
-3. **Language Implementation**
-   - Storage: Separate language and translation tables
-   - Translation Generation: OpenAI API
-   - Manual Override: Support for human refinement
-   - Performance: Caching of translations
+3. **Languages**
+   - Automated initialization
+   - OpenAI translation
+   - Manual refinement
+   - Translation caching
 
-4. **Item Limits Implementation**
-   - Global Upper Limit: Configurable maximum
-   - Category Limits: Threshold for items within category
-   - Per-Item Limits: Both household and per-person
-   - Default Values: Configurable through settings
+4. **Item Limits**
+   - Global limits
+   - Category thresholds
+   - Household/person options
+   - Default settings
 
-## Security Considerations
+## Security Measures
 
 1. **Input Validation**
-   - Request validation middleware
-   - Type checking with TypeScript
-   - Sanitization of user inputs
+   - Request validation
+   - Type checking
+   - Input sanitization
 
 2. **Error Handling**
-   - Custom error classes
-   - Standardized error responses
-   - Production/development error detail control
+   - Custom errors
+   - Standard responses
+   - Error detail control
 
 3. **API Security**
-   - CORS configuration
-   - Rate limiting (planned)
-   - Input sanitization
+   - CORS setup
+   - Rate limiting
+   - Input cleaning
 
 ## Testing Strategy
 
-1. **Unit Testing**
-   - Jest test framework
-   - Service layer coverage
-   - Utility function testing
+1. **Unit Tests**
+   - Jest framework
+   - Service coverage
+   - Utility testing
 
-2. **Integration Testing**
-   - API endpoint testing
-   - Database operation testing
-   - Translation system testing
+2. **Integration Tests**
+   - API endpoints
+   - Database operations
+   - Translation system
 
-3. **Frontend Testing**
+3. **Frontend Tests**
    - Component testing
-   - User interaction testing
-   - Cross-browser compatibility
+   - User interaction
+   - Browser compatibility
 
-## Development Workflow
+## Development Process
 
 1. **Version Control**
-   - Feature branch workflow
-   - Conventional commits
-   - Regular tagging of versions
+   - Feature branches
+   - Standard commits
+   - Version tagging
 
 2. **Documentation**
-   - Inline code documentation
+   - Code comments
    - API documentation
-   - Changelog maintenance
-   - Project structure documentation
+   - Change logging
+   - Structure docs
 
-3. **Quality Assurance**
-   - Code review process
-   - Automated testing
-   - Manual UI testing
-   - Translation quality checks
+3. **Quality Control**
+   - Code review
+   - Automated tests
+   - UI testing
+   - Translation checks
 
-## Future Roadmap
+## Roadmap
 
 1. **Short Term**
-   - Complete React frontend implementation
-   - Enhance test coverage
-   - Add user authentication
-   - Implement caching
+   - React frontend
+   - Test coverage
+   - Auth system
+   - Caching
 
 2. **Medium Term**
-   - Add inventory analytics
-   - Enhance translation capabilities
-   - Add reporting features
-   - Implement user roles
+   - Analytics 
+   - Translation updates
+   - Reporting
+   - User roles
 
 3. **Long Term**
-   - Scale database solution
-   - Add mobile application
-   - Implement offline support
-   - Add advanced analytics
+   - Database scaling
+   - Mobile app
+   - Offline mode
+   - Analytics
 
-## Performance Considerations
+## Performance
 
-1. **Database Optimization**
-   - Efficient indexing
-   - Query optimization
+1. **Database**
+   - Index optimization
+   - Query efficiency
    - Connection pooling
 
-2. **API Performance**
+2. **API**
    - Response caching
-   - Pagination support
-   - Efficient data loading
+   - Pagination
+   - Efficient loading
 
-3. **Frontend Performance**
+3. **Frontend**
    - Code splitting
    - Asset optimization
    - Lazy loading
 
-## Deployment Strategy
+## Deployment
 
-1. **Development Environment**
-   - Local SQLite database
-   - Environment variable configuration
-   - Development server setup
+1. **Development**
+   - Local SQLite
+   - Environment config
+   - Dev server
 
-2. **Production Environment (Planned)**
-   - Database migration strategy
-   - Environment configuration
-   - Monitoring setup
-   - Backup procedures
+2. **Production**
+   - Migration strategy
+   - Environment setup
+   - Monitoring
+   - Backups
 
-## Maintenance Considerations
+## Maintenance
 
-1. **Database Maintenance**
+1. **Database**
    - Regular backups
    - Migration management
-   - Data cleanup procedures
+   - Data cleanup
 
-2. **Code Maintenance**
+2. **Code**
    - Dependency updates
    - Security patches
    - Performance monitoring
 
-3. **Translation Maintenance**
-   - Quality monitoring
-   - Manual review process
-   - Update procedures
+3. **Translations**
+   - Quality checks
+   - Manual review
+   - Update process
 
 ## Success Metrics
 
-1. **Technical Metrics**
-   - API response times
+1. **Technical**
+   - API response time
    - Error rates
    - Translation accuracy
    - Test coverage
 
-2. **Service Metrics**
-   - Volunteer time savings
-   - Translation usage
-   - Inventory accuracy
-   - System availability
+2. **Service Impact**
+   - Volunteer hours saved
+   - Language accessibility
    - Client satisfaction
-   - Language accessibility reach
+   - System reliability
+   - Community reach
