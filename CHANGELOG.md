@@ -6,6 +6,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.10] - 2024-12-23
+### Added
+- Table sorting functionality
+  - Ascending/descending toggles for all data tables
+  - Visual sort indicators with directional arrows
+  - Type-specific sorting (dates, numbers, text)
+  - Memory-efficient event handling
+  - Cross-browser compatible implementation
+- Enhanced table interactivity
+  - Hover effects for sortable columns
+  - Active state styling for current sort
+  - Proper cleanup of event listeners
+
+### Changed
+- Improved table header styling
+- Enhanced user interaction feedback
+
 ## [0.5.9] - 2024-12-22
 ### Added
 - Input validation and constraints

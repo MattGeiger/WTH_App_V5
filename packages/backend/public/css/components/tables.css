@@ -15,4 +15,36 @@
     padding: 8px;
     text-align: left;
     background-color: #f8f9fa;
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Add hover effect for sortable headers */
+.table__header[data-sort] {
+    padding-right: 25px; /* Make room for the sort indicator */
+}
+
+.table__header[data-sort]:hover {
+    background-color: #e9ecef;
+}
+
+/* Style for sort indicators */
+.sort-indicator {
+    position: absolute;
+    right: 8px;
+    color: #6c757d;
+    font-size: 0.85em;
+    opacity: 0.7;
+}
+
+/* Active sort state */
+.table__header[data-sort].active {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.table__header[data-sort].active .sort-indicator {
+    color: #2c3e50;
+    opacity: 1;
 }

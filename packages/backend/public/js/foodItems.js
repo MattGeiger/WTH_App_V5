@@ -1,5 +1,6 @@
 import { showMessage, apiGet, apiPost, apiPut, apiDelete } from './utils.js';
 import { managers } from './main.js';
+import { SortableTable } from './utils/sortableTable.js';
 
 export class FoodItemManager {
     constructor(settingsManager) {
@@ -10,6 +11,7 @@ export class FoodItemManager {
         this.resetButton = document.getElementById('resetFoodItemForm');
         this.categorySelect = document.getElementById('foodItemCategory');
         this.nameInput = document.getElementById('foodItemName');
+        this.sortableTable = new SortableTable('foodItemTableBody', this.getSortValue.bind(this));
         this.setupEventListeners();
         this.init();
     }
@@ -18,6 +20,24 @@ export class FoodItemManager {
         await this.loadCategories();
         if (this.categorySelect.options.length === 0) {
             this.displayNoCategories();
+        }
+    }
+
+    getSortValue(row, key) {
+        const columnIndex = this.sortableTable.getColumnIndex(key);
+        switch (key) {
+            case 'name':
+            case 'category':
+                return row.cells[columnIndex].textContent.toLowerCase();
+            case 'status':
+            case 'dietary':
+                return row.cells[columnIndex].textContent.toLowerCase();
+            case 'limit':
+                return SortableTable.numberSortValue(row, columnIndex);
+            case 'created':
+                return SortableTable.dateSortValue(row, columnIndex);
+            default:
+                return row.cells[columnIndex].textContent.toLowerCase();
         }
     }
 
@@ -217,6 +237,9 @@ export class FoodItemManager {
         this.tableBody.innerHTML = foodItems
             .map(item => this.createFoodItemRow(item))
             .join('');
+
+        // Initialize sorting controls after displaying data
+        this.sortableTable.setupSortingControls();
     }
 
     createFoodItemRow(item) {

@@ -1,5 +1,6 @@
 import { showMessage, apiGet, apiPost, apiPut, apiDelete } from './utils.js';
 import { managers, EVENTS } from './main.js';
+import { SortableTable } from './utils/sortableTable.js';
 
 export class CategoryManager {
     constructor() {
@@ -8,6 +9,7 @@ export class CategoryManager {
         this.resetButton = document.getElementById('resetForm');
         this.itemLimitValue = document.getElementById('categoryItemLimit');
         this.nameInput = document.getElementById('categoryName');
+        this.sortableTable = new SortableTable('categoryTableBody', this.getSortValue.bind(this));
         this.setupEventListeners();
     }
 
@@ -17,6 +19,20 @@ export class CategoryManager {
         this.itemLimitValue.addEventListener('input', this.handleLimitValidation.bind(this));
         this.nameInput.addEventListener('input', this.handleNameInput.bind(this));
         this.addTableEventListeners();
+    }
+
+    getSortValue(row, key) {
+        const columnIndex = this.sortableTable.getColumnIndex(key);
+        switch (key) {
+            case 'name':
+                return row.cells[columnIndex].textContent.toLowerCase();
+            case 'limit':
+                return SortableTable.numberSortValue(row, columnIndex);
+            case 'created':
+                return SortableTable.dateSortValue(row, columnIndex);
+            default:
+                return row.cells[columnIndex].textContent.toLowerCase();
+        }
     }
 
     handleNameInput(e) {
@@ -151,6 +167,9 @@ export class CategoryManager {
                 </td>
             </tr>
         `).join('');
+
+        // Initialize sorting controls after displaying data
+        this.sortableTable.setupSortingControls();
     }
 
     formatLimit(limit) {

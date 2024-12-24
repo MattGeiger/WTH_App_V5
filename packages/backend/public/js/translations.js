@@ -1,13 +1,30 @@
 import { showMessage, apiGet, apiPut, apiDelete } from './utils.js';
+import { SortableTable } from './utils/sortableTable.js';
 
 export class TranslationManager {
     constructor() {
         this.translationTableBody = document.getElementById('translationTableBody');
         this.translationTypeRadios = document.querySelectorAll('input[name="translationType"]');
         this.filterLanguageSelect = document.getElementById('filterLanguage');
+        this.sortableTable = new SortableTable('translationTableBody', this.getSortValue.bind(this));
         this.setupEventListeners();
         this.currentType = 'category';
         this.loadLanguagesFilter();
+    }
+
+    getSortValue(row, key) {
+        const columnIndex = this.sortableTable.getColumnIndex(key);
+        switch (key) {
+            case 'originalText':
+            case 'language':
+            case 'translation':
+            case 'type':
+                return row.cells[columnIndex].textContent.toLowerCase();
+            case 'created':
+                return SortableTable.dateSortValue(row, columnIndex);
+            default:
+                return row.cells[columnIndex].textContent.toLowerCase();
+        }
     }
 
     async loadLanguagesFilter() {
@@ -96,6 +113,9 @@ export class TranslationManager {
             const row = this.createTranslationRow(translation);
             this.translationTableBody.appendChild(row);
         });
+        
+        // Initialize sorting controls after displaying data
+        this.sortableTable.setupSortingControls();
     }
 
     createTranslationRow(translation) {

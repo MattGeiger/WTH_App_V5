@@ -1,4 +1,5 @@
 import { showMessage, apiGet, apiPost } from './utils.js';
+import { SortableTable } from './utils/sortableTable.js';
 
 export class LanguageManager {
     constructor() {
@@ -6,7 +7,22 @@ export class LanguageManager {
         this.updateLanguagesBtn = document.getElementById('updateLanguages');
         this.languageGrid = document.querySelector('.language-grid');
         this.filterSelect = document.getElementById('languageFilter');
+        this.sortableTable = new SortableTable('languageTableBody', this.getSortValue.bind(this));
         this.setupEventListeners();
+    }
+
+    getSortValue(row, key) {
+        const columnIndex = this.sortableTable.getColumnIndex(key);
+        switch (key) {
+            case 'code':
+                return row.cells[columnIndex].textContent.toLowerCase();
+            case 'name':
+                return row.cells[columnIndex].textContent.toLowerCase();
+            case 'status':
+                return row.cells[columnIndex].textContent === 'Active' ? 1 : 0;
+            default:
+                return row.cells[columnIndex].textContent.toLowerCase();
+        }
     }
 
     setupEventListeners() {
@@ -79,6 +95,9 @@ export class LanguageManager {
         this.languageTableBody.innerHTML = languages
             .map(lang => this.createLanguageRow(lang))
             .join('');
+
+        // Initialize sorting controls after displaying data
+        this.sortableTable.setupSortingControls();
     }
 
     createLanguageRow(language) {
