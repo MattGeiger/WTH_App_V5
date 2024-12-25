@@ -7,13 +7,143 @@ export class FoodItemManager {
         this.settingsManager = settingsManager;
         this.form = document.getElementById('foodItemForm');
         this.tableBody = document.getElementById('foodItemTableBody');
-        this.itemLimitValue = document.getElementById('itemLimitValue');
+        this.itemLimitSelect = document.getElementById('itemLimitSelect');
         this.resetButton = document.getElementById('resetFoodItemForm');
         this.categorySelect = document.getElementById('foodItemCategory');
         this.nameInput = document.getElementById('foodItemName');
+        this.foodItemStats = document.getElementById('foodItemStats');
         this.sortableTable = new SortableTable('foodItemTableBody', this.getSortValue.bind(this));
+        this.lastUpdated = null;
+        this.initializeFormLayout();
         this.setupEventListeners();
+        this.initializeItemLimitDropdown();
         this.init();
+    }
+
+    initializeFormLayout() {
+        const formSections = ['input', 'status', 'dietary'];
+        formSections.forEach(section => {
+            const container = document.createElement('div');
+            container.className = `form-section ${section}-section`;
+            this.form.appendChild(container);
+        });
+
+        this.appendToFormSection('input', [
+            this.createFormGroup('Item Name:', this.nameInput),
+            this.createFormGroup('Category:', this.categorySelect),
+            this.createFormGroup('Item Limit:', this.itemLimitSelect),
+            this.createLimitTypeGroup()
+        ]);
+
+        const statusFlags = this.createStatusFlagsGroup();
+        this.appendToFormSection('status', [statusFlags]);
+
+        const dietaryFlags = this.createDietaryFlagsGroup();
+        this.appendToFormSection('dietary', [dietaryFlags]);
+    }
+
+    createFormGroup(label, element) {
+        const group = document.createElement('div');
+        group.className = 'form-group';
+        
+        const labelEl = document.createElement('label');
+        labelEl.textContent = label;
+        labelEl.className = 'form-label';
+        
+        group.appendChild(labelEl);
+        group.appendChild(element);
+        return group;
+    }
+
+    createLimitTypeGroup() {
+        const container = document.createElement('div');
+        container.id = 'limitTypeContainer';
+        container.style.display = 'none';
+        container.className = 'limit-type-group';
+
+        const perHousehold = document.createElement('input');
+        perHousehold.type = 'radio';
+        perHousehold.name = 'limitType';
+        perHousehold.value = 'perHousehold';
+        perHousehold.id = 'perHousehold';
+        perHousehold.checked = true;
+
+        const perPerson = document.createElement('input');
+        perPerson.type = 'radio';
+        perPerson.name = 'limitType';
+        perPerson.value = 'perPerson';
+        perPerson.id = 'perPerson';
+
+        const perHouseholdLabel = document.createElement('label');
+        perHouseholdLabel.htmlFor = 'perHousehold';
+        perHouseholdLabel.textContent = 'Per Household';
+
+        const perPersonLabel = document.createElement('label');
+        perPersonLabel.htmlFor = 'perPerson';
+        perPersonLabel.textContent = 'Per Person';
+
+        container.appendChild(perHousehold);
+        container.appendChild(perHouseholdLabel);
+        container.appendChild(perPerson);
+        container.appendChild(perPersonLabel);
+
+        return container;
+    }
+
+    createStatusFlagsGroup() {
+        const container = document.createElement('div');
+        container.className = 'status-flags-group';
+        
+        const flags = [
+            { id: 'foodItemInStock', label: 'In Stock' },
+            { id: 'foodItemMustGo', label: 'Must Go' },
+            { id: 'foodItemLowSupply', label: 'Low Supply' },
+            { id: 'foodItemReadyToEat', label: 'Ready to Eat' }
+        ];
+
+        flags.forEach(flag => {
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = flag.id;
+            
+            const label = document.createElement('label');
+            label.htmlFor = flag.id;
+            label.textContent = flag.label;
+            
+            container.appendChild(checkbox);
+            container.appendChild(label);
+        });
+
+        return container;
+    }
+
+    createDietaryFlagsGroup() {
+        const container = document.createElement('div');
+        container.className = 'dietary-flags-group';
+        
+        const flags = [
+            { id: 'foodItemKosher', label: 'Kosher' },
+            { id: 'foodItemHalal', label: 'Halal' },
+            { id: 'foodItemVegetarian', label: 'Vegetarian' },
+            { id: 'foodItemVegan', label: 'Vegan' },
+            { id: 'foodItemGlutenFree', label: 'Gluten Free' },
+            { id: 'foodItemOrganic', label: 'Organic' }
+        ];
+
+        flags.forEach(flag => {
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = flag.id;
+            
+            const label = document.createElement('label');
+            label.htmlFor = flag.id;
+            label.textContent = flag.label;
+            
+            container.appendChild(checkbox);
+            container.appendChild(label);
+        });
+
+        return container;
     }
 
     async init() {
@@ -21,6 +151,19 @@ export class FoodItemManager {
         if (this.categorySelect.options.length === 0) {
             this.displayNoCategories();
         }
+    }
+
+    initializeItemLimitDropdown() {
+        if (!this.itemLimitSelect) return;
+
+        const globalLimit = this.settingsManager.getCurrentLimit();
+        let options = ['<option value="0">No Limit</option>'];
+        
+        for (let i = 1; i <= globalLimit; i++) {
+            options.push(`<option value="${i}">${i}</option>`);
+        }
+        
+        this.itemLimitSelect.innerHTML = options.join('');
     }
 
     getSortValue(row, key) {
@@ -33,7 +176,8 @@ export class FoodItemManager {
             case 'dietary':
                 return row.cells[columnIndex].textContent.toLowerCase();
             case 'limit':
-                return SortableTable.numberSortValue(row, columnIndex);
+                const limitText = row.cells[columnIndex].textContent;
+                return limitText === 'No Limit' ? -1 : parseInt(limitText);
             case 'created':
                 return SortableTable.dateSortValue(row, columnIndex);
             default:
@@ -44,35 +188,35 @@ export class FoodItemManager {
     setupEventListeners() {
         this.form.addEventListener('submit', this.handleSubmit.bind(this));
         this.resetButton.addEventListener('click', () => this.resetForm());
-        this.itemLimitValue.addEventListener('input', this.handleLimitValidation.bind(this));
         this.nameInput.addEventListener('input', this.handleNameInput.bind(this));
         this.addTableEventListeners();
+        
+        this.itemLimitSelect.addEventListener('change', () => {
+            const limitTypeContainer = document.getElementById('limitTypeContainer');
+            limitTypeContainer.style.display = this.itemLimitSelect.value === '0' ? 'none' : 'block';
+        });
     }
 
     handleNameInput(e) {
         const input = e.target;
         const value = input.value;
 
-        // Client-side validation
         if (value.length > 36) {
             input.value = value.slice(0, 36);
             showMessage('Input cannot exceed 36 characters', 'warning', 'foodItem');
             return;
         }
 
-        // Remove consecutive spaces as they type
         if (/\s{2,}/.test(value)) {
             input.value = value.replace(/\s{2,}/g, ' ');
         }
 
-        // Check for repeated words
         const words = value.toLowerCase().split(' ');
         const uniqueWords = new Set(words);
         if (uniqueWords.size !== words.length) {
             showMessage('Input contains repeated words', 'warning', 'foodItem');
         }
 
-        // Convert to Title Case as they type
         input.value = value
             .split(' ')
             .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
@@ -110,21 +254,11 @@ export class FoodItemManager {
                 const option = document.createElement('option');
                 option.value = category.id;
                 option.textContent = category.name;
+                option.dataset.limit = category.itemLimit;
                 this.categorySelect.appendChild(option);
             });
         } catch (error) {
             showMessage(error.message, 'error', 'foodItem');
-        }
-    }
-
-    handleLimitValidation(e) {
-        const globalUpperLimit = this.settingsManager.getCurrentLimit();
-        let value = parseInt(e.target.value);
-
-        if (isNaN(value) || value < 0) {
-            e.target.value = 0;
-        } else if (value > globalUpperLimit) {
-            e.target.value = globalUpperLimit;
         }
     }
 
@@ -145,7 +279,6 @@ export class FoodItemManager {
         e.preventDefault();
         const name = this.nameInput.value.trim();
         
-        // Client-side validation
         if (name.length < 3) {
             showMessage('Food item name must be at least three characters long', 'error', 'foodItem');
             return;
@@ -157,7 +290,6 @@ export class FoodItemManager {
             return;
         }
 
-        // Check for repeated words
         const words = name.toLowerCase().split(' ');
         const uniqueWords = new Set(words);
         if (uniqueWords.size !== words.length) {
@@ -189,13 +321,8 @@ export class FoodItemManager {
     }
 
     collectFormData() {
-        const limitType = document.querySelector('input[name="limitType"]:checked').value;
-        let itemLimit = parseInt(this.itemLimitValue.value);
-        if (isNaN(itemLimit)) itemLimit = 0;
-        if (itemLimit < 0) itemLimit = 0;
-
-        const globalUpperLimit = this.settingsManager.getCurrentLimit();
-        if (itemLimit > globalUpperLimit) itemLimit = globalUpperLimit;
+        const limitType = document.querySelector('input[name="limitType"]:checked')?.value || 'perHousehold';
+        const itemLimit = parseInt(this.itemLimitSelect.value) || 0;
 
         return {
             name: this.nameInput.value.trim(),
@@ -220,6 +347,8 @@ export class FoodItemManager {
             await this.loadCategories();
             const data = await apiGet('/api/food-items?includeOutOfStock=true');
             this.displayFoodItems(data.data);
+            this.updateStats(data.data);
+            this.lastUpdated = new Date();
             if (managers.translations) {
                 await managers.translations.loadTranslations();
             }
@@ -228,9 +357,32 @@ export class FoodItemManager {
         }
     }
 
+    updateStats(foodItems) {
+        if (!this.foodItemStats) return;
+
+        const totalItems = foodItems.length;
+        const inStock = foodItems.filter(item => item.inStock).length;
+        const outOfStock = totalItems - inStock;
+        const limited = foodItems.filter(item => item.itemLimit > 0).length;
+        const unlimited = totalItems - limited;
+        const lastUpdatedStr = this.lastUpdated ? 
+            `Last Updated: ${this.lastUpdated.toLocaleString()}` : '';
+
+        this.foodItemStats.innerHTML = `
+            <div class="stats">
+                <span>Total Items: ${totalItems}</span>
+                <span>In Stock: ${inStock}</span>
+                <span>Out of Stock: ${outOfStock}</span>
+                <span>Limited: ${limited}</span>
+                <span>Unlimited: ${unlimited}</span>
+                <span>${lastUpdatedStr}</span>
+            </div>
+        `;
+    }
+
     displayFoodItems(foodItems) {
         if (!Array.isArray(foodItems) || foodItems.length === 0) {
-            this.tableBody.innerHTML = '<tr><td colspan="7">No food items found</td></tr>';
+            this.tableBody.innerHTML = '<tr><td colspan="7" class="table__cell--empty">No food items found</td></tr>';
             return;
         }
 
@@ -238,7 +390,6 @@ export class FoodItemManager {
             .map(item => this.createFoodItemRow(item))
             .join('');
 
-        // Initialize sorting controls after displaying data
         this.sortableTable.setupSortingControls();
     }
 
@@ -269,13 +420,13 @@ export class FoodItemManager {
 
         return `
             <tr>
-                <td>${item.name}</td>
-                <td>${item.category?.name || 'Unknown'}</td>
-                <td>${status || 'None'}</td>
-                <td>${dietary || 'None'}</td>
-                <td>${limitDisplay}</td>
-                <td>${new Date(item.createdAt).toLocaleDateString()}</td>
-                <td>
+                <td class="table__cell">${item.name}</td>
+                <td class="table__cell">${item.category?.name || 'Unknown'}</td>
+                <td class="table__cell">${status || 'None'}</td>
+                <td class="table__cell">${dietary || 'None'}</td>
+                <td class="table__cell">${limitDisplay}</td>
+                <td class="table__cell">${new Date(item.createdAt).toLocaleDateString()}</td>
+                <td class="table__cell">
                     <button class="edit-food-item-btn" data-item='${itemDataString}'>
                         Edit
                     </button>
@@ -336,15 +487,15 @@ export class FoodItemManager {
         document.getElementById('foodItemOrganic').checked = data.organic;
         document.getElementById('foodItemReadyToEat').checked = data.readyToEat;
 
-        const globalUpperLimit = this.settingsManager.getCurrentLimit();
         const limitTypeInputs = document.querySelectorAll('input[name="limitType"]');
-        
         limitTypeInputs.forEach(r => {
             r.checked = (r.value === data.limitType);
         });
 
-        const limitValue = Math.min(data.itemLimit, globalUpperLimit);
-        this.itemLimitValue.value = limitValue;
+        this.itemLimitSelect.value = data.itemLimit;
+
+        const limitTypeContainer = document.getElementById('limitTypeContainer');
+        limitTypeContainer.style.display = data.itemLimit === 0 ? 'none' : 'block';
     }
 
     async deleteFoodItem(id) {
@@ -362,6 +513,16 @@ export class FoodItemManager {
     resetForm() {
         this.form.reset();
         document.getElementById('foodItemId').value = '';
+        this.itemLimitSelect.value = '0';
+        const limitTypeContainer = document.getElementById('limitTypeContainer');
+        limitTypeContainer.style.display = 'none';
         this.form.querySelector('button[type="submit"]').textContent = 'Add Food Item';
+    }
+
+    appendToFormSection(section, elements) {
+        const container = this.form.querySelector(`.${section}-section`);
+        if (container) {
+            elements.forEach(el => container.appendChild(el));
+        }
     }
 }

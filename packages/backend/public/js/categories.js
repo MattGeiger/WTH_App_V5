@@ -7,18 +7,33 @@ export class CategoryManager {
         this.form = document.getElementById('categoryForm');
         this.tableBody = document.getElementById('categoryTableBody');
         this.resetButton = document.getElementById('resetForm');
-        this.itemLimitValue = document.getElementById('categoryItemLimit');
+        this.itemLimitSelect = document.getElementById('categoryItemLimit');
         this.nameInput = document.getElementById('categoryName');
+        this.categoryStats = document.getElementById('categoryStats');
         this.sortableTable = new SortableTable('categoryTableBody', this.getSortValue.bind(this));
+        this.lastUpdated = null;
         this.setupEventListeners();
+        this.initializeItemLimitDropdown();
     }
 
     setupEventListeners() {
         this.form.addEventListener('submit', this.handleSubmit.bind(this));
         this.resetButton.addEventListener('click', () => this.resetForm());
-        this.itemLimitValue.addEventListener('input', this.handleLimitValidation.bind(this));
         this.nameInput.addEventListener('input', this.handleNameInput.bind(this));
         this.addTableEventListeners();
+    }
+
+    initializeItemLimitDropdown() {
+        if (!this.itemLimitSelect) return;
+
+        const globalLimit = managers.settings.getCurrentLimit();
+        let options = ['<option value="0">No Limit</option>'];
+        
+        for (let i = 1; i <= globalLimit; i++) {
+            options.push(`<option value="${i}">${i}</option>`);
+        }
+        
+        this.itemLimitSelect.innerHTML = options.join('');
     }
 
     getSortValue(row, key) {
@@ -27,7 +42,8 @@ export class CategoryManager {
             case 'name':
                 return row.cells[columnIndex].textContent.toLowerCase();
             case 'limit':
-                return SortableTable.numberSortValue(row, columnIndex);
+                const limitText = row.cells[columnIndex].textContent;
+                return limitText === 'No Limit' ? -1 : parseInt(limitText);
             case 'created':
                 return SortableTable.dateSortValue(row, columnIndex);
             default:
@@ -65,17 +81,6 @@ export class CategoryManager {
             .join(' ');
     }
 
-    handleLimitValidation(e) {
-        const globalUpperLimit = managers.settings.getCurrentLimit();
-        let value = parseInt(e.target.value);
-
-        if (isNaN(value) || value < 0) {
-            e.target.value = 0;
-        } else if (value > globalUpperLimit) {
-            e.target.value = globalUpperLimit;
-        }
-    }
-
     addTableEventListeners() {
         this.tableBody.addEventListener('click', (e) => {
             const target = e.target;
@@ -94,7 +99,7 @@ export class CategoryManager {
     async handleSubmit(e) {
         e.preventDefault();
         const name = this.nameInput.value.trim();
-        const itemLimit = parseInt(this.itemLimitValue.value) || 0;
+        const itemLimit = parseInt(this.itemLimitSelect.value);
         const id = document.getElementById('categoryId').value;
 
         // Client-side validation
@@ -141,15 +146,36 @@ export class CategoryManager {
             const data = await apiGet('/api/categories');
             if (data && data.data) {
                 this.displayCategories(data.data);
+                this.updateStats(data.data);
+                this.lastUpdated = new Date();
             }
         } catch (error) {
             showMessage(error.message || 'Error loading categories', 'error', 'category');
         }
     }
 
+    updateStats(categories) {
+        if (!this.categoryStats) return;
+
+        const totalCategories = categories.length;
+        const limitedCategories = categories.filter(cat => cat.itemLimit > 0).length;
+        const unlimitedCategories = totalCategories - limitedCategories;
+        const lastUpdatedStr = this.lastUpdated ? 
+            `Last Updated: ${this.lastUpdated.toLocaleString()}` : '';
+
+        this.categoryStats.innerHTML = `
+            <div class="stats">
+                <span>Total Categories: ${totalCategories}</span>
+                <span>Limited: ${limitedCategories}</span>
+                <span>Unlimited: ${unlimitedCategories}</span>
+                <span>${lastUpdatedStr}</span>
+            </div>
+        `;
+    }
+
     displayCategories(categories) {
         if (!Array.isArray(categories)) {
-            this.tableBody.innerHTML = '<tr><td colspan="4">No categories available</td></tr>';
+            this.tableBody.innerHTML = '<tr><td colspan="4" class="table__cell--empty">No categories available</td></tr>';
             return;
         }
 
@@ -195,14 +221,14 @@ export class CategoryManager {
     editCategory(id, name, itemLimit) {
         document.getElementById('categoryId').value = id;
         this.nameInput.value = name || '';
-        this.itemLimitValue.value = itemLimit || 0;
+        this.itemLimitSelect.value = itemLimit || 0;
         this.form.querySelector('button[type="submit"]').textContent = 'Update Category';
     }
 
     resetForm() {
         this.form.reset();
         document.getElementById('categoryId').value = '';
-        this.itemLimitValue.value = '0';
+        this.itemLimitSelect.value = '0';
         this.form.querySelector('button[type="submit"]').textContent = 'Add Category';
     }
 }
