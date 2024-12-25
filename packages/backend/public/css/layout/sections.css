@@ -1,12 +1,272 @@
-.section {
-    margin: 20px 0;
-    padding: 20px;
-    border: 1px solid #ccc;
+/* Main Container */
+body {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 24px;
 }
 
-.filter-controls {
+/* Section Base */
+.section {
+    margin: 40px 0;
+    padding: 32px;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Section Headers */
+.section h2 {
+    color: #212529;
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0 0 24px 0;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #e9ecef;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+}
+
+.section h3 {
+    color: #495057;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 32px 0 16px 0;
+}
+
+.section h4 {
+    color: #495057;
+    font-size: 16px;
+    font-weight: 600;
+    margin: 24px 0 12px 0;
+}
+
+/* Section-specific Colors */
+#settingsSection {
+    border-left: 4px solid #0066cc;
+}
+
+#languageSection {
+    border-left: 4px solid #28a745;
+}
+
+#categorySection {
+    border-left: 4px solid #fd7e14;
+}
+
+#foodItemSection {
+    border-left: 4px solid #dc3545;
+}
+
+#translationSection {
+    border-left: 4px solid #6f42c1;
+}
+
+/* Global Settings Section */
+#settingsSection {
+    max-width: 800px;
+}
+
+#settingsSection .form__group {
+    margin-bottom: 24px;
+}
+
+/* Message Areas */
+.message-area {
+    min-height: 48px;
+    margin-bottom: 24px;
+}
+
+/* Content Layouts */
+.section-content {
+    margin: 24px 0;
+}
+
+/* Form Container */
+.section form {
+    max-width: 800px;
+    margin: 24px 0;
+}
+
+/* List Sections */
+.list-section {
+    margin-top: 32px;
+}
+
+/* Stats Container */
+.stats-container {
+    margin: 24px 0;
+}
+
+/* Filter Controls */
+.filter-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 24px 0;
+    padding: 16px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+}
+
+/* Language Management */
+#languageSection .language-grid {
+    margin: 24px 0;
+}
+
+#languageSection .filter-controls {
+    justify-content: flex-start;
+}
+
+/* Category Management */
+#categorySection .form__group,
+#foodItemSection .form__group {
+    max-width: 480px;
+}
+
+/* Food Item Management */
+#foodItemSection .flags-section {
+    margin: 32px 0;
+}
+
+.flags-section h4 {
+    color: #212529;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+/* Translation Management */
+#translationSection .translation-controls {
+    margin: 24px 0;
+}
+
+.translation-controls .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Section Banners */
+.section-banner {
+    padding: 16px;
+    margin: 24px 0;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.section-banner--warning {
+    background: #fff3cd;
+    border: 1px solid #ffeeba;
+    color: #856404;
+}
+
+.section-banner--note {
+    background: #e7f5ff;
+    border: 1px solid #b8daff;
+    color: #004085;
+}
+
+/* Table Containers */
+.table-container {
+    margin: 24px 0;
+    overflow-x: auto;
+    border-radius: 8px;
+}
+
+/* Button Groups */
+.button-group {
+    display: flex;
+    gap: 12px;
+    margin: 24px 0;
+}
+
+/* Empty States */
+.empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    background: #f8f9fa;
+    border: 1px dashed #dee2e6;
+    border-radius: 8px;
+    color: #6c757d;
+    margin: 24px 0;
+}
+
+/* Loading States */
+.loading-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    color: #6c757d;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    body {
+        padding: 24px 16px;
+    }
+
+    .section {
+        padding: 24px 16px;
+        margin: 24px 0;
+    }
+
+    .section h2 {
+        font-size: 20px;
+        margin-bottom: 20px;
+    }
+
+    .filter-controls {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .button-group {
+        flex-direction: column;
+    }
+
+    .button-group button {
+        width: 100%;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .section {
+        break-inside: avoid;
+        border: none;
+        box-shadow: none;
+        padding: 20px 0;
+    }
+
+    .button-group,
+    .filter-controls {
+        display: none;
+    }
+
+    .section-banner {
+        background: none;
+        border: 1px solid #000;
+    }
+}
+
+/* Global Header */
+h1 {
+    color: #212529;
+    font-size: 32px;
+    font-weight: 700;
+    margin: 0 0 40px 0;
+    text-align: center;
+}
+
+/* Help Text */
+.help-text {
+    font-size: 13px;
+    color: #6c757d;
+    margin-top: 8px;
+    line-height: 1.4;
 }
