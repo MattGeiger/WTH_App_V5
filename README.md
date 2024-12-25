@@ -31,8 +31,8 @@ A web application designed for non-profit food pantries. Features automated inve
   - AI-powered translation system
   - Automatic language initialization
   - Manual translation refinement
-  - Race condition protection
-  - Instant updates across UI
+  - Support for custom translations
+  - Real-time updates across UI
 
 - **Dietary System**
   - Automated dietary flags
@@ -171,6 +171,8 @@ GET    /api/languages/active
 ```
 GET    /api/translations
 GET    /api/translations/language/:languageCode
+GET    /api/translations/custom
+POST   /api/translations/custom
 POST   /api/translations/category/:categoryId
 POST   /api/translations/food-item/:foodItemId
 PUT    /api/translations/:id

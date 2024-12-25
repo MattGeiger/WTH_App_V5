@@ -22,6 +22,7 @@ The Food Pantry Management System is a web application designed to support non-p
    - Zero-configuration initialization
    - Race-condition prevention
    - Translation refinement tools
+   - Support for custom translations
    - Automatic updates
    - Sortable translation tables
 
@@ -109,6 +110,7 @@ The Food Pantry Management System is a web application designed to support non-p
    - OpenAI translation
    - Manual refinement
    - Translation caching
+   - Support for custom translations
 
 4. **Item Limits**
    - Global limits
@@ -301,7 +303,7 @@ The Food Pantry Management System is a web application designed to support non-p
    - Event handler efficiency
 
 2. **Service Impact**
-   - Volunteer hours saved
+   - Staff hours saved
    - Language accessibility
    - Client satisfaction
    - System reliability
