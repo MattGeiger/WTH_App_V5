@@ -68,6 +68,9 @@
     <div id="categorySection" class="section">
         <h2>Category Management</h2>
         <div class="message-area"></div>
+        <div id="categoryStats" class="stats-container">
+            <!-- Stats will be dynamically populated here -->
+        </div>
         <form id="categoryForm">
             <div class="form__group">
                 <label for="categoryName">Category Name:</label>
@@ -75,10 +78,11 @@
             </div>
             <div class="form__group">
                 <label for="categoryItemLimit">Item Limit:</label>
-                <input type="number" id="categoryItemLimit" name="categoryItemLimit" min="0" value="0">
+                <select id="categoryItemLimit" name="categoryItemLimit">
+                    <!-- Options will be dynamically populated -->
+                </select>
                 <p class="message message--note">
-                    Set to 0 for no limit. Global Upper Limit applies as a maximum threshold.
-                    This limit applies to all items within this category.
+                    Global Upper Limit applies when set to 'No Limit.' This limit applies to all items within this category.
                 </p>
             </div>
             <input type="hidden" id="categoryId">
@@ -107,84 +111,22 @@
     <div id="foodItemSection" class="section">
         <h2>Food Item Management</h2>
         <div class="message-area"></div>
+        <div id="foodItemStats" class="stats-container">
+            <!-- Stats will be dynamically populated here -->
+        </div>
         <form id="foodItemForm">
-            <div class="form__group">
-                <label for="foodItemName">Item Name:</label>
-                <input type="text" id="foodItemName" name="foodItemName" required>
+            <!-- Important: Empty containers for dynamic form sections -->
+            <div class="form-section input-section">
+                <!-- Name, Category, and Limit inputs will be added here -->
+                <input type="text" id="foodItemName" name="foodItemName" class="hidden">
+                <select id="foodItemCategory" class="hidden"></select>
+                <select id="itemLimitSelect" class="hidden"></select>
             </div>
-            <div class="form__group">
-                <label for="foodItemCategory">Category:</label>
-                <select id="foodItemCategory" required></select>
+            <div class="form-section status-section">
+                <!-- Status flags will be added here -->
             </div>
-            <div class="form__group">
-                <label for="foodItemInStock">In Stock:</label>
-                <input type="checkbox" id="foodItemInStock" name="foodItemInStock" checked>
-            </div>
-            <div class="form__group">
-                <h4>Status Flags</h4>
-                <div class="toggle-group">
-                    <label class="toggle-group__label">
-                        <input type="checkbox" id="foodItemMustGo" name="mustGo">
-                        Must Go
-                    </label>
-                    <label class="toggle-group__label">
-                        <input type="checkbox" id="foodItemLowSupply" name="lowSupply">
-                        Low Supply
-                    </label>
-                    <label class="toggle-group__label">
-                        <input type="checkbox" id="foodItemReadyToEat" name="readyToEat">
-                        Ready to Eat
-                    </label>
-                </div>
-            </div>
-            <div class="form__group">
-                <h4>Dietary Flags</h4>
-                <div class="toggle-group">
-                    <label class="toggle-group__label">
-                        <input type="checkbox" id="foodItemKosher" name="kosher">
-                        Kosher
-                    </label>
-                    <label class="toggle-group__label">
-                        <input type="checkbox" id="foodItemHalal" name="halal">
-                        Halal
-                    </label>
-                    <label class="toggle-group__label">
-                        <input type="checkbox" id="foodItemVegetarian" name="vegetarian">
-                        Vegetarian
-                    </label>
-                    <label class="toggle-group__label">
-                        <input type="checkbox" id="foodItemVegan" name="vegan">
-                        Vegan
-                    </label>
-                    <label class="toggle-group__label">
-                        <input type="checkbox" id="foodItemGlutenFree" name="glutenFree">
-                        Gluten Free
-                    </label>
-                    <label class="toggle-group__label">
-                        <input type="checkbox" id="foodItemOrganic" name="organic">
-                        Organic
-                    </label>
-                </div>
-            </div>
-            <div class="form__group">
-                <h4>Item Limit</h4>
-                <div class="limit-options">
-                    <label>
-                        <input type="radio" name="limitType" value="perHousehold" checked>
-                        Per Household
-                    </label>
-                    <label>
-                        <input type="radio" name="limitType" value="perPerson">
-                        Per Person
-                    </label>
-                    <div>
-                        <label for="itemLimitValue">Limit Value:</label>
-                        <input type="number" id="itemLimitValue" min="0" value="0">
-                        <p class="message message--note">
-                            Set to 0 for no limit. Global Upper Limit applies as a maximum threshold.
-                        </p>
-                    </div>
-                </div>
+            <div class="form-section dietary-section">
+                <!-- Dietary flags will be added here -->
             </div>
             <input type="hidden" id="foodItemId">
             <button type="submit">Add Food Item</button>
@@ -215,32 +157,49 @@
     <div id="translationSection" class="section">
         <h2>Translation Management</h2>
         <div class="message-area"></div>
-        <p class="message message--note">
-            Translations are automatically generated for all active languages.
-            Manual edits may be overwritten during automated translation updates.
-        </p>
-        
-        <div class="filter-controls">
-            <div class="translation-type">
-                <label>
-                    <input type="radio" name="translationType" value="category" checked>
-                    Categories
-                </label>
-                <label>
-                    <input type="radio" name="translationType" value="foodItem">
-                    Food Items
-                </label>
+        <div class="translation-controls">
+            <div class="custom-translation-input form__group">
+                <label for="customText">Custom Translation:</label>
+                <div class="flex">
+                    <input type="text" id="customText" placeholder="Enter text to translate">
+                    <button type="button" id="addTranslation" class="button">Add Translation</button>
+                </div>
             </div>
-    
-            <div class="language-filter">
-                <label for="filterLanguage">Filter By Language:</label>
-                <select id="filterLanguage">
-                    <option value="">All Languages</option>
-                </select>
+
+            <p class="message message--note">
+                Translations are automatically generated for all active languages.
+                Manual edits may be overwritten during automated translation updates.
+            </p>
+            
+            <div class="filter-controls">
+                <div class="translation-type">
+                    <label>
+                        <input type="radio" name="translationType" value="category" checked>
+                        Categories
+                    </label>
+                    <label>
+                        <input type="radio" name="translationType" value="foodItem">
+                        Food Items
+                    </label>
+                    <label>
+                        <input type="radio" name="translationType" value="customInput">
+                        Custom
+                    </label>
+                </div>
+                
+                <div class="language-filter">
+                    <label for="filterLanguage">Filter By Language:</label>
+                    <select id="filterLanguage">
+                        <option value="">All Languages</option>
+                    </select>
+                </div>
             </div>
         </div>
     
         <div id="translationList">
+            <div id="translationStats" class="stats-container">
+                <!-- Stats will be dynamically populated here -->
+            </div>
             <table class="table">
                 <thead>
                     <tr>

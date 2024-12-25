@@ -7,8 +7,17 @@ export class LanguageManager {
         this.updateLanguagesBtn = document.getElementById('updateLanguages');
         this.languageGrid = document.querySelector('.language-grid');
         this.filterSelect = document.getElementById('languageFilter');
+        this.languageStats = document.getElementById('languageStats');
         this.sortableTable = new SortableTable('languageTableBody', this.getSortValue.bind(this));
+        this.lastUpdated = null;
+        
+        // Set default filter to "Active Languages"
+        if (this.filterSelect) {
+            this.filterSelect.value = 'active';
+        }
+        
         this.setupEventListeners();
+        this.loadLanguages(); // Initial load
     }
 
     getSortValue(row, key) {
@@ -36,9 +45,30 @@ export class LanguageManager {
             const languages = this.filterLanguages(data.data);
             this.displayLanguages(languages);
             this.displayLanguageToggles(data.data);
+            this.updateStats(data.data);
+            this.lastUpdated = new Date();
         } catch (error) {
             showMessage(error.message, 'error', 'language');
         }
+    }
+
+    updateStats(languages) {
+        if (!this.languageStats) return;
+
+        const totalLanguages = languages.length;
+        const activeLanguages = languages.filter(lang => lang.active).length;
+        const inactiveLanguages = totalLanguages - activeLanguages;
+        const lastUpdatedStr = this.lastUpdated ? 
+            `Last Updated: ${this.lastUpdated.toLocaleString()}` : '';
+
+        this.languageStats.innerHTML = `
+            <div class="stats">
+                <span>Total Languages: ${totalLanguages}</span>
+                <span>Active: ${activeLanguages}</span>
+                <span>Inactive: ${inactiveLanguages}</span>
+                <span>${lastUpdatedStr}</span>
+            </div>
+        `;
     }
 
     filterLanguages(languages) {
@@ -89,6 +119,15 @@ export class LanguageManager {
     displayLanguages(languages) {
         if (!Array.isArray(languages)) {
             showMessage('Invalid language data received', 'error', 'language');
+            return;
+        }
+
+        if (languages.length === 0) {
+            this.languageTableBody.innerHTML = `
+                <tr>
+                    <td colspan="3" class="table__cell--empty">No languages found</td>
+                </tr>
+            `;
             return;
         }
 

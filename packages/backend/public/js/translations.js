@@ -1,4 +1,4 @@
-import { showMessage, apiGet, apiPut, apiDelete } from './utils.js';
+import { showMessage, apiGet, apiPut, apiDelete, apiPost } from './utils.js';
 import { SortableTable } from './utils/sortableTable.js';
 
 export class TranslationManager {
@@ -6,9 +6,13 @@ export class TranslationManager {
         this.translationTableBody = document.getElementById('translationTableBody');
         this.translationTypeRadios = document.querySelectorAll('input[name="translationType"]');
         this.filterLanguageSelect = document.getElementById('filterLanguage');
+        this.customTextInput = document.getElementById('customText');
+        this.addTranslationBtn = document.getElementById('addTranslation');
+        this.translationStats = document.getElementById('translationStats');
         this.sortableTable = new SortableTable('translationTableBody', this.getSortValue.bind(this));
         this.setupEventListeners();
         this.currentType = 'category';
+        this.lastUpdated = null;
         this.loadLanguagesFilter();
     }
 
@@ -31,6 +35,7 @@ export class TranslationManager {
         try {
             const data = await apiGet('/api/languages');
             this.updateLanguageFilter(data.data);
+            this.activeLanguages = data.data.filter(lang => lang.active);
         } catch (error) {
             showMessage(error.message, 'error', 'translation');
         }
@@ -56,6 +61,10 @@ export class TranslationManager {
         return this.currentType === 'foodItem';
     }
 
+    isTypeCustom() {
+        return this.currentType === 'customInput';
+    }
+
     setupEventListeners() {
         this.translationTypeRadios.forEach(radio => {
             radio.addEventListener('change', () => {
@@ -73,7 +82,57 @@ export class TranslationManager {
             this.loadTranslations();
         });
 
+        if (this.customTextInput) {
+            this.customTextInput.addEventListener('keyup', (e) => {
+                if (e.key === 'Enter') {
+                    this.handleCustomTranslation();
+                }
+            });
+        }
+
+        if (this.addTranslationBtn) {
+            this.addTranslationBtn.addEventListener('click', () => {
+                this.handleCustomTranslation();
+            });
+        }
+
         this.addTableEventListeners();
+    }
+
+    async handleCustomTranslation() {
+        const text = this.customTextInput.value.trim();
+        if (!text) {
+            showMessage('Please enter text to translate', 'error', 'translation');
+            return;
+        }
+
+        const languageCode = this.filterLanguageSelect.value;
+        if (!languageCode) {
+            showMessage('Please select a target language', 'error', 'translation');
+            return;
+        }
+
+        try {
+            await apiPost('/api/translations/custom', {
+                text,
+                languageCode,
+                type: 'customInput'
+            });
+
+            this.customTextInput.value = '';
+            showMessage('Custom translation added successfully', 'success', 'translation');
+            
+            // Select custom type and reload translations
+            const customRadio = Array.from(this.translationTypeRadios)
+                .find(radio => radio.value === 'customInput');
+            if (customRadio) {
+                customRadio.checked = true;
+                this.currentType = 'customInput';
+            }
+            await this.loadTranslations();
+        } catch (error) {
+            showMessage(error.message, 'error', 'translation');
+        }
     }
 
     addTableEventListeners() {
@@ -89,24 +148,66 @@ export class TranslationManager {
 
     async loadTranslations() {
         try {
-            const type = this.currentType;
-            const languageCode = this.filterLanguageSelect.value;
-            const queryParams = new URLSearchParams({ type });
-            if (languageCode) {
-                queryParams.append('languageCode', languageCode);
+            let queryParams = new URLSearchParams();
+            
+            // Only add type for category and foodItem
+            if (!this.isTypeCustom()) {
+                queryParams.append('type', this.currentType);
             }
             
-            const response = await apiGet(`/api/translations?${queryParams}`);
+            if (this.filterLanguageSelect.value) {
+                queryParams.append('languageCode', this.filterLanguageSelect.value);
+            }
+
+            // For custom type, use a different endpoint
+            const endpoint = this.isTypeCustom() ? 
+                '/api/translations/custom' : 
+                `/api/translations?${queryParams}`;
+
+            const response = await apiGet(endpoint);
             this.displayTranslations(response.data);
+            this.updateStats(response.data);
+            this.lastUpdated = new Date();
         } catch (error) {
-            showMessage(error.message, 'error', 'translation');
+            if (this.isTypeCustom()) {
+                // If no custom translations yet, show empty state
+                this.displayTranslations([]);
+                this.updateStats([]);
+            } else {
+                showMessage(error.message, 'error', 'translation');
+            }
         }
+    }
+
+    updateStats(translations) {
+        if (!this.translationStats) return;
+
+        const uniqueLanguages = new Set(translations.map(t => t.language.code)).size;
+        const uniqueTexts = new Set(translations.map(t => 
+            t.category?.name || t.foodItem?.name || t.originalText
+        )).size;
+        const lastUpdatedStr = this.lastUpdated ? 
+            `Last Updated: ${this.lastUpdated.toLocaleString()}` : '';
+
+        this.translationStats.innerHTML = `
+            <div class="stats">
+                <span>Total Translations: ${translations.length}</span>
+                <span>Unique Items: ${uniqueTexts}</span>
+                <span>Languages: ${uniqueLanguages}</span>
+                <span>${lastUpdatedStr}</span>
+            </div>
+        `;
     }
 
     displayTranslations(translations) {
         this.translationTableBody.innerHTML = '';
         if (!translations || translations.length === 0) {
-            this.translationTableBody.innerHTML = '<tr><td colspan="6">No translations found</td></tr>';
+            const message = this.isTypeCustom() ? 
+                'No custom translations found' : 
+                'No translations found';
+            this.translationTableBody.innerHTML = `
+                <tr><td colspan="6" class="table__cell--empty">${message}</td></tr>
+            `;
             return;
         }
         translations.forEach(translation => {
@@ -114,20 +215,19 @@ export class TranslationManager {
             this.translationTableBody.appendChild(row);
         });
         
-        // Initialize sorting controls after displaying data
         this.sortableTable.setupSortingControls();
     }
 
     createTranslationRow(translation) {
         const row = document.createElement('tr');
         const originalText = translation.category ? translation.category.name : 
-                           (translation.foodItem ? translation.foodItem.name : '');
+                           (translation.foodItem ? translation.foodItem.name : translation.originalText);
         
         row.innerHTML = `
             <td class="table__cell">${originalText}</td>
             <td class="table__cell">${translation.language.name}</td>
             <td class="table__cell">${translation.translatedText}</td>
-            <td class="table__cell">${translation.category ? 'Category' : 'Food Item'}</td>
+            <td class="table__cell">${this.getTranslationType(translation)}</td>
             <td class="table__cell">${new Date(translation.createdAt).toLocaleDateString()}</td>
             <td class="table__cell">
                 <button class="edit-translation-btn" 
@@ -142,6 +242,12 @@ export class TranslationManager {
         `;
         
         return row;
+    }
+
+    getTranslationType(translation) {
+        if (translation.category) return 'Category';
+        if (translation.foodItem) return 'Food Item';
+        return 'Custom';
     }
 
     async handleEditTranslation(button) {
