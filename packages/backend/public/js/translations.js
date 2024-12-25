@@ -106,21 +106,31 @@ export class TranslationManager {
             return;
         }
 
-        const languageCode = this.filterLanguageSelect.value;
-        if (!languageCode) {
-            showMessage('Please select a target language', 'error', 'translation');
-            return;
-        }
-
         try {
-            await apiPost('/api/translations/custom', {
-                text,
-                languageCode,
-                type: 'customInput'
-            });
+            const activeLanguages = await apiGet('/api/languages/active');
+            const translations = [];
+            let errors = 0;
+
+            for (const language of activeLanguages.data) {
+                try {
+                    const response = await apiPost('/api/translations/custom', {
+                        text,
+                        languageCode: language.code,
+                        type: 'customInput'
+                    });
+                    translations.push(response);
+                } catch (error) {
+                    errors++;
+                    console.error(`Failed to translate to ${language.code}:`, error);
+                }
+            }
 
             this.customTextInput.value = '';
-            showMessage('Custom translation added successfully', 'success', 'translation');
+            const successCount = translations.length;
+            const message = errors > 0 ? 
+                `Custom text translated to ${successCount} languages (${errors} failed)` :
+                `Custom text translated to ${successCount} languages`;
+            showMessage(message, errors > 0 ? 'warning' : 'success', 'translation');
             
             // Select custom type and reload translations
             const customRadio = Array.from(this.translationTypeRadios)

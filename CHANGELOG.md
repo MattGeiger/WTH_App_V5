@@ -6,6 +6,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.11] - 2024-12-25
+### Added
+- Custom translation support:
+  - New API routes for managing custom translations
+  - Backend methods for creating and retrieving custom translations
+  - Database schema updates to include `originalText` for custom translations
+  - Frontend support for adding and managing custom translations via UI
+  - Automatic application of custom translations to all active languages
+  - "Custom Translation" table view in Translation Management section
+- Enhanced Translation Management UI:
+  - "Add Translation" button for custom translations
+  - Updated labels for clarity (e.g., "Custom Translation:")
+  - Improved empty state messaging for tables
+- New error handling for custom translations:
+  - Consistent error messages for missing or invalid parameters
+  - Detailed logging of API request errors
+- Improved form structure for Food Item Management:
+  - Removed duplicate form elements from the HTML template
+  - Dynamic form creation handled entirely in JavaScript
+  - Stacked input fields in logical order (Item Name, Category, Item Limit)
+  - Dropdowns for item limits, including "No Limit" as default
+- Backend validation for translation requests:
+  - Added support for "customInput" type in translation routes
+  - Validation of input parameters for consistency and security
+
+### Changed
+- Updated database constraints:
+  - Unique constraint added for custom translations (`languageId` + `originalText`)
+  - Schema migration for `originalText` field
+- Refactored translation service:
+  - Centralized logic for handling translation types
+  - Improved OpenAI integration for dynamic prompts
+- Improved Translation Management filtering:
+  - Fixed issues with "Custom" radio button interaction
+  - Added dynamic table rendering for active custom translations
+- Enhanced feedback for translation actions:
+  - Real-time updates to Translation Management table after actions
+  - Clear success and error messages for users
+
+### Fixed
+- UI error for Translation Management:
+  - Resolved issue where "Custom" radio button triggered invalid type error
+  - Fixed API request errors for `type=customInput`
+- API error handling:
+  - Properly logs and reports invalid translation types
+  - Improved error responses for invalid or missing query parameters
+- Food Item Management:
+  - Fixed missing input controls for dietary tags and status flags
+  - Resolved layout issues caused by inconsistent form generation
+- JavaScript cleanup:
+  - Removed unused or duplicate code in `translations.js` and `foodItems.js`
+  - Improved event listener handling and memory cleanup
+
+### Known Issues
+- Translation Management table does not currently display individual statuses for translations (e.g., pending, completed) – planned for future release.
+- Performance optimization for bulk translation processing is still in progress.
+- Custom translations cannot currently be edited or deleted via the UI.
+
 ## [0.5.10] - 2024-12-23
 ### Added
 - Table sorting functionality

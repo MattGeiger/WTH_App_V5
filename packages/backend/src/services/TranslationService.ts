@@ -5,7 +5,7 @@ import { LanguageConfig } from '../config/languageConfig';
 import { ErrorTypes, ErrorMessages } from '../utils/errorConstants';
 import { handleServiceError } from '../utils/errorHandler';
 
-type ItemType = 'category' | 'foodItem';
+type ItemType = 'category' | 'foodItem' | 'customInput';
 
 interface CreateTranslationData {
     languageCode: string;
@@ -42,6 +42,8 @@ export class TranslationService {
                     whereClause.AND.push({ categoryId: { not: null }, foodItemId: null });
                 } else if (params.type === 'foodItem') {
                     whereClause.AND.push({ foodItemId: { not: null }, categoryId: null });
+                } else if (params.type === 'customInput') {
+                    whereClause.AND.push({ categoryId: null, foodItemId: null });
                 }
             }
 
@@ -55,6 +57,28 @@ export class TranslationService {
             });
         } catch (error) {
             throw handleServiceError(error, 'Error fetching translations');
+        }
+    }
+
+    async findCustom(languageCode?: string) {
+        try {
+            const whereClause: any = {
+                categoryId: null,
+                foodItemId: null
+            };
+
+            if (languageCode) {
+                whereClause.language = { code: languageCode };
+            }
+
+            return await this.prisma.translation.findMany({
+                where: whereClause,
+                include: {
+                    language: true
+                }
+            });
+        } catch (error) {
+            throw handleServiceError(error, 'Error fetching custom translations');
         }
     }
 
@@ -95,6 +119,38 @@ export class TranslationService {
             });
         } catch (error) {
             throw handleServiceError(error, `Error fetching translations for language: ${languageCode}`);
+        }
+    }
+
+    async createCustom(text: string, languageCode: string) {
+        try {
+            const language = await this.prisma.language.findFirst({
+                where: { code: languageCode, active: true }
+            });
+
+            if (!language) {
+                throw new ApiError(ErrorTypes.VALIDATION, ErrorMessages.INVALID_LANGUAGE);
+            }
+
+            // Get translation from OpenAI
+            const translatedText = await this.openAI.translateText(
+                text,
+                languageCode,
+                'customInput'
+            );
+
+            // Store translation with original text in metadata
+            return await this.prisma.translation.create({
+                data: {
+                    translatedText,
+                    originalText: text,  // Store original text for reference
+                    languageId: language.id,
+                    isAutomatic: true
+                },
+                include: { language: true }
+            });
+        } catch (error) {
+            throw handleServiceError(error, 'Error creating custom translation');
         }
     }
 

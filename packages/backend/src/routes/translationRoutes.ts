@@ -12,15 +12,15 @@ router.get('/', async (req, res, next) => {
         const { languageCode, categoryId, foodItemId, type } = req.query;
         console.log('Translation query params:', { languageCode, categoryId, foodItemId, type });
 
-        if (type && !['category', 'foodItem'].includes(type as string)) {
-            throw new ApiError(400, 'Invalid type parameter. Must be either "category" or "foodItem"');
+        if (type && !['category', 'foodItem', 'customInput'].includes(type as string)) {
+            throw new ApiError(400, 'Invalid type parameter. Must be "category", "foodItem", or "customInput"');
         }
 
         const params = {
             languageCode: languageCode as string,
             categoryId: categoryId ? parseInt(categoryId as string) : undefined,
             foodItemId: foodItemId ? parseInt(foodItemId as string) : undefined,
-            type: type as 'category' | 'foodItem' | undefined
+            type: type as 'category' | 'foodItem' | 'customInput' | undefined
         };
         console.log('Processed params:', params);
 
@@ -30,6 +30,17 @@ router.get('/', async (req, res, next) => {
         res.json(ApiResponse.success(translations));
     } catch (error) {
         console.error('Translation error:', error);
+        next(error);
+    }
+});
+
+// GET /translations/custom
+router.get('/custom', async (req, res, next) => {
+    try {
+        const { languageCode } = req.query;
+        const translations = await translationService.findCustom(languageCode as string);
+        res.json(ApiResponse.success(translations));
+    } catch (error) {
         next(error);
     }
 });
@@ -47,6 +58,21 @@ router.get('/language/:languageCode', async (req, res, next) => {
 
         const translations = await translationService.findByLanguage(languageCode, params);
         res.json(ApiResponse.success(translations));
+    } catch (error) {
+        next(error);
+    }
+});
+
+// POST /translations/custom
+router.post('/custom', async (req, res, next) => {
+    try {
+        const { text, languageCode } = req.body;
+        if (!text || !languageCode) {
+            throw new ApiError(400, 'Text and language code are required');
+        }
+
+        const translation = await translationService.createCustom(text, languageCode);
+        res.status(201).json(ApiResponse.success(translation, 'Custom translation created successfully'));
     } catch (error) {
         next(error);
     }
