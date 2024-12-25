@@ -50,20 +50,9 @@ export class OpenAIService {
 
     private buildSystemPrompt(context: 'category' | 'foodItem' | 'customInput', languageName: string): string {
         const contextPrompts = {
-            category: `You are a professional translator specializing in grocery, pharmacy, and department store categories. 
-                      Translate the following category name to ${languageName}. 
-                      Keep the translation concise and commonly used in grocery, pharmacy, and department store contexts.
-                      Use the most common term that would be recognized by native speakers.
-                      Do not comment on the translation, only output the translation itself.`,
-            foodItem: `You are a professional translator specializing in grocery, pharmacy, and department store items. 
-                      Translate the following store item name to ${languageName}. 
-                      Use the most common term that would be recognized by native speakers.
-                      Do not comment on the translation, only output the translation itself.`,
-            customInput: `You are a professional translator specializing in nonprofit and social services content.
-                         Translate the following text to ${languageName}.
-                         Focus on clarity and cultural appropriateness for nonprofit contexts.
-                         Use terminology that would be easily understood by native speakers.
-                         Do not comment on the translation, only output the translation itself.`
+            category: `You are a professional translator for grocery/pharmacy categories. Translate to ${languageName}. Output only translation.`,
+            foodItem: `translator for grocery/pharmacy items. Translate to ${languageName}. Output only translation.`,
+            customInput: `You are a professional translator for nonprofit food pantry and social services. Translate to ${languageName}. Output only translation.`
         };
 
         return contextPrompts[context];
