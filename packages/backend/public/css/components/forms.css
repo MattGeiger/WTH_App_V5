@@ -1,32 +1,292 @@
+/* Form Group Base */
 .form__group {
-    margin: 10px 0;
+    margin: 0 0 24px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 480px;
 }
 
-.toggle-group {
+/* Form Labels */
+.form__group label {
+    font-weight: 500;
+    color: #495057;
+    font-size: 14px;
+}
+
+/* Form Inputs */
+.form__group input[type="text"],
+.form__group input[type="number"],
+.form__group select,
+.form__group textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+    transition: all 0.2s ease;
+    background-color: white;
+    color: #212529;
+}
+
+/* Input Focus States */
+.form__group input[type="text"]:focus,
+.form__group input[type="number"]:focus,
+.form__group select:focus,
+.form__group textarea:focus {
+    border-color: #0066cc;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+}
+
+/* Checkbox and Radio */
+.form__group input[type="checkbox"],
+.form__group input[type="radio"] {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+/* Modern Button Styles */
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 100px;
+    padding: 10px 24px;
+    border-radius: 100px;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.4;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    gap: 8px;
+}
+
+/* Primary Button */
+.button--primary {
+    background: #0066cc;
+    color: white;
+}
+
+.button--primary:hover {
+    background: #0052a3;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Secondary Button */
+.button--secondary {
+    background: #f8f9fa;
+    color: #495057;
+    border: 1px solid #dee2e6;
+}
+
+.button--secondary:hover {
+    background: #e9ecef;
+    border-color: #ced4da;
+}
+
+/* Button Groups */
+.button-group {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+/* Form Sections */
+.form-section {
+    margin: 32px 0;
+}
+
+.form-section__header {
+    margin: 0 0 16px 0;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.form-section__title {
+    color: #212529;
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+}
+
+/* Status and Dietary Flags */
+.flags-group {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin: 10px 0;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+    padding: 16px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    margin: 12px 0;
 }
 
-.toggle-group__label {
+.flag-item {
     display: flex;
     align-items: center;
-    gap: 5px;
+    padding: 8px;
+    border-radius: 6px;
+    transition: background-color 0.2s;
 }
 
-.limit-options {
+.flag-item:hover {
+    background: #e9ecef;
+}
+
+.flag-item label {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 8px;
+    width: 100%;
+    cursor: pointer;
+    font-size: 14px;
+    color: #495057;
 }
 
-.lang-select {
+/* Item Limit Section */
+.limit-section {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 16px 0;
+    max-width: 480px;
+}
+
+.limit-type-options {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 16px;
+}
+
+.limit-value {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Helper Text */
+.help-text {
+    font-size: 13px;
+    color: #6c757d;
+    margin-top: 4px;
+    line-height: 1.4;
+}
+
+/* Custom Translation Input */
+.custom-translation-input {
+    max-width: 480px;
+}
+
+.custom-translation-input .flex {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.custom-translation-input input {
+    flex: 1;
+}
+
+/* Filter Controls */
+.filter-controls {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 24px;
+    margin: 24px 0;
+    padding: 16px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
 }
 
-.lang-select__label {
-    width: 120px;
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.filter-label {
+    font-weight: 500;
+    color: #495057;
+    margin: 0;
+    min-width: 80px;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    .form__group {
+        max-width: 100%;
+    }
+
+    .flags-group {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    }
+
+    .limit-type-options {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .button-group {
+        flex-direction: column;
+    }
+
+    .button {
+        width: 100%;
+    }
+
+    .custom-translation-input .flex {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .filter-controls {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .filter-group {
+        width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+/* Global Settings Specific */
+#settingsSection .form__group {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+    align-items: start;
+    max-width: 600px;
+}
+
+#settingsSection input[type="number"] {
+    max-width: 120px;
+}
+
+/* Food Item Form Specific */
+#foodItemForm .input-section {
+    max-width: 480px;
+}
+
+#foodItemForm .status-section,
+#foodItemForm .dietary-section {
+    margin-top: 32px;
+}
+
+.section-label {
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 12px;
+    font-size: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e9ecef;
 }
