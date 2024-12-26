@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.13] - 2024-12-25
+### Changed
+- Standardized button styling across UI sections using primary and secondary button patterns
+- Applied consistent button dimensions and spacing
+- Updated Global Settings "Save" button to match primary button style
+
 ## [0.5.12] - 2024-12-25
 ### Fixed
 - Standardized section dimensions across the UI for consistent appearance

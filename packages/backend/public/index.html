@@ -15,8 +15,8 @@
         <div class="message-area"></div>
         <div class="form__group">
             <label for="globalUpperLimit">Global Upper Limit for "No Limit" Items:</label>
-            <input type="number" id="globalUpperLimit" value="40" min="1">
-            <button id="saveGlobalLimit">Save</button>
+            <input type="number" id="globalUpperLimit" value="255" min="1">
+            <button id="saveGlobalLimit" class="primary-button" type="submit">Save</button>
         </div>
         <p class="message message--note">
             This setting is now stored in the backend. Adjust it and click "Save" to persist.
@@ -162,7 +162,7 @@
                 <label for="customText">Custom Translation:</label>
                 <div class="flex">
                     <input type="text" id="customText" placeholder="Enter text to translate">
-                    <button type="button" id="addTranslation" class="button">Add Translation</button>
+                    <button type="submit" id="addTranslation" class="primary-button">Add Translation</button>
                 </div>
             </div>
 

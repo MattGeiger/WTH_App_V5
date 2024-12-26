@@ -66,6 +66,11 @@ The Food Pantry Management System is a web application designed to support non-p
    - Case-insensitive comparison
 
 ### Frontend Architecture
+- Button System:
+     * Primary: Filled pill-style (#1a73e8)
+     * Secondary: Outlined pill-style
+     * Consistent height (40px) and padding
+     * Responsive behavior on mobile
 
 1. **Current Implementation**
 - Responsive breakpoints:
