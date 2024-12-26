@@ -44,11 +44,11 @@ export class FoodItemManager {
 
     createFormGroup(label, element) {
         const group = document.createElement('div');
-        group.className = 'form-group';
+        group.className = 'form__group';
         
         const labelEl = document.createElement('label');
         labelEl.textContent = label;
-        labelEl.className = 'form-label';
+        labelEl.className = 'required';
         
         group.appendChild(labelEl);
         group.appendChild(element);
