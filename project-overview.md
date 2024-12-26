@@ -68,6 +68,14 @@ The Food Pantry Management System is a web application designed to support non-p
 ### Frontend Architecture
 
 1. **Current Implementation**
+- Responsive breakpoints:
+     * Desktop (>1024px)
+     * Tablet landscape (≤1024px)
+     * Tablet portrait (≤768px)
+     * Mobile (≤480px)
+   - Consistent section dimensions
+   - Mobile-first responsive design
+   - Standardized form layouts
    - Modular JavaScript
    - Event communication
    - Real-time updates
