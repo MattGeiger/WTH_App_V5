@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.14] - 2024-12-25
+### Changed
+- Enhanced input field styling across the application
+  - Modernized form input visual design
+  - Improved focus and hover states
+  - Added helper text support
+  - Enhanced accessibility with high contrast support
+  - Updated form class naming convention to BEM methodology
+
 ## [0.5.13] - 2024-12-25
 ### Changed
 - Enhanced form input styling with modern UI elements
