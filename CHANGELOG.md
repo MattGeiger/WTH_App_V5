@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.12] - 2024-12-25
+### Fixed
+- Standardized section dimensions across the UI for consistent appearance
+- Enhanced responsive design with better breakpoints for various screen sizes
+- Improved mobile layout and spacing for better usability on small devices
+
 ## [0.5.11] - 2024-12-25
 ### Added
 - Custom translation support:

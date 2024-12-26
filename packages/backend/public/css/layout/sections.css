@@ -13,6 +13,8 @@ body {
     border: 1px solid #dee2e6;
     border-radius: 12px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* Section Headers */
@@ -63,12 +65,10 @@ body {
     border-left: 4px solid #6f42c1;
 }
 
-/* Global Settings Section */
-#settingsSection {
-    max-width: 800px;
-}
-
-#settingsSection .form__group {
+/* Section Form Groups */
+.section .form__group {
+    max-width: 480px;
+    width: 100%;
     margin-bottom: 24px;
 }
 
@@ -80,12 +80,6 @@ body {
 
 /* Content Layouts */
 .section-content {
-    margin: 24px 0;
-}
-
-/* Form Container */
-.section form {
-    max-width: 800px;
     margin: 24px 0;
 }
 
@@ -118,12 +112,6 @@ body {
 
 #languageSection .filter-controls {
     justify-content: flex-start;
-}
-
-/* Category Management */
-#categorySection .form__group,
-#foodItemSection .form__group {
-    max-width: 480px;
 }
 
 /* Food Item Management */
@@ -205,6 +193,13 @@ body {
 }
 
 /* Responsive Design */
+@media screen and (max-width: 1024px) {
+    .section {
+        padding: 28px 24px;
+        margin: 32px 0;
+    }
+}
+
 @media screen and (max-width: 768px) {
     body {
         padding: 24px 16px;
@@ -218,19 +213,49 @@ body {
     .section h2 {
         font-size: 20px;
         margin-bottom: 20px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .section .form__group {
+        max-width: 100%;
     }
 
     .filter-controls {
         flex-direction: column;
         align-items: flex-start;
+        gap: 12px;
     }
 
     .button-group {
         flex-direction: column;
+        width: 100%;
     }
 
     .button-group button {
         width: 100%;
+    }
+
+    .translation-controls .filter-group {
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    body {
+        padding: 16px 12px;
+    }
+
+    .section {
+        padding: 20px 12px;
+        margin: 20px 0;
+    }
+
+    .section h2 {
+        font-size: 18px;
     }
 }
 
