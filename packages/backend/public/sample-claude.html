@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Modern Input Fields Sample</title>
+    <style>
+        /* Base styles */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+            line-height: 1.4;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 32px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Form field container */
+        .field-container {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        /* Base input styles */
+        .field-container input,
+        .field-container select,
+        .field-container textarea {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 14px;
+            line-height: 1.5;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            background: white;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        /* Focus styles */
+        .field-container input:focus,
+        .field-container select:focus,
+        .field-container textarea:focus {
+            outline: none;
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.1);
+        }
+
+        /* Label styles */
+        .field-container label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #5f6368;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        /* Helper text */
+        .helper-text {
+            font-size: 12px;
+            color: #5f6368;
+            margin-top: 4px;
+        }
+
+        /* Error state */
+        .field-container.error input {
+            border-color: #d93025;
+        }
+
+        .field-container.error .helper-text {
+            color: #d93025;
+        }
+
+        /* Disabled state */
+        .field-container input:disabled,
+        .field-container select:disabled {
+            background-color: #f1f3f4;
+            border-color: #dadce0;
+            color: #80868b;
+            cursor: not-allowed;
+        }
+
+        /* Number input */
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Select styling */
+        select {
+            appearance: none;
+            padding-right: 40px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%235f6368' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 24px;
+        }
+
+        /* Required indicator */
+        .required::after {
+            content: "*";
+            color: #d93025;
+            margin-left: 4px;
+        }
+
+        /* Responsive adjustments */
+        @media screen and (max-width: 480px) {
+            .container {
+                padding: 16px;
+            }
+        }
+
+        /* High Contrast support */
+        @media (prefers-contrast: high) {
+            .field-container input,
+            .field-container select,
+            .field-container textarea {
+                border-width: 2px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Modern Form Fields</h2>
+
+        <!-- Text input -->
+        <div class="field-container">
+            <label for="name" class="required">Category Name</label>
+            <input type="text" id="name" placeholder="Enter category name"/>
+            <div class="helper-text">3-36 characters, no special characters</div>
+        </div>
+
+        <!-- Select input -->
+        <div class="field-container">
+            <label for="limit">Item Limit</label>
+            <select id="limit">
+                <option value="">Select a limit</option>
+                <option value="no-limit">No Limit</option>
+                <option value="1">1 item</option>
+                <option value="2">2 items</option>
+            </select>
+            <div class="helper-text">Global upper limit applies when set to 'No Limit'</div>
+        </div>
+
+        <!-- Number input -->
+        <div class="field-container">
+            <label for="global-limit" class="required">Global Upper Limit</label>
+            <input type="number" id="global-limit" value="255" min="1"/>
+            <div class="helper-text">Minimum value is 1</div>
+        </div>
+
+        <!-- Text input with error -->
+        <div class="field-container error">
+            <label for="error-example">Error Example</label>
+            <input type="text" id="error-example" value="Duplicate name"/>
+            <div class="helper-text">This category name already exists</div>
+        </div>
+
+        <!-- Disabled input -->
+        <div class="field-container">
+            <label for="disabled-example">Disabled Example</label>
+            <input type="text" id="disabled-example" disabled value="Cannot modify"/>
+            <div class="helper-text">This field cannot be modified</div>
+        </div>
+    </div>
+</body>
+</html>

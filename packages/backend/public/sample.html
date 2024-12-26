@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Modern Form Example</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+    .field-container {
+      position: relative;
+      margin-bottom: 24px;
+    }
+    /* Common styles for inputs and selects */
+    .field-container input,
+    .field-container select,
+    .field-container textarea {
+      width: 100%;
+      padding: 12px 8px;
+      border: none;
+      border-bottom: 2px solid #ccc;
+      background: none;
+      font-size: 16px;
+      outline: none;
+      transition: border-color 0.3s;
+      box-sizing: border-box;
+    }
+    /* Focus effect */
+    .field-container input:focus,
+    .field-container select:focus,
+    .field-container textarea:focus {
+      border-bottom: 2px solid #1a73e8;
+    }
+    /* Floating label */
+    .field-container label {
+      position: absolute;
+      top: 12px;
+      left: 8px;
+      font-size: 16px;
+      color: #aaa;
+      pointer-events: none;
+      transition: 0.3s;
+    }
+    /* Move label up when input has text or focus */
+    .field-container input:focus + label,
+    .field-container input:not(:placeholder-shown) + label,
+    .field-container select:focus + label,
+    .field-container select:not([value=""]) + label,
+    .field-container textarea:focus + label,
+    .field-container textarea:not(:placeholder-shown) + label {
+      top: -8px;
+      font-size: 12px;
+      color: #1a73e8;
+    }
+    /* Icons */
+    .field-icon {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 20px;
+      color: #aaa;
+    }
+    .leading-icon {
+      left: 8px;
+    }
+    .trailing-icon {
+      right: 8px;
+      cursor: pointer;
+    }
+    .with-leading-icon {
+      padding-left: 36px;
+    }
+    .with-trailing-icon {
+      padding-right: 36px;
+    }
+    /* Helper and error text */
+    .helper-text,
+    .error-text {
+      font-size: 12px;
+      color: #aaa;
+      margin-top: 4px;
+    }
+    .error-text {
+      color: #d93025;
+    }
+    /* Outlined container */
+    .outlined {
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 16px 8px 8px; 
+    }
+    .outlined label {
+      background-color: #f5f5f5;
+      padding: 0 4px;
+      left: 16px;
+    }
+    /* Responsive (optional) */
+    @media (max-width: 480px) {
+      body {
+        padding: 10px;
+      }
+      .outlined {
+        padding: 12px 8px 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Modern Form Fields</h1>
+
+  <!-- Filled Text Field -->
+  <div class="field-container">
+    <input type="text" id="filled" placeholder=" " />
+    <label for="filled">Filled Text</label>
+  </div>
+
+  <!-- Outlined Text Field -->
+  <div class="field-container outlined">
+    <input type="text" id="outlined" placeholder=" " />
+    <label for="outlined">Outlined Text</label>
+  </div>
+
+  <!-- Text Field with Leading Icon -->
+  <div class="field-container">
+    <span class="field-icon leading-icon">🔍</span>
+    <input type="text" id="search" placeholder=" " class="with-leading-icon" />
+    <label for="search">Search</label>
+  </div>
+
+  <!-- Password Field with Trailing Icon -->
+  <div class="field-container">
+    <input
+      type="password"
+      id="password"
+      placeholder=" "
+      class="with-trailing-icon"
+    />
+    <label for="password">Password</label>
+    <span class="field-icon trailing-icon" onclick="togglePassword()">
+      👁️
+    </span>
+    <div class="helper-text">At least 8 characters.</div>
+  </div>
+
+  <!-- Textarea -->
+  <div class="field-container">
+    <textarea id="message" rows="3" placeholder=" "></textarea>
+    <label for="message">Your Message</label>
+  </div>
+
+  <!-- Dropdown Menu -->
+  <div class="field-container">
+    <select id="dropdown" value="">
+      <option value="" disabled selected hidden></option>
+      <option value="option1">Option 1</option>
+      <option value="option2">Option 2</option>
+      <option value="option3">Option 3</option>
+    </select>
+    <label for="dropdown">Select an Option</label>
+    <div class="helper-text">Choose from the dropdown.</div>
+  </div>
+
+  <!-- Dropdown with Outlined Style -->
+  <div class="field-container outlined">
+    <select id="dropdown-outlined" value="">
+      <option value="" disabled selected hidden></option>
+      <option value="optionA">Option A</option>
+      <option value="optionB">Option B</option>
+      <option value="optionC">Option C</option>
+    </select>
+    <label for="dropdown-outlined">Outlined Dropdown</label>
+  </div>
+
+  <!-- Simulate Error State -->
+  <div class="field-container">
+    <input type="text" id="error-field" placeholder=" " />
+    <label for="error-field">Username</label>
+    <div class="error-text">Username is already taken.</div>
+  </div>
+
+  <script>
+    function togglePassword() {
+      const passInput = document.getElementById("password");
+      passInput.type = passInput.type === "password" ? "text" : "password";
+    }
+  </script>
+</body>
+</html>

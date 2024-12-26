@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.13] - 2024-12-25
 ### Changed
+- Enhanced form input styling with modern UI elements
+  - Added consistent styling for all input types
+  - Improved focus states and transitions
+  - Added helper text and required field indicators
+  - Enhanced accessibility features
+  - Added high contrast mode support
+
+## [0.5.13] - 2024-12-25
+### Changed
 - Standardized button styling across UI sections using primary and secondary button patterns
 - Applied consistent button dimensions and spacing
 - Updated Global Settings "Save" button to match primary button style
