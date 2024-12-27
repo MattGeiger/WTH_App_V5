@@ -6,6 +6,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.16] - 2024-12-26
+### Added
+- UI System Documentation:
+  - Created /docs directory for system documentation
+  - Added design-notes.md with detailed component specifications
+  - Added elements.html as interactive UI catalog
+  - Added sample-layout.html demonstrating layout patterns
+  - Documented:
+    - Form element styling and behavior
+    - Button system specifications
+    - Message styling variations
+    - Spacing and layout guidelines
+    - Typography standards
+    - Input field patterns
+    - Responsive design rules
+    - Grid system usage
+    - Table styling
+    - CSS variable system
+
 ## [0.5.15] - 2024-12-26
 ### Changed
 - Enhanced Food Item Management flag controls
