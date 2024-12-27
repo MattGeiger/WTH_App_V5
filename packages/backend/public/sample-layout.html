@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Layout Sample</title>
+    <style>
+        /* Base styles */
+        :root {
+            --color-primary: #1a73e8;
+            --color-primary-hover: #1557b0;
+            --color-secondary-text: #5f6368;
+            --color-border: #dadce0;
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.4;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: var(--space-xl);
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        section {
+            margin-bottom: var(--space-xl);
+            padding: var(--space-lg);
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+        }
+
+        h2 {
+            color: #212529;
+            font-size: 20px;
+            margin: 0 0 var(--space-lg) 0;
+        }
+
+        /* Form Layout */
+        .form-row {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-md);
+            margin-bottom: var(--space-lg);
+        }
+
+        .form-field {
+            flex: 1;
+            min-width: 0; /* Prevents flex item overflow */
+        }
+
+        /* Labels and Inputs */
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--color-secondary-text);
+            margin-bottom: var(--space-sm);
+        }
+
+        input {
+            width: 100%;
+            padding: 10px var(--space-md);
+            font-size: 14px;
+            border: 1px solid var(--color-border);
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        /* Buttons */
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 120px;
+            height: 40px;
+            padding: 0 var(--space-lg);
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 29px; /* Aligns with input field considering label */
+        }
+
+        .button-primary {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .button-primary:hover {
+            background: var(--color-primary-hover);
+        }
+
+        /* Helper Text */
+        .helper-text {
+            font-size: 12px;
+            color: var(--color-secondary-text);
+            margin-top: var(--space-xs);
+        }
+
+        /* Messages */
+        .message {
+            font-size: 14px;
+            padding: var(--space-md);
+            margin-top: var(--space-md);
+            border-radius: 4px;
+            background: #e7f5ff;
+            border: 1px solid #b8daff;
+            color: #004085;
+        }
+
+        @media screen and (max-width: 640px) {
+            .container {
+                padding: var(--space-md);
+            }
+
+            section {
+                padding: var(--space-md);
+            }
+
+            .form-row {
+                flex-direction: column;
+                gap: var(--space-md);
+            }
+
+            .button {
+                width: 100%;
+                margin-top: var(--space-sm);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Global Settings Example -->
+        <section>
+            <h2>Global Settings</h2>
+            <div class="form-row">
+                <div class="form-field">
+                    <label for="global-limit">Global Upper Limit for "No Limit" Items:</label>
+                    <input type="number" id="global-limit" min="1" value="255">
+                    <div class="helper-text">Minimum value is 1</div>
+                </div>
+                <button class="button button-primary">Save</button>
+            </div>
+            <div class="message">
+                This setting is now stored in the backend. Adjust it and click "Save" to persist.
+            </div>
+        </section>
+
+        <!-- Language Settings Example -->
+        <section>
+            <h2>Language Management</h2>
+            <div class="form-row">
+                <button class="button button-primary" style="margin-top: 0;">Update Language Settings</button>
+            </div>
+            <!-- Additional language settings content would go here -->
+        </section>
+
+        <!-- Translation Management Example -->
+        <section>
+            <h2>Translation Management</h2>
+            <div class="form-row">
+                <div class="form-field">
+                    <label for="custom-text">Custom Translation:</label>
+                    <input type="text" id="custom-text" placeholder="Enter text to translate">
+                    <div class="helper-text">Enter the text you want to translate</div>
+                </div>
+                <button class="button button-primary">Add Translation</button>
+            </div>
+        </section>
+    </div>
+</body>
+</html>
