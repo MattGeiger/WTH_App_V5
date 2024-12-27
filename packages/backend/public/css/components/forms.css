@@ -99,43 +99,83 @@
     margin: 0;
 }
 
-/* Checkbox and Radio Groups */
+/* Flag Groups */
 .dietary-flags-group,
-.status-flags-group,
-.limit-type-group {
+.status-flags-group {
+    margin-bottom: 32px;
+}
+
+.dietary-flags-group h3,
+.status-flags-group h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #202124;
+    margin: 0 0 8px 0;
+}
+
+/* Flag Grid Layout */
+.flags-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 12px;
-    margin: 16px 0;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+    margin: 24px 0;
+    padding: 24px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 12px;
 }
 
-/* Checkbox and Radio Styling */
-input[type="checkbox"],
-input[type="radio"] {
-    width: 18px;
-    height: 18px;
-    margin: 0;
-    vertical-align: middle;
+/* Flag Toggle Items */
+.flag-toggle {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 12px;
+    transition: all 0.2s ease;
 }
 
-.dietary-flags-group label,
-.status-flags-group label,
-.limit-type-group label {
+.flag-toggle:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.flag-toggle label {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    color: #5f6368;
+    gap: 10px;
     cursor: pointer;
-    padding: 8px 12px;
-    border-radius: 4px;
-    transition: background-color 0.2s ease;
+    width: 100%;
+    color: #495057;
+    font-size: 14px;
+    font-weight: 500;
 }
 
-.dietary-flags-group label:hover,
-.status-flags-group label:hover,
-.limit-type-group label:hover {
-    background-color: rgba(26, 115, 232, 0.04);
+.flag-toggle input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 2px solid #dee2e6;
+    cursor: pointer;
+    margin: 0;
+}
+
+/* Status vs Dietary Visual Differentiation */
+.status-flags-group .flags-grid {
+    border-color: rgba(33, 150, 243, 0.3);
+    background: rgba(33, 150, 243, 0.02);
+}
+
+.dietary-flags-group .flags-grid {
+    border-color: rgba(76, 175, 80, 0.3);
+    background: rgba(76, 175, 80, 0.02);
+}
+
+/* Limit Type Group */
+.limit-type-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+    margin: 16px 0;
 }
 
 /* Button Base Styles */
@@ -226,10 +266,18 @@ button:disabled {
         max-width: 100%;
     }
     
-    .dietary-flags-group,
-    .status-flags-group,
+    .flags-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        padding: 16px;
+        gap: 12px;
+    }
+
+    .flag-toggle {
+        padding: 10px;
+    }
+
     .limit-type-group {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     }
     
     button {
@@ -242,11 +290,12 @@ button:disabled {
     }
 }
 
-/* High Contrast Mode Support */
+/* High Contrast Support */
 @media (prefers-contrast: high) {
     .form__group input,
     .form__group select,
-    .form__group textarea {
+    .form__group textarea,
+    .flag-toggle {
         border-width: 2px;
     }
     
@@ -260,5 +309,13 @@ button:disabled {
     .form__group textarea:focus {
         outline: 2px solid #1a73e8;
         outline-offset: 2px;
+    }
+
+    .status-flags-group .flags-grid {
+        border: 2px solid #2196f3;
+    }
+
+    .dietary-flags-group .flags-grid {
+        border: 2px solid #4caf50;
     }
 }

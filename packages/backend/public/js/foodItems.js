@@ -93,6 +93,15 @@ export class FoodItemManager {
     createStatusFlagsGroup() {
         const container = document.createElement('div');
         container.className = 'status-flags-group';
+
+        // Add heading
+        const heading = document.createElement('h3');
+        heading.textContent = 'Status Flags';
+        container.appendChild(heading);
+
+        // Create grid container
+        const gridContainer = document.createElement('div');
+        gridContainer.className = 'flags-grid';
         
         const flags = [
             { id: 'foodItemInStock', label: 'In Stock' },
@@ -102,24 +111,45 @@ export class FoodItemManager {
         ];
 
         flags.forEach(flag => {
+            // Create toggle container
+            const toggle = document.createElement('div');
+            toggle.className = 'flag-toggle';
+            
+            // Create label that wraps the checkbox
+            const label = document.createElement('label');
+            
+            // Create checkbox
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.id = flag.id;
             
-            const label = document.createElement('label');
-            label.htmlFor = flag.id;
-            label.textContent = flag.label;
+            // Add the checkbox and text to label
+            label.appendChild(checkbox);
+            label.appendChild(document.createTextNode(flag.label));
             
-            container.appendChild(checkbox);
-            container.appendChild(label);
+            // Add label to toggle container
+            toggle.appendChild(label);
+            
+            // Add toggle to grid
+            gridContainer.appendChild(toggle);
         });
 
+        container.appendChild(gridContainer);
         return container;
     }
 
     createDietaryFlagsGroup() {
         const container = document.createElement('div');
         container.className = 'dietary-flags-group';
+
+        // Add heading
+        const heading = document.createElement('h3');
+        heading.textContent = 'Dietary Flags';
+        container.appendChild(heading);
+
+        // Create grid container
+        const gridContainer = document.createElement('div');
+        gridContainer.className = 'flags-grid';
         
         const flags = [
             { id: 'foodItemKosher', label: 'Kosher' },
@@ -131,18 +161,30 @@ export class FoodItemManager {
         ];
 
         flags.forEach(flag => {
+            // Create toggle container
+            const toggle = document.createElement('div');
+            toggle.className = 'flag-toggle';
+            
+            // Create label that wraps the checkbox
+            const label = document.createElement('label');
+            
+            // Create checkbox
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.id = flag.id;
             
-            const label = document.createElement('label');
-            label.htmlFor = flag.id;
-            label.textContent = flag.label;
+            // Add the checkbox and text to label
+            label.appendChild(checkbox);
+            label.appendChild(document.createTextNode(flag.label));
             
-            container.appendChild(checkbox);
-            container.appendChild(label);
+            // Add label to toggle container
+            toggle.appendChild(label);
+            
+            // Add toggle to grid
+            gridContainer.appendChild(toggle);
         });
 
+        container.appendChild(gridContainer);
         return container;
     }
 
@@ -157,10 +199,10 @@ export class FoodItemManager {
         if (!this.itemLimitSelect) return;
 
         const globalLimit = this.settingsManager.getCurrentLimit();
-        let options = ['<option value="0">No Limit</option>'];
+        let options = ['<option value=\"0\">No Limit</option>'];
         
         for (let i = 1; i <= globalLimit; i++) {
-            options.push(`<option value="${i}">${i}</option>`);
+            options.push(`<option value=\"${i}\">${i}</option>`);
         }
         
         this.itemLimitSelect.innerHTML = options.join('');
@@ -207,8 +249,8 @@ export class FoodItemManager {
             return;
         }
 
-        if (/\s{2,}/.test(value)) {
-            input.value = value.replace(/\s{2,}/g, ' ');
+        if (/\\s{2,}/.test(value)) {
+            input.value = value.replace(/\\s{2,}/g, ' ');
         }
 
         const words = value.toLowerCase().split(' ');
@@ -229,7 +271,7 @@ export class FoodItemManager {
         option.textContent = 'Please create a category first';
         this.categorySelect.appendChild(option);
         
-        this.form.querySelector('button[type="submit"]').disabled = true;
+        this.form.querySelector('button[type=\"submit\"]').disabled = true;
         showMessage('Please create at least one category before adding food items', 'warning', 'foodItem');
     }
 
@@ -243,7 +285,7 @@ export class FoodItemManager {
                 return;
             }
 
-            this.form.querySelector('button[type="submit"]').disabled = false;
+            this.form.querySelector('button[type=\"submit\"]').disabled = false;
             
             const defaultOption = document.createElement('option');
             defaultOption.value = '';
@@ -321,7 +363,7 @@ export class FoodItemManager {
     }
 
     collectFormData() {
-        const limitType = document.querySelector('input[name="limitType"]:checked')?.value || 'perHousehold';
+        const limitType = document.querySelector('input[name=\"limitType\"]:checked')?.value || 'perHousehold';
         const itemLimit = parseInt(this.itemLimitSelect.value) || 0;
 
         return {
