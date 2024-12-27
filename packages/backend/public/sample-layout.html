@@ -16,6 +16,7 @@
             --space-md: 16px;
             --space-lg: 24px;
             --space-xl: 32px;
+            --number-input-width: 120px;
         }
 
         body {
@@ -58,7 +59,8 @@
         }
 
         .form-field {
-            flex: 1;
+            display: flex;
+            flex-direction: column;
             min-width: 0; /* Prevents flex item overflow */
         }
 
@@ -78,6 +80,37 @@
             border: 1px solid var(--color-border);
             border-radius: 4px;
             box-sizing: border-box;
+        }
+
+        input[type="number"] {
+            width: var(--number-input-width);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.1);
+        }
+
+        /* Textarea styles */
+        textarea {
+            width: 100%;
+            min-width: 400px;
+            height: 80px;
+            padding: 10px var(--space-md);
+            font-size: 14px;
+            font-family: inherit;
+            line-height: 1.5;
+            border: 1px solid var(--color-border);
+            border-radius: 4px;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.1);
         }
 
         /* Buttons */
@@ -111,6 +144,11 @@
             font-size: 12px;
             color: var(--color-secondary-text);
             margin-top: var(--space-xs);
+            width: var(--number-input-width); /* Align helper text with input */
+        }
+
+        .form-field .helper-text {
+            width: 100%; /* Full width for text areas and regular inputs */
         }
 
         /* Messages */
@@ -142,6 +180,18 @@
                 width: 100%;
                 margin-top: var(--space-sm);
             }
+
+            input[type="number"] {
+                width: 100%; /* Full width on mobile */
+            }
+
+            .helper-text {
+                width: 100%; /* Full width on mobile */
+            }
+
+            textarea {
+                min-width: 100%;
+            }
         }
     </style>
 </head>
@@ -152,14 +202,15 @@
             <h2>Global Settings</h2>
             <div class="form-row">
                 <div class="form-field">
-                    <label for="global-limit">Global Upper Limit for "No Limit" Items:</label>
+                    <label for="global-limit">Global Upper Limit:</label>
                     <input type="number" id="global-limit" min="1" value="255">
                     <div class="helper-text">Minimum value is 1</div>
                 </div>
                 <button class="button button-primary">Save</button>
             </div>
             <div class="message">
-                This setting is now stored in the backend. Adjust it and click "Save" to persist.
+                This upper limit setting applies to all categories and food items set to "No Limit."<br>
+                Adjust the limit and click "Save" to update.
             </div>
         </section>
 
@@ -169,7 +220,6 @@
             <div class="form-row">
                 <button class="button button-primary" style="margin-top: 0;">Update Language Settings</button>
             </div>
-            <!-- Additional language settings content would go here -->
         </section>
 
         <!-- Translation Management Example -->
@@ -178,8 +228,12 @@
             <div class="form-row">
                 <div class="form-field">
                     <label for="custom-text">Custom Translation:</label>
-                    <input type="text" id="custom-text" placeholder="Enter text to translate">
-                    <div class="helper-text">Enter the text you want to translate</div>
+                    <textarea 
+                        id="custom-text" 
+                        placeholder="Enter text to translate"
+                        spellcheck="true"
+                    ></textarea>
+                    <div class="helper-text">Enter the text you want translated to all active languages</div>
                 </div>
                 <button class="button button-primary">Add Translation</button>
             </div>
