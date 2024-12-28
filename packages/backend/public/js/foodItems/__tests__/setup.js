@@ -1,3 +1,7 @@
+import * as assertions from './utils/assertions';
+import * as testHelpers from './utils/testHelpers';
+import * as testFactories from './utils/testFactories';
+
 // Enable fake timers
 jest.useFakeTimers();
 
@@ -35,6 +39,23 @@ expect.extend({
                 ? `Expected function not to have been called once with ${expectedArgs}`
                 : `Expected function to have been called once with ${expectedArgs}`
         };
+    },
+    // Add our custom assertions as matchers
+    toHaveValidFormState(form, options) {
+        assertions.expectFormValidationState(form, options);
+        return { pass: true };
+    },
+    toHaveValidTableStructure(tableBody) {
+        assertions.expectTableStructure(tableBody);
+        return { pass: true };
+    },
+    toHaveSortableHeaders(table) {
+        assertions.expectSortableHeaders(table);
+        return { pass: true };
+    },
+    toHaveValidStats(container, expectedStats) {
+        assertions.expectValidStats(container, expectedStats);
+        return { pass: true };
     }
 });
 
@@ -45,8 +66,20 @@ global.ResizeObserver = class ResizeObserver {
     disconnect() {}
 };
 
-// Utility function to wait for DOM updates
-global.waitForDomChange = () => new Promise(resolve => setTimeout(resolve, 0));
+// Add test utilities to global scope
+global.testHelpers = testHelpers;
+global.testFactories = testFactories;
+global.assertions = assertions;
+
+// Add common test utilities
+global.waitForDomChange = testHelpers.waitForDomUpdate;
+global.createTestContext = testHelpers.createTestContext;
+global.measureDomPerformance = testHelpers.measureDomPerformance;
+
+// Add factory methods
+global.createMockFoodItem = testFactories.createMockFoodItem;
+global.createMockManager = testFactories.createMockManager;
+global.createTestEnvironment = testFactories.createTestEnvironment;
 
 // Cleanup after each test
 afterEach(() => {
