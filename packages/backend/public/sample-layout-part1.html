@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Layout Sample</title>
+    <style>
+       @media screen and (max-width: 768px) {
+            .container {
+                padding: var(--space-md);
+            }
+
+            section {
+                padding: var(--space-md);
+            }
+
+            .form-row {
+                flex-direction: column;
+                gap: var(--space-md);
+            }
+
+            .button {
+                width: 100%;
+                margin-top: var(--space-sm);
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            input[type="number"] {
+                width: 100%;
+            }
+
+            .helper-text {
+                width: 100%;
+            }
+
+            textarea {
+                min-width: 100%;
+            }
+
+            .flags-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                padding: var(--space-md);
+                gap: var(--space-sm);
+            }
+
+            .flag-toggle {
+                padding: 10px;
+            }
+        }
+
+        @media (prefers-contrast: high) {
+            input, select, textarea, .flag-toggle {
+                border-width: 2px;
+            }
+
+            .button-primary {
+                border: 2px solid var(--color-primary);
+            }
+
+            input:focus, select:focus, textarea:focus {
+                outline: 2px solid var(--color-primary);
+                outline-offset: 2px;
+            }
+
+            .status-flags-group .flags-grid {
+                border: 2px solid var(--color-info);
+            }
+
+            .dietary-flags-group .flags-grid {
+                border: 2px solid var(--color-success);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <section>
+            <h2>Global Settings</h2>
+            <div class="form-row">
+                <div class="form-field">
+                    <label for="global-limit">Global Upper Limit:</label>
+                    <input type="number" id="global-limit" min="1" value="255">
+                    <div class="helper-text">Minimum value is 1</div>
+                </div>
+                <button class="button button-primary">Save</button>
+            </div>
+            <div class="message">
+                This upper limit setting applies to all categories and food items set to "No Limit."<br>
+                Adjust the limit and click "Save" to update.
+            </div>
+        </section>
+
+        <section>
+            <h2>Language Management</h2>
+            <div class="form-row">
+                <button class="button button-primary" style="margin-top: 0;">Update Language Settings</button>
+            </div>
+        </section>
+
+        <section>
+            <h2>Translation Management</h2>
+            <div class="form-row">
+                <div class="form-field">
+                    <label for="custom-text">Custom Translation:</label>
+                    <textarea 
+                        id="custom-text" 
+                        placeholder="Enter text to translate"
+                        spellcheck="true"
+                    ></textarea>
+                    <div class="helper-text">Enter the text you want translated to all active languages</div>
+                </div>
+                <button class="button button-primary">Add Translation</button>
+            </div>
+        </section>
+
+        <section>
+            <h2>Food Item Management</h2>
+            
+            <div class="form-row">
+                <div class="form-field">
+                    <label for="item-name">Food Item Name:</label>
+                    <input type="text" id="item-name" placeholder="Enter food item name">
+                    <div class="helper-text">3-36 characters, no special characters</div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-field">
+                    <label for="item-category">Category:</label>
+                    <select id="item-category">
+                        <option value="">Select a category</option>
+                        <option value="1">Canned Goods</option>
+                        <option value="2">Fresh Produce</option>
+                        <option value="3">Dairy</option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label for="item-limit">Item Limit:</label>
+                    <select id="item-limit">
+                        <option value="no-limit">No Limit</option>
+                        <option value="1">1 item</option>
+                        <option value="2">2 items</option>
+                        <option value="3">3 items</option>
+                    </select>
+                    <div class="helper-text">Per household/visit</div>
+                </div>
+            </div>
+
+            <div class="status-flags-group">
+                <h3>Status Flags</h3>
+                <div class="flags-grid">
+                    <div class="flag-toggle">
+                        <label for="flag-low-stock">
+                            <input type="checkbox" id="flag-low-stock">
+                            Low Stock
+                        </label>
+                    </div>
+                    <div class="flag-toggle">
+                        <label for="flag-must-go">
+                            <input type="checkbox" id="flag-must-go">
+                            Must Go
+                        </label>
+                    </div>
+                    <div class="flag-toggle">
+                        <label for="flag-seasonal">
+                            <input type="checkbox" id="flag-seasonal">
+                            Seasonal
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dietary-flags-group">
+                <h3>Dietary Flags</h3>
+                <div class="flags-grid">
+                    <div class="flag-toggle">
+                        <label for="diet-gluten-free">
+                            <input type="checkbox" id="diet-gluten-free">
+                            Gluten Free
+                        </label>
+                    </div>
+                    <div class="flag-toggle">
+                        <label for="diet-vegetarian">
+                            <input type="checkbox" id="diet-vegetarian">
+                            Vegetarian
+                        </label>
+                    </div>
+                    <div class="flag-toggle">
+                        <label for="diet-vegan">
+                            <input type="checkbox" id="diet-vegan">
+                            Vegan
+                        </label>
+                    </div>
+                    <div class="flag-toggle">
+                        <label for="diet-kosher">
+                            <input type="checkbox" id="diet-kosher">
+                            Kosher
+                        </label>
+                    </div>
+                    <div class="flag-toggle">
+                        <label for="diet-halal">
+                            <input type="checkbox" id="diet-halal">
+                            Halal
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button type="submit" class="button button-primary">Add Food Item</button>
+                <button type="button" class="button button-secondary">Clear Form</button>
+            </div>
+        </section>
+    </div>
+</body>
+</html>

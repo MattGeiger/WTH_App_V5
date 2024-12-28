@@ -1,5 +1,6 @@
 .
 ├── CHANGELOG.md
+├── Initial_prompt_v01.txt
 ├── LICENSE
 ├── README.md
 ├── codebase.md
@@ -40,16 +41,21 @@
 │   │   │   │   │   └── sections.css
 │   │   │   │   └── styles.css
 │   │   │   ├── index.html
-│   │   │   └── js
-│   │   │       ├── categories.js
-│   │   │       ├── foodItems.js
-│   │   │       ├── languages.js
-│   │   │       ├── main.js
-│   │   │       ├── settings.js
-│   │   │       ├── translations.js
-│   │   │       ├── utils
-│   │   │       │   └── sortableTable.js
-│   │   │       └── utils.js
+│   │   │   ├── js
+│   │   │   │   ├── categories.js
+│   │   │   │   ├── foodItems.js
+│   │   │   │   ├── languages.js
+│   │   │   │   ├── main.js
+│   │   │   │   ├── settings.js
+│   │   │   │   ├── translations.js
+│   │   │   │   ├── utils
+│   │   │   │   │   └── sortableTable.js
+│   │   │   │   └── utils.js
+│   │   │   ├── sample-claude.html
+│   │   │   ├── sample-layout-part1.html
+│   │   │   ├── sample-layout.html
+│   │   │   ├── sample-layoutv2.html
+│   │   │   └── sample.html
 │   │   ├── src
 │   │   │   ├── config
 │   │   │   │   └── languageConfig.ts
@@ -95,6 +101,8 @@
 │   │   │       ├── errorHandler.ts
 │   │   │       └── validationUtils.ts
 │   │   └── tsconfig.json
+│   ├── data
+│   │   └── food-pantry.db
 │   ├── frontend
 │   │   └── package.json
 │   └── repomix-output.xml
@@ -104,4 +112,4 @@
 ├── repomix-output.xml
 └── repomix.config.json
 
-29 directories, 76 files
+30 directories, 83 files

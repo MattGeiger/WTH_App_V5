@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang=\"en\">
+<html lang="en">
 <head>
-    <meta charset=\"UTF-8\" />
-    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"/>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Layout Sample</title>
     <style>
         /* Base styles */
@@ -75,83 +75,6 @@
             padding-bottom: var(--space-xs);
             border-bottom: 2px solid #e9ecef;
         }
-
-        /* Form Layout */
-        .form-row {
-            display: flex;
-            align-items: flex-start;
-            gap: var(--space-md);
-            margin-bottom: var(--space-lg);
-        }
-
-        .form-field {
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-            flex: 1;
-        }
-
-        /* Labels and Inputs */
-        label {
-            display: block;
-            font-size: var(--font-size-base);
-            font-weight: 500;
-            color: var(--color-secondary-text);
-            margin-bottom: var(--space-sm);
-        }
-
-        input, select {
-            width: 100%;
-            padding: 10px var(--space-md);
-            font-size: var(--font-size-base);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-sm);
-            box-sizing: border-box;
-            background-color: white;
-            transition: all 0.2s ease;
-        }
-
-        select {
-            appearance: none;
-            padding-right: 36px;
-            background-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%235f6368' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\");
-            background-repeat: no-repeat;
-            background-position: right 8px center;
-            background-size: 24px;
-        }
-
-        input[type=\"number\"] {
-            width: var(--number-input-width);
-        }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--color-primary);
-            box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.1);
-        }
-
-        /* Textarea styles */
-        textarea {
-            width: 100%;
-            min-width: 400px;
-            height: 80px;
-            padding: 10px var(--space-md);
-            font-size: var(--font-size-base);
-            font-family: inherit;
-            line-height: 1.5;
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-sm);
-            box-sizing: border-box;
-            resize: vertical;
-            transition: all 0.2s ease;
-        }
-
-        textarea:focus {
-            outline: none;
-            border-color: var(--color-primary);
-            box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.1);
-        }
-
         /* Buttons */
         .button {
             display: inline-flex;
@@ -167,6 +90,11 @@
             cursor: pointer;
             transition: all 0.2s ease;
             margin-top: 29px;
+        }
+
+        .button.button-primary {
+            margin-left: 0; 
+            margin-right: var(--space-sm);
         }
 
         .button-primary {
@@ -207,6 +135,79 @@
         .button-group .button {
             margin-top: 0;
         }
+        /* Form Layout */
+        .form-row {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-md);
+            margin-bottom: var(--space-lg);
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            flex: 1;
+        }
+        label {
+            display: block;
+            font-size: var(--font-size-base);
+            font-weight: 500;
+            color: var(--color-secondary-text);
+            margin-bottom: var(--space-sm);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px var(--space-md);
+            font-size: var(--font-size-base);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            box-sizing: border-box;
+            background-color: white;
+            transition: all 0.2s ease;
+        }
+
+        select {
+            appearance: none;
+            padding-right: 36px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%235f6368' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 24px;
+        }
+
+        input[type="number"] {
+            width: var(--number-input-width);
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.1);
+        }
+
+        /* Textarea styles */
+        textarea {
+            width: 100%;
+            min-width: 400px;
+            height: 80px;
+            padding: 10px var(--space-md);
+            font-size: var(--font-size-base);
+            font-family: inherit;
+            line-height: 1.5;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            box-sizing: border-box;
+            resize: vertical;
+            transition: all 0.2s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.1);
+        }
 
         /* Helper Text */
         .helper-text {
@@ -215,7 +216,7 @@
             margin-top: var(--space-xs);
         }
 
-        .form-field:has(input[type=\"number\"]) .helper-text {
+        .form-field:has(input[type="number"]) .helper-text {
             width: var(--number-input-width);
         }
 
@@ -235,7 +236,6 @@
         .status-flags-group {
             margin-bottom: var(--space-lg);
         }
-
         .dietary-flags-group h3,
         .status-flags-group h3 {
             font-size: var(--font-size-lg);
@@ -282,7 +282,7 @@
             margin: 0;
         }
 
-        .flag-toggle input[type=\"checkbox\"] {
+        .flag-toggle input[type="checkbox"] {
             width: 18px;
             height: 18px;
             border-radius: var(--radius-sm);
@@ -301,7 +301,6 @@
             border-color: rgba(76, 175, 80, 0.3);
             background: rgba(76, 175, 80, 0.02);
         }
-
         @media screen and (max-width: 768px) {
             .container {
                 padding: var(--space-md);
@@ -325,7 +324,7 @@
                 flex-direction: column;
             }
 
-            input[type=\"number\"] {
+            input[type="number"] {
                 width: 100%;
             }
 
@@ -373,80 +372,78 @@
     </style>
 </head>
 <body>
-    <div class=\"container\">
+    <div class="container">
         <section>
             <h2>Global Settings</h2>
-            <div class=\"form-row\">
-                <div class=\"form-field\">
-                    <label for=\"global-limit\">Global Upper Limit:</label>
-                    <input type=\"number\" id=\"global-limit\" min=\"1\" value=\"255\">
-                    <div class=\"helper-text\">Minimum value is 1</div>
+            <div class="form-row">
+                <div class="form-field">
+                    <label for="global-limit">Global Upper Limit:</label>
+                    <input type="number" id="global-limit" min="1" value="255">
+                    <div class="helper-text">Minimum value is 1</div>
                 </div>
-                <button class=\"button button-primary\">Save</button>
+                <button class="button button-primary">Save</button>
             </div>
-            <div class=\"message\">
-                This upper limit setting applies to all categories and food items set to \"No Limit.\"<br>
-                Adjust the limit and click \"Save\" to update.
+            <div class="message">
+                This upper limit setting applies to all categories and food items set to "No Limit."<br>
+                Adjust the limit and click "Save" to update.
             </div>
         </section>
 
         <section>
             <h2>Language Management</h2>
-            <div class=\"form-row\">
-                <button class=\"button button-primary\" style=\"margin-top: 0;\">Update Language Settings</button>
+            <div class="form-row">
+                <button class="button button-primary" style="margin-top: 0;">Update Language Settings</button>
             </div>
         </section>
 
         <section>
             <h2>Translation Management</h2>
-            <div class=\"form-row\">
-                <div class=\"form-field\">
-                    <label for=\"custom-text\">Custom Translation:</label>
+            <div class="form-row">
+                <div class="form-field">
+                    <label for="custom-text">Custom Translation:</label>
                     <textarea 
-                        id=\"custom-text\" 
-                        placeholder=\"Enter text to translate\"
-                        spellcheck=\"true\"
+                        id="custom-text" 
+                        placeholder="Enter text to translate"
+                        spellcheck="true"
                     ></textarea>
-                    <div class=\"helper-text\">Enter the text you want translated to all active languages</div>
+                    <div class="helper-text">Enter the text you want translated to all active languages</div>
                 </div>
-                <button class=\"button button-primary\">Add Translation</button>
+                <button class="button button-primary">Add Translation</button>
             </div>
         </section>
-
-        <section>
+    <section>
             <h2>Food Item Management</h2>
             
-            <div class=\"form-row\">
-                <div class=\"form-field\">
-                    <label for=\"item-name\">Food Item Name:</label>
-                    <input type=\"text\" id=\"item-name\" placeholder=\"Enter food item name\">
-                    <div class=\"helper-text\">3-36 characters, no special characters</div>
+            <div class="form-row">
+                <div class="form-field">
+                    <label for="item-name">Food Item Name:</label>
+                    <input type="text" id="item-name" placeholder="Enter food item name">
+                    <div class="helper-text">3-36 characters, no special characters</div>
                 </div>
             </div>
 
-            <div class=\"form-row\">
-                <div class=\"form-field\">
-                    <label for=\"item-category\">Category:</label>
-                    <select id=\"item-category\">
-                        <option value=\"\">Select a category</option>
-                        <option value=\"1\">Canned Goods</option>
-                        <option value=\"2\">Fresh Produce</option>
-                        <option value=\"3\">Dairy</option>
+            <div class="form-row">
+                <div class="form-field">
+                    <label for="item-category">Category:</label>
+                    <select id="item-category">
+                        <option value="">Select a category</option>
+                        <option value="1">Canned Goods</option>
+                        <option value="2">Fresh Produce</option>
+                        <option value="3">Dairy</option>
                     </select>
                 </div>
-                <div class=\"form-field\">
-                    <label for=\"item-limit\">Item Limit:</label>
-                    <select id=\"item-limit\">
-                        <option value=\"no-limit\">No Limit</option>
-                        <option value=\"1\">1 item</option>
-                        <option value=\"2\">2 items</option>
-                        <option value=\"3\">3 items</option>
+                <div class="form-field">
+                    <label for="item-limit">Item Limit:</label>
+                    <select id="item-limit">
+                        <option value="no-limit">No Limit</option>
+                        <option value="1">1 item</option>
+                        <option value="2">2 items</option>
+                        <option value="3">3 items</option>
                     </select>
-                    <div class=\"helper-text\">Per household/visit</div>
+                    <div class="helper-text">Per household/visit</div>
                 </div>
             </div>
 
-            <!-- Status Flags -->
             <div class="status-flags-group">
                 <h3>Status Flags</h3>
                 <div class="flags-grid">
@@ -471,7 +468,6 @@
                 </div>
             </div>
 
-            <!-- Dietary Flags -->
             <div class="dietary-flags-group">
                 <h3>Dietary Flags</h3>
                 <div class="flags-grid">
@@ -508,7 +504,6 @@
                 </div>
             </div>
 
-            <!-- Form Actions -->
             <div class="button-group">
                 <button type="submit" class="button button-primary">Add Food Item</button>
                 <button type="button" class="button button-secondary">Clear Form</button>
