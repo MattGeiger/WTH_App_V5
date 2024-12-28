@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.17] - 2024-12-27
+### Changed
+- Refactored Food Item Management into modular architecture
+  - Split foodItems.js into smaller, focused modules
+  - Created dedicated handlers for form submission and validation
+  - Separated UI components for forms, tables, and stats
+  - Added centralized error handling utility
+  - Improved code maintainability and testability
+  - Reduced module coupling
+  - Enhanced separation of concerns
+
 ## [0.5.16] - 2024-12-26
 ### Added
 - UI System Documentation:
