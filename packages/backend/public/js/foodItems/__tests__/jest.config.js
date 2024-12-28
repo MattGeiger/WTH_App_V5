@@ -35,7 +35,7 @@ module.exports = {
 
   // Test setup file
   setupFilesAfterEnv: [
-    '<rootDir>/__tests__/setup.js'
+    '<rootDir>/setup.js'
   ],
 
   // Mocking configuration
