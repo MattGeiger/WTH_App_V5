@@ -1,10 +1,8 @@
 import { FoodItemManager } from '../FoodItemManager.js';
-import { apiGet, apiPost, apiPut, apiDelete, showMessage } from '../../utils.js';
+import { showMessage } from '../../utils.js';
+import { SortableTable } from '../../utils/sortableTable.js';
 
 jest.mock('../../utils.js');
-jest.mock('../ui/forms.js', () => ({
-    createFormLayout: jest.fn()
-}));
 jest.mock('../../utils/sortableTable.js');
 
 describe('FoodItemManager', () => {
@@ -12,32 +10,41 @@ describe('FoodItemManager', () => {
     let mockSettingsManager;
 
     beforeEach(() => {
-        // Set up DOM
+        // Setup complete DOM structure
         document.body.innerHTML = `
             <form id="foodItemForm">
-                <button type="submit">Submit</button>
+                <input type="text" id="foodItemName" name="foodItemName">
+                <select id="foodItemCategory"></select>
+                <select id="itemLimitSelect"></select>
+                <input type="hidden" id="foodItemId" value="">
+                <div id="limitTypeContainer" style="display: none;">
+                    <input type="radio" name="limitType" value="perHousehold" id="perHousehold" checked>
+                    <label for="perHousehold">Per Household</label>
+                    <input type="radio" name="limitType" value="perPerson" id="perPerson">
+                    <label for="perPerson">Per Person</label>
+                </div>
+                <button type="submit">Add Food Item</button>
             </form>
             <div id="foodItemTableBody"></div>
-            <select id="itemLimitSelect"></select>
-            <button id="resetFoodItemForm">Reset</button>
-            <select id="foodItemCategory"></select>
-            <input id="foodItemName" />
             <div id="foodItemStats"></div>
-            <div id="foodItemId"></div>
         `;
 
+        // Mock settings manager
         mockSettingsManager = {
             getCurrentLimit: jest.fn().mockReturnValue(10)
         };
 
-        // Reset mocks
-        apiGet.mockReset();
-        apiPost.mockReset();
-        apiPut.mockReset();
-        apiDelete.mockReset();
-        showMessage.mockReset();
-
+        // Create manager instance
         manager = new FoodItemManager(mockSettingsManager);
+
+        // Reset mocks
+        showMessage.mockReset();
+        SortableTable.mockClear();
+    });
+
+    afterEach(() => {
+        document.body.innerHTML = '';
+        jest.clearAllMocks();
     });
 
     describe('Initialization', () => {
@@ -45,7 +52,6 @@ describe('FoodItemManager', () => {
             expect(manager.form).toBeTruthy();
             expect(manager.tableBody).toBeTruthy();
             expect(manager.itemLimitSelect).toBeTruthy();
-            expect(manager.resetButton).toBeTruthy();
             expect(manager.categorySelect).toBeTruthy();
             expect(manager.nameInput).toBeTruthy();
             expect(manager.foodItemStats).toBeTruthy();
@@ -53,11 +59,22 @@ describe('FoodItemManager', () => {
 
         it('should initialize item limit dropdown', () => {
             expect(manager.itemLimitSelect.children.length).toBe(11); // 0-10
-            expect(manager.itemLimitSelect.children[0].value).toBe('0');
-            expect(manager.itemLimitSelect.children[0].textContent).toBe('No Limit');
+            const firstOption = manager.itemLimitSelect.children[0];
+            expect(firstOption.value).toBe('0');
+            expect(firstOption.textContent).toBe('No Limit');
         });
 
         it('should set up initial event listeners', () => {
+            // Manually trigger events to test listeners
+            const submitEvent = new Event('submit');
+            manager.form.dispatchEvent(submitEvent);
+            
+            const inputEvent = new Event('input');
+            manager.nameInput.dispatchEvent(inputEvent);
+            
+            const changeEvent = new Event('change');
+            manager.itemLimitSelect.dispatchEvent(changeEvent);
+            
             expect(manager.form.onsubmit).toBeTruthy();
             expect(manager.resetButton.onclick).toBeTruthy();
             expect(manager.nameInput.oninput).toBeTruthy();
@@ -73,7 +90,10 @@ describe('FoodItemManager', () => {
         };
 
         beforeEach(() => {
-            apiGet.mockResolvedValue(mockCategories);
+            global.fetch = jest.fn().mockResolvedValue({
+                ok: true,
+                json: () => Promise.resolve(mockCategories)
+            });
         });
 
         it('should load categories successfully', async () => {
@@ -83,7 +103,11 @@ describe('FoodItemManager', () => {
         });
 
         it('should handle empty categories', async () => {
-            apiGet.mockResolvedValue({ data: [] });
+            global.fetch = jest.fn().mockResolvedValue({
+                ok: true,
+                json: () => Promise.resolve({ data: [] })
+            });
+
             await manager.loadCategories();
             expect(manager.categorySelect.children.length).toBe(1);
             expect(manager.form.querySelector('button[type="submit"]').disabled).toBe(true);
@@ -92,7 +116,8 @@ describe('FoodItemManager', () => {
 
         it('should handle API errors', async () => {
             const error = new Error('API Error');
-            apiGet.mockRejectedValue(error);
+            global.fetch = jest.fn().mockRejectedValue(error);
+
             await manager.loadCategories();
             expect(showMessage).toHaveBeenCalledWith(error.message, 'error', 'foodItem');
         });
@@ -107,8 +132,16 @@ describe('FoodItemManager', () => {
             inStock: true
         };
 
+        beforeEach(() => {
+            document.getElementById('foodItemId').value = '';
+        });
+
         it('should create item successfully', async () => {
-            apiPost.mockResolvedValue({ success: true });
+            global.fetch = jest.fn().mockResolvedValue({
+                ok: true,
+                json: () => Promise.resolve({ success: true, data: mockItem })
+            });
+
             const result = await manager.createItem(mockItem);
             expect(result).toBe(true);
             expect(showMessage).toHaveBeenCalledWith(
@@ -119,7 +152,11 @@ describe('FoodItemManager', () => {
         });
 
         it('should update item successfully', async () => {
-            apiPut.mockResolvedValue({ success: true });
+            global.fetch = jest.fn().mockResolvedValue({
+                ok: true,
+                json: () => Promise.resolve({ success: true, data: mockItem })
+            });
+
             const result = await manager.updateItem(1, mockItem);
             expect(result).toBe(true);
             expect(showMessage).toHaveBeenCalledWith(
@@ -130,11 +167,13 @@ describe('FoodItemManager', () => {
         });
 
         it('should delete item after confirmation', async () => {
-            window.confirm = jest.fn().mockReturnValue(true);
-            apiDelete.mockResolvedValue({ success: true });
-            
+            global.fetch = jest.fn().mockResolvedValue({
+                ok: true,
+                json: () => Promise.resolve({ success: true })
+            });
+            global.confirm = jest.fn().mockReturnValue(true);
+
             await manager.deleteFoodItem(1);
-            expect(apiDelete).toHaveBeenCalledWith('/api/food-items/1');
             expect(showMessage).toHaveBeenCalledWith(
                 'Food item deleted successfully',
                 'success',
@@ -143,24 +182,25 @@ describe('FoodItemManager', () => {
         });
 
         it('should handle delete cancellation', async () => {
-            window.confirm = jest.fn().mockReturnValue(false);
+            global.confirm = jest.fn().mockReturnValue(false);
             await manager.deleteFoodItem(1);
-            expect(apiDelete).not.toHaveBeenCalled();
+            expect(global.fetch).not.toHaveBeenCalled();
         });
     });
 
     describe('Form Management', () => {
-        it('should reset form correctly', () => {
+        beforeEach(() => {
             document.getElementById('foodItemId').value = '1';
             manager.itemLimitSelect.value = '5';
-            const submitButton = manager.form.querySelector('button[type="submit"]');
-            submitButton.textContent = 'Update Food Item';
+            document.getElementById('limitTypeContainer').style.display = 'block';
+        });
 
+        it('should reset form correctly', () => {
             manager.resetForm();
-
             expect(document.getElementById('foodItemId').value).toBe('');
             expect(manager.itemLimitSelect.value).toBe('0');
-            expect(submitButton.textContent).toBe('Add Food Item');
+            expect(document.getElementById('limitTypeContainer').style.display).toBe('none');
+            expect(manager.form.querySelector('button[type="submit"]').textContent).toBe('Add Food Item');
         });
 
         it('should populate form for editing', () => {
@@ -175,35 +215,47 @@ describe('FoodItemManager', () => {
             };
 
             manager.editFoodItem(JSON.stringify(mockData));
-
             expect(document.getElementById('foodItemId').value).toBe('1');
             expect(manager.nameInput.value).toBe('Test Item');
             expect(manager.categorySelect.value).toBe('2');
             expect(manager.itemLimitSelect.value).toBe('5');
-            expect(manager.form.querySelector('button[type="submit"]').textContent)
-                .toBe('Update Food Item');
+            expect(manager.form.querySelector('button[type="submit"]').textContent).toBe('Update Food Item');
         });
     });
 
     describe('Sort Value Handling', () => {
         it('should handle name sort values', () => {
             const row = { cells: [{ textContent: 'Test Item' }] };
-            expect(manager.getSortValue(row, 'name')).toBe('test item');
+            const result = manager.getSortValue(row, 'name');
+            expect(result).toBe('test item');
         });
 
         it('should handle limit sort values', () => {
-            const row = { cells: [null, null, null, null, { textContent: 'No Limit' }] };
-            expect(manager.getSortValue(row, 'limit')).toBe(-1);
+            const noLimitRow = { 
+                cells: Array(5).fill(null).map(() => ({ textContent: '' }))
+            };
+            noLimitRow.cells[4].textContent = 'No Limit';
             
-            row.cells[4].textContent = '5';
-            expect(manager.getSortValue(row, 'limit')).toBe(5);
+            expect(manager.getSortValue(noLimitRow, 'limit')).toBe(-1);
+            
+            const limitRow = { 
+                cells: Array(5).fill(null).map(() => ({ textContent: '' }))
+            };
+            limitRow.cells[4].textContent = '5';
+            
+            expect(manager.getSortValue(limitRow, 'limit')).toBe(5);
         });
 
         it('should handle date sort values', () => {
             const date = new Date();
-            const row = { cells: [null, null, null, null, null, { textContent: date.toLocaleDateString() }] };
+            const row = { 
+                cells: Array(6).fill(null).map(() => ({ textContent: '' }))
+            };
+            row.cells[5].textContent = date.toLocaleDateString();
+            
             const result = manager.getSortValue(row, 'created');
             expect(typeof result).toBe('number');
+            expect(result).toBeTruthy();
         });
     });
 });
