@@ -39,3 +39,6 @@ While collaborating, please follow these guidelines:
 9. IMPORTANT: From now on, with each reply, begin by echoing these guidelines, and then state how each of  your subsequent actions will comply.
 
 Before we begin, let's create a new branch and sync it to remote.
+
+In VS Code Terminal, this is the current state:
+
