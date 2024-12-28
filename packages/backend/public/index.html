@@ -14,13 +14,13 @@
         <h2>Global Settings</h2>
         <div class="message-area"></div>
         <div class="form__group">
-            <label for="globalUpperLimit">Global Upper Limit for "No Limit" Items:</label>
+            <label for="globalUpperLimit">Global Upper Limit:</label>
             <input type="number" id="globalUpperLimit" value="255" min="1">
             <button id="saveGlobalLimit" class="primary-button" type="submit">Save</button>
         </div>
         <p class="message message--note">
-            This setting is now stored in the backend. Adjust it and click "Save" to persist.
-            The "No Limit" items will consider this upper limit for future features.
+            Applies to all food items and categories set to "No Limit."<br>
+            After adjusting the upper limit setting, click "Save" to apply it. 
         </p>
     </div>
 
@@ -29,8 +29,8 @@
         <h2>Language Management</h2>
         <div class="message-area"></div>
         <p class="message message--warning">
-            Note: Language support varies by region and complexity. AI translations may contain
-            errors and should be reviewed for accuracy.
+            Note: Language support varies by region and complexity.<br>
+            AI translations may contain errors and should be reviewed for accuracy.
         </p>
         
         <div class="language-grid">
@@ -38,6 +38,10 @@
         </div>
         
         <button id="updateLanguages">Update Language Settings</button>
+        <p class="message message--note">
+            Click on a language to toggle Active/Inactive state.<br>
+            After making changes, click "Update Language Settings" to apply it. 
+        </p>
         
         <div id="activeLanguages">
             <div class="filter-controls">
@@ -82,7 +86,8 @@
                     <!-- Options will be dynamically populated -->
                 </select>
                 <p class="message message--note">
-                    Global Upper Limit applies when set to 'No Limit.' This limit applies to all items within this category.
+                    Limits the total items a client can request within a category.<br>
+                    Global Upper Limit applies when a category is set to 'No Limit.' 
                 </p>
             </div>
             <input type="hidden" id="categoryId">
@@ -167,7 +172,7 @@
             </div>
 
             <p class="message message--note">
-                Translations are automatically generated for all active languages.
+                Translations are automatically generated for all languages marked "Active."<br>
                 Manual edits may be overwritten during automated translation updates.
             </p>
             
