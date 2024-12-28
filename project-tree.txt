@@ -1,6 +1,6 @@
 .
 ├── CHANGELOG.md
-├── Initial_prompt_v01.txt
+├── Initial_prompt_v02.txt
 ├── LICENSE
 ├── README.md
 ├── codebase.md
@@ -43,6 +43,23 @@
 │   │   │   ├── index.html
 │   │   │   ├── js
 │   │   │   │   ├── categories.js
+│   │   │   │   ├── foodItems
+│   │   │   │   │   ├── FoodItemManager.js
+│   │   │   │   │   ├── __tests__
+│   │   │   │   │   │   └── handlers
+│   │   │   │   │   │       ├── submit.test.js
+│   │   │   │   │   │       └── validation.test.js
+│   │   │   │   │   ├── handlers
+│   │   │   │   │   │   ├── formData.js
+│   │   │   │   │   │   ├── submit.js
+│   │   │   │   │   │   └── validation.js
+│   │   │   │   │   ├── index.js
+│   │   │   │   │   ├── ui
+│   │   │   │   │   │   ├── forms.js
+│   │   │   │   │   │   ├── stats.js
+│   │   │   │   │   │   └── table.js
+│   │   │   │   │   └── utils
+│   │   │   │   │       └── errorHandler.js
 │   │   │   │   ├── foodItems.js
 │   │   │   │   ├── languages.js
 │   │   │   │   ├── main.js
@@ -101,8 +118,6 @@
 │   │   │       ├── errorHandler.ts
 │   │   │       └── validationUtils.ts
 │   │   └── tsconfig.json
-│   ├── data
-│   │   └── food-pantry.db
 │   ├── frontend
 │   │   └── package.json
 │   └── repomix-output.xml
@@ -112,4 +127,4 @@
 ├── repomix-output.xml
 └── repomix.config.json
 
-30 directories, 83 files
+35 directories, 93 files
