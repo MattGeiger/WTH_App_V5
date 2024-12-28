@@ -6,7 +6,6 @@ export const managers = {
     translations: null
 };
 
-// Create custom event for category changes
 export const EVENTS = {
     CATEGORY_UPDATED: 'categoryUpdated'
 };
@@ -16,7 +15,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const { SettingsManager } = await import('./settings.js');
         const { LanguageManager } = await import('./languages.js');
         const { CategoryManager } = await import('./categories.js');
-        const { FoodItemManager } = await import('./foodItems.js');
+        const { FoodItemManager } = await import('./foodItems/index.js');
         const { TranslationManager } = await import('./translations.js');
 
         managers.settings = new SettingsManager();
@@ -31,7 +30,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         await managers.foodItems.loadFoodItems();
         await managers.translations.loadTranslations();
 
-        // Set up event listeners for cross-manager communication
         document.addEventListener(EVENTS.CATEGORY_UPDATED, async () => {
             if (managers.foodItems) {
                 await managers.foodItems.loadCategories();
