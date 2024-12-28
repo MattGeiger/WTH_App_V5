@@ -17,6 +17,8 @@
         "test:fooditems": "jest public/js/foodItems/__tests__/ --config public/js/foodItems/__tests__/jest.config.js",
         "test:fooditems:watch": "npm run test:fooditems -- --watch",
         "test:fooditems:coverage": "npm run test:fooditems -- --coverage",
+        "test:fooditems:report": "node public/js/foodItems/__tests__/utils/generateCoverage.js",
+        "test:fooditems:full": "npm run test:fooditems:coverage && npm run test:fooditems:report",
         "lint": "eslint . --ext .ts"
     },
     "dependencies": {
