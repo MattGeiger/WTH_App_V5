@@ -10,26 +10,52 @@ jest.mock('../../handlers/formData.js');
 describe('Submit Handler', () => {
     let mockEvent;
     let mockManager;
+    let mockData;
 
     beforeEach(() => {
+        // Setup DOM
+        document.body.innerHTML = `
+            <form id="foodItemForm">
+                <input type="text" id="foodItemName" value="Test Item">
+                <select id="foodItemCategory" value="1"></select>
+                <input type="hidden" id="foodItemId" value="">
+                <button type="submit">Add Food Item</button>
+            </form>
+        `;
+
+        // Mock event
         mockEvent = {
             preventDefault: jest.fn()
         };
 
+        // Mock form data
+        mockData = {
+            name: 'Test Item',
+            categoryId: 1,
+            itemLimit: 5,
+            limitType: 'perHousehold',
+            inStock: true
+        };
+
+        // Mock manager
         mockManager = {
             nameInput: { value: 'Test Item' },
+            categorySelect: { value: '1' },
             updateItem: jest.fn(),
             createItem: jest.fn(),
             resetForm: jest.fn(),
             loadFoodItems: jest.fn()
         };
 
-        validateName.mockReset().mockReturnValue(true);
-        collectFormData.mockReset().mockReturnValue({
-            name: 'Test Item',
-            categoryId: '1'
-        });
+        // Setup default mock returns
+        validateName.mockReturnValue(true);
+        collectFormData.mockReturnValue(mockData);
         showMessage.mockReset();
+    });
+
+    afterEach(() => {
+        document.body.innerHTML = '';
+        jest.clearAllMocks();
     });
 
     it('should prevent default form submission', async () => {
@@ -45,8 +71,11 @@ describe('Submit Handler', () => {
     });
 
     it('should show error if category is not selected', async () => {
-        collectFormData.mockReturnValue({ categoryId: '' });
+        mockData.categoryId = '';
+        collectFormData.mockReturnValue(mockData);
+        
         await handleSubmit(mockEvent, mockManager);
+        
         expect(showMessage).toHaveBeenCalledWith(
             'Please select a category',
             'error',
@@ -56,19 +85,23 @@ describe('Submit Handler', () => {
     });
 
     it('should create new item when no ID present', async () => {
-        mockManager.createItem.mockResolvedValue(true);
+        mockManager.createItem.mockResolvedValue({ success: true });
+        
         await handleSubmit(mockEvent, mockManager);
-        expect(mockManager.createItem).toHaveBeenCalled();
+        
+        expect(mockManager.createItem).toHaveBeenCalledWith(mockData);
         expect(mockManager.updateItem).not.toHaveBeenCalled();
         expect(mockManager.resetForm).toHaveBeenCalled();
         expect(mockManager.loadFoodItems).toHaveBeenCalled();
     });
 
     it('should update existing item when ID present', async () => {
-        document.body.innerHTML = '<input id="foodItemId" value="1" />';
-        mockManager.updateItem.mockResolvedValue(true);
+        document.getElementById('foodItemId').value = '1';
+        mockManager.updateItem.mockResolvedValue({ success: true });
+        
         await handleSubmit(mockEvent, mockManager);
-        expect(mockManager.updateItem).toHaveBeenCalled();
+        
+        expect(mockManager.updateItem).toHaveBeenCalledWith('1', mockData);
         expect(mockManager.createItem).not.toHaveBeenCalled();
         expect(mockManager.resetForm).toHaveBeenCalled();
         expect(mockManager.loadFoodItems).toHaveBeenCalled();
@@ -77,12 +110,43 @@ describe('Submit Handler', () => {
     it('should handle API errors gracefully', async () => {
         const error = new Error('API Error');
         mockManager.createItem.mockRejectedValue(error);
+        
         await handleSubmit(mockEvent, mockManager);
+        
         expect(showMessage).toHaveBeenCalledWith(
             'API Error',
             'error',
             'foodItem'
         );
         expect(mockManager.resetForm).not.toHaveBeenCalled();
+        expect(mockManager.loadFoodItems).not.toHaveBeenCalled();
+    });
+
+    it('should handle validation errors appropriately', async () => {
+        const validationError = new Error('Validation failed');
+        validateName.mockImplementation(() => { throw validationError; });
+        
+        await handleSubmit(mockEvent, mockManager);
+        
+        expect(showMessage).toHaveBeenCalledWith(
+            'Validation failed',
+            'error',
+            'foodItem'
+        );
+        expect(mockManager.createItem).not.toHaveBeenCalled();
+    });
+
+    it('should handle form data collection errors', async () => {
+        const collectionError = new Error('Data collection failed');
+        collectFormData.mockImplementation(() => { throw collectionError; });
+        
+        await handleSubmit(mockEvent, mockManager);
+        
+        expect(showMessage).toHaveBeenCalledWith(
+            'Data collection failed',
+            'error',
+            'foodItem'
+        );
+        expect(mockManager.createItem).not.toHaveBeenCalled();
     });
 });
