@@ -53,21 +53,5 @@ module.exports = {
 
   // Timeouts
   testTimeout: 5000,
-  slowTestThreshold: 1000,
-
-  // Reporter configuration
-  reporters: [
-    'default',
-    [
-      'jest-junit',
-      {
-        outputDirectory: 'coverage',
-        outputName: 'junit.xml',
-        classNameTemplate: '{classname}',
-        titleTemplate: '{title}',
-        ancestorSeparator: ' › ',
-        usePathForSuiteName: true
-      }
-    ]
-  ]
-};
+  slowTestThreshold: 1000
+}
