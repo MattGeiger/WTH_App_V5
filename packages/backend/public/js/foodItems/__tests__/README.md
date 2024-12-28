@@ -26,10 +26,23 @@ npm run test:fooditems
 npm run test:fooditems:watch
 ```
 
-### Coverage Report
+### Coverage Reports
 ```bash
+# Run tests with coverage metrics
 npm run test:fooditems:coverage
+
+# Generate detailed coverage report
+npm run test:fooditems:report
+
+# Run tests and generate report
+npm run test:fooditems:full
 ```
+
+The coverage report will be generated in `coverage-report.md`, providing:
+- Component-level coverage metrics
+- Uncovered code analysis
+- Test quality metrics
+- Recommendations for improvement
 
 ## Test Utilities
 
@@ -116,6 +129,8 @@ describe('Form Handler', () => {
 - Functions: 80%
 - Lines: 80%
 
+The coverage report will highlight any components that fall below these thresholds.
+
 ## Best Practices
 
 ### DOM Testing
@@ -154,9 +169,33 @@ Set `DEBUG=true` environment variable for detailed logging:
 DEBUG=true npm run test:fooditems
 ```
 
+## Coverage Reports
+
+### Running Reports
+Coverage reports can be generated in different formats:
+- Basic metrics: `npm run test:fooditems:coverage`
+- Detailed analysis: `npm run test:fooditems:report`
+- Complete suite: `npm run test:fooditems:full`
+
+### Report Contents
+The generated report includes:
+- Per-component coverage metrics
+- Uncovered code analysis
+- Test quality assessment
+- Actionable recommendations
+- Performance metrics
+
+### Using Reports
+1. Review coverage metrics regularly
+2. Address uncovered code paths
+3. Implement suggested improvements
+4. Monitor coverage trends
+5. Update tests accordingly
+
 ## Contributing
 1. Follow test organization structure
 2. Use provided utilities and helpers
 3. Maintain coverage requirements
 4. Add documentation for new utilities
 5. Follow naming conventions
+6. Update coverage reports before PR
