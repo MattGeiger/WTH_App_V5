@@ -38,6 +38,11 @@ module.exports = {
     '<rootDir>/setup.js'
   ],
 
+  // Transform configuration
+  transform: {
+    '^.+\\.js$': 'babel-jest'
+  },
+
   // Mocking configuration
   clearMocks: true,
   resetMocks: true,
