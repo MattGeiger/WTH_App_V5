@@ -41,8 +41,8 @@ describe('Submit Handler', () => {
         mockManager = {
             nameInput: { value: 'Test Item' },
             categorySelect: { value: '1' },
-            updateItem: jest.fn(),
-            createItem: jest.fn(),
+            updateItem: jest.fn().mockResolvedValue(true),
+            createItem: jest.fn().mockResolvedValue(true),
             resetForm: jest.fn(),
             loadFoodItems: jest.fn()
         };
@@ -85,7 +85,7 @@ describe('Submit Handler', () => {
     });
 
     it('should create new item when no ID present', async () => {
-        mockManager.createItem.mockResolvedValue({ success: true });
+        mockManager.createItem.mockResolvedValue(true);
         
         await handleSubmit(mockEvent, mockManager);
         
@@ -97,7 +97,7 @@ describe('Submit Handler', () => {
 
     it('should update existing item when ID present', async () => {
         document.getElementById('foodItemId').value = '1';
-        mockManager.updateItem.mockResolvedValue({ success: true });
+        mockManager.updateItem.mockResolvedValue(true);
         
         await handleSubmit(mockEvent, mockManager);
         
@@ -108,8 +108,8 @@ describe('Submit Handler', () => {
     });
 
     it('should handle API errors gracefully', async () => {
-        const error = new Error('API Error');
-        mockManager.createItem.mockRejectedValue(error);
+        const apiError = new Error('API Error');
+        mockManager.createItem.mockRejectedValue(apiError);
         
         await handleSubmit(mockEvent, mockManager);
         
@@ -123,8 +123,9 @@ describe('Submit Handler', () => {
     });
 
     it('should handle validation errors appropriately', async () => {
-        const validationError = new Error('Validation failed');
-        validateName.mockImplementation(() => { throw validationError; });
+        validateName.mockImplementation(() => {
+            throw new Error('Validation failed');
+        });
         
         await handleSubmit(mockEvent, mockManager);
         
@@ -137,8 +138,9 @@ describe('Submit Handler', () => {
     });
 
     it('should handle form data collection errors', async () => {
-        const collectionError = new Error('Data collection failed');
-        collectFormData.mockImplementation(() => { throw collectionError; });
+        collectFormData.mockImplementation(() => {
+            throw new Error('Data collection failed');
+        });
         
         await handleSubmit(mockEvent, mockManager);
         
