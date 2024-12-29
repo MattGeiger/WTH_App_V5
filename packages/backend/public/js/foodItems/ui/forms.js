@@ -13,13 +13,11 @@ export function createFormLayout(manager) {
         createLimitTypeGroup()
     ]);
 
-    appendToFormSection(manager.form, 'status', [
-        createStatusFlagsGroup()
-    ]);
+    const statusGroup = createStatusFlagsGroup();
+    appendToFormSection(manager.form, 'status', [statusGroup]);
 
-    appendToFormSection(manager.form, 'dietary', [
-        createDietaryFlagsGroup()
-    ]);
+    const dietaryGroup = createDietaryFlagsGroup();
+    appendToFormSection(manager.form, 'dietary', [dietaryGroup]);
 }
 
 function createFormGroup(label, element) {
@@ -86,14 +84,16 @@ function createFlagGroup(title, flags) {
     flags.forEach(flag => {
         const toggle = document.createElement('div');
         toggle.className = 'flag-toggle';
-        
-        const label = document.createElement('label');
+
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.id = flag.id;
         
-        label.appendChild(checkbox);
-        label.appendChild(document.createTextNode(flag.label));
+        const label = document.createElement('label');
+        label.htmlFor = flag.id;
+        label.textContent = flag.label;
+
+        toggle.appendChild(checkbox);
         toggle.appendChild(label);
         gridContainer.appendChild(toggle);
     });
