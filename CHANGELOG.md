@@ -87,7 +87,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enhanced accessibility with high contrast support
   - Updated form class naming convention to BEM methodology
 
-## [0.5.13] - 2024-12-25
+## [0.5.13a] - 2024-12-25
 ### Changed
 - Enhanced form input styling with modern UI elements
   - Added consistent styling for all input types
