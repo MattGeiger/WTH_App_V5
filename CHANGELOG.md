@@ -6,6 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.19] - 2024-12-28
+### Changed
+- Enhanced Food Item form component architecture
+  - Refactored flag group creation for better modularity
+  - Improved accessibility with proper label associations
+  - Enhanced DOM hierarchy and element creation
+  - Added proper input name attributes
+  - Fixed class name consistency issues
+  - Split complex functions into smaller, focused ones
+  - Improved test coverage and reliability
+  - Added error handling for form element generation
+  - Enhanced form initialization process
+  - Added documentation for form component structure
+
 ## [0.5.18] - 2024-12-27
 ### Added
 - Comprehensive test suite for Food Items module
