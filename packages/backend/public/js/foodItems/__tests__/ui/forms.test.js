@@ -1,4 +1,4 @@
-import { createFormLayout } from '../../ui/forms.js';
+import { createFormLayout, createFlagsGroup } from '../../ui/forms.js';
 
 describe('Form UI Components', () => {
     let mockForm;
