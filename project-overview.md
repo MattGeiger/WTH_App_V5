@@ -2,35 +2,34 @@
 
 ## Introduction
 
-The Food Pantry Management System is a web application designed to support non-profit food pantries through automated inventory management and AI-powered multilingual accessibility. The system reduces volunteer workload while improving service delivery to diverse communities.
+The Food Pantry Management System is a web application designed to support non-profit food pantries through automated inventory management and AI-powered multilingual accessibility. The system **enhances staff performance** while improving service delivery to diverse communities.
 
 ## Core Goals
 
 1. **Automated Inventory Management**
    - Zero-configuration database setup
    - Automated item and category tracking
-   - Smart inventory status flags
-   - Flexible item limits system
-   - Real-time synchronization
+   - Smart inventory status flags (e.g., *must go*, *low supply*)
+   - Flexible item limits system (global, category, per-household/per-person)
+   - Real-time synchronization across UI components
    - Reduced manual data entry
-   - Input validation and constraints
+   - Input validation and constraints (3–36 character limits, no duplicates, etc.)
    - Sortable data tables for efficient management
 
 2. **Multilingual Support**
-   - Instant AI translations
-   - 60+ language support
+   - Instant AI translations (OpenAI-powered)
+   - Support for 60+ languages
    - Zero-configuration initialization
-   - Race-condition prevention
-   - Translation refinement tools
-   - Support for custom translations
-   - Automatic updates
+   - Race-condition prevention for language updates
+   - Manual translation refinement and custom translations
+   - Automatic updates when languages are toggled active/inactive
    - Sortable translation tables
 
 3. **Dietary Tracking**
-   - Automated restriction flags
+   - Automated restriction flags (e.g., halal, kosher, vegetarian, vegan, gluten-free)
    - Clear allergen labeling
    - Quick filtering tools
-   - Standardized attributes
+   - Standardized attributes for dietary needs
    - Sortable dietary information
 
 ## Technical Architecture
@@ -39,9 +38,9 @@ The Food Pantry Management System is a web application designed to support non-p
 
 1. **Database Layer**
    - SQLite for local deployment
-   - Prisma ORM
+   - Prisma ORM for type-safe queries
    - Automated migrations
-   - Models:
+   - Core models:
      * Categories
      * Food Items
      * Translations
@@ -51,68 +50,57 @@ The Food Pantry Management System is a web application designed to support non-p
 2. **API Layer**
    - Express.js REST API
    - TypeScript integration
-   - Modular routing
-   - Standard responses
-   - Error handling
-   - Input validation
-   - Real-time feedback
+   - Modular routing for each entity
+   - Standardized responses (via `ApiResponse`)
+   - Centralized error handling (`ApiError`, errorHandler middleware)
+   - Input validation and logging
+   - Real-time feedback and synchronization hooks
 
 3. **Service Layer**
-   - Business logic
-   - OpenAI translation
-   - CRUD operations
-   - Data validation
-   - Duplicate detection
-   - Case-insensitive comparison
+   - Business logic abstraction (CategoryService, FoodItemService, LanguageService, TranslationService)
+   - OpenAI integration for translation
+   - CRUD operations with data validation
+   - Duplicate detection and case-insensitive checks
+   - Title case and word repetition prevention
 
 ### Frontend Architecture
-- Enhanced form design
-     * Modern input field styling
-     * Consistent focus and hover states
-     * Accessible high contrast support
-     * Helper text integration
-     * BEM-compliant class naming
-- Modern form styling
-     * Consistent input design
-     * Enhanced accessibility
-     * Interactive states
-     * Helper text support
-     * High contrast mode
-- Button System:
-     * Primary: Filled pill-style (#1a73e8)
-     * Secondary: Outlined pill-style
-     * Consistent height (40px) and padding
-     * Responsive behavior on mobile
+
+- **Enhanced Form Design**
+  - Modern input field styling with accessibility features
+  - Consistent focus and hover states
+  - High contrast support
+  - Helper text integration and BEM-compliant class naming
+
+- **Modern Form Styling**
+  - Consistent input designs
+  - Interactive states for user feedback
+  - Real-time validation (character length, duplicates, repeated words)
+  - Automatic trimming, title-casing, and formatting
+
+- **Button System**
+  - Primary: Filled pill-style (#1a73e8)
+  - Secondary: Outlined pill-style
+  - Consistent height (40px) and padding
+  - Responsive behavior on mobile
 
 1. **Current Implementation**
-- Responsive breakpoints:
-     * Desktop (>1024px)
-     * Tablet landscape (≤1024px)
-     * Tablet portrait (≤768px)
-     * Mobile (≤480px)
+   - Responsive breakpoints (desktop, tablet, mobile)
    - Consistent section dimensions
-   - Mobile-first responsive design
-   - Standardized form layouts
-   - Modular JavaScript
-   - Event communication
-   - Real-time updates
-   - UI validation
-   - CSS styling
-   - Input constraints
-   - Error messages
-   - Auto-formatting
-   - Client-side sorting
-   - Memory-efficient event handling
-   - Type-specific data sorting
-   - Visual sort indicators
+   - Mobile-first design
+   - Modular JavaScript code
+   - Event communication across components
+   - Real-time UI updates
+   - Error messages for invalid inputs
+   - Auto-formatting for better data consistency
+   - Client-side sorting with type-specific logic (dates, numbers, text)
+   - Visual sort indicators (asc/desc) for tables
+   - Memory-efficient event handling (cleaning up listeners)
 
 2. **Planned React Implementation**
-   - TypeScript
-   - State management
-   - Enhanced UI/UX
-   - Component reuse
-   - Validation patterns
-   - Error boundaries
+   - TypeScript + React
+   - State management (e.g., Redux or React Context)
+   - Enhanced UI/UX with modular components
+   - Validation patterns and error boundaries
 
 ## Technical Decisions
 
@@ -124,195 +112,179 @@ The Food Pantry Management System is a web application designed to support non-p
    - Unique constraints
 
 2. **ORM: Prisma**
-   - Type safety
-   - Auto-generated types
-   - Migration tools
-   - Query building
-   - Validation support
+   - Type safety for queries
+   - Auto-generated TypeScript types
+   - Migration tools for schema changes
+   - Query building with validation support
 
 3. **Languages**
-   - Automated initialization
-   - OpenAI translation
-   - Manual refinement
+   - Automated initialization and AI translations
+   - Manual refinement or custom translations
    - Translation caching
-   - Support for custom translations
+   - Automatic toggles for active/inactive states
 
 4. **Item Limits**
-   - Global limits
+   - Global upper limit settings
    - Category thresholds
-   - Household/person options
-   - Default settings
+   - Household vs. per-person
+   - Default fallbacks for easy configuration
 
 5. **Input Validation**
-   - Character limits (3-36)
-   - Case-insensitive uniqueness
+   - Character limits (3–36)
+   - Case-insensitive uniqueness checks
    - Title case normalization
    - Word repetition prevention
-   - Special character rules
+   - No consecutive spaces or special character abuse
 
 6. **Data Presentation**
-   - Client-side sorting
-   - Type-specific sorting (dates, numbers, text)
+   - Client-side sorting with typed sort logic
    - Memory-efficient event handling
-   - Visual sort indicators
-   - Active state management
-   - Event cleanup for performance
+   - Visual indicators for sort direction
+   - Index-based active state management
+   - Cleanup for performance and resource usage
 
 ## Security Measures
 
 1. **Input Validation**
-   - Length constraints
+   - Enforced length constraints
    - Character restrictions
    - Case normalization
-   - Duplicate prevention
-   - Cross-reference checks
-   - Real-time validation
+   - Duplicate checks
+   - Real-time validation in UI
+   - Cross-reference checks (e.g., unique name across items/categories)
 
 2. **Error Handling**
-   - Custom errors
-   - Standard responses
-   - Error detail control
-   - User-friendly messages
-   - Validation feedback
+   - Custom error classes (`ApiError`)
+   - Standardized JSON responses
+   - Configurable error detail levels
+   - User-friendly messages in the UI
+   - Validation feedback for quick fixes
 
 3. **API Security**
-   - CORS setup
-   - Rate limiting
-   - Input cleaning
-   - Request validation
+   - CORS setup for external access
+   - Planned rate limiting
+   - Input cleaning and strict schema validations
+   - Request logging for audit trails
 
 ## Testing Strategy
 
 1. **Unit Tests**
-   - Jest framework
-   - Service coverage
-   - Utility testing
-   - Validation testing
-   - Case handling
-   - Sort functionality testing
+   - Jest framework for services, utilities, validations
+   - Detailed coverage for input validation and duplicates
+   - Sorting and UI interactions tested in isolation
 
 2. **Integration Tests**
-   - API endpoints
-   - Database operations
-   - Translation system
-   - Input constraints
-   - Error scenarios
-   - UI interaction testing
+   - API endpoints and route coverage
+   - Database operations validated via Prisma
+   - Translation integration with OpenAI
+   - Input constraints and error scenarios
 
 3. **Frontend Tests**
-   - Component testing
-   - User interaction
+   - Component-level checks (planned React migration)
+   - User interactions in modular JavaScript
    - Browser compatibility
-   - Form validation
-   - Error handling
-   - Sort behavior testing
+   - Form validation and error handling
+   - Sorting behavior tests
 
 ## Development Process
 
 1. **Version Control**
-   - Feature branches
-   - Standard commits
-   - Version tagging
-   - Comprehensive changelogs
+   - Feature branches and standard commits
+   - Semantic versioning
+   - Comprehensive changelogs for each release
 
 2. **Documentation**
-   - Code comments
-   - API documentation
-   - Change logging
-   - Structure docs
-   - Validation rules
-   - UI interaction docs
+   - Code comments and wiki usage guides
+   - API references with endpoints
+   - Validation rule documentation
+   - Detailed UI interaction docs
 
 3. **Quality Control**
-   - Code review
-   - Automated tests
-   - UI testing
-   - Translation checks
-   - Input validation
-   - Sort functionality verification
+   - Code review with PR workflows
+   - Automated tests for each commit
+   - UI testing for major flows
+   - Translation checks with mock data
+   - Validation rules for all user inputs
 
 ## Roadmap
 
 1. **Short Term**
-   - React frontend
-   - Test coverage
-   - Auth system
-   - Caching
-   - Enhanced sorting features
+   - React frontend integration
+   - Comprehensive test coverage
+   - Basic authentication system
+   - Enhanced caching and performance
+   - Better sorting features
 
 2. **Medium Term**
-   - Analytics 
-   - Translation updates
-   - Reporting
-   - User roles
-   - Advanced data filtering
+   - **Automated shopping lists** (generating pick-lists for staff)
+   - Improved analytics and advanced reporting
+   - Translation refinements and user roles
 
 3. **Long Term**
-   - Database scaling
-   - Mobile app
-   - Offline mode
-   - Analytics
-   - Complex data operations
+   - **Client-facing ordering system** (online pre-orders for clients)
+   - Database scaling and multi-pantry deployments
+   - Offline mode for on-site reliability
+   - Additional analytics for resource management
+   - Potential mobile app integration
 
 ## Performance
 
 1. **Database**
-   - Index optimization
-   - Query efficiency
-   - Connection pooling
-   - Validation speed
+   - Index optimization for queries
+   - Query efficiency improvements
+   - Connection pooling (if upgraded to Postgres)
+   - Validation speed checks
 
 2. **API**
    - Response caching
-   - Pagination
+   - Pagination for large data sets
    - Efficient loading
-   - Fast validation
+   - Fast validations
 
 3. **Frontend**
-   - Code splitting
+   - Code splitting for smaller bundles
    - Asset optimization
-   - Lazy loading
-   - Real-time validation
+   - Lazy loading for certain UI components
+   - Real-time validation for minimal requests
    - Efficient sorting algorithms
-   - Event listener cleanup
-   - DOM manipulation optimization
+   - Proper event listener cleanup
+   - DOM manipulation optimizations
 
 ## Deployment
 
 1. **Development**
-   - Local SQLite
-   - Environment config
-   - Dev server
-   - Test validation
-   - Performance monitoring
+   - SQLite local environment
+   - .env-based config
+   - Dev server with hot reload
+   - Performance monitoring during dev
 
 2. **Production**
-   - Migration strategy
-   - Environment setup
-   - Monitoring
-   - Backups
-   - Load testing
+   - Database migration strategy
+   - Environment-based config (OpenAI keys, DB paths)
+   - Monitoring and logging
+   - Regular backups
+   - Load testing prior to release
 
 ## Maintenance
 
 1. **Database**
-   - Regular backups
+   - Scheduled backups
    - Migration management
-   - Data cleanup
-   - Constraint checks
+   - Data cleanup tasks
+   - Constraint checks for consistent data
 
 2. **Code**
-   - Dependency updates
-   - Security patches
-   - Performance monitoring
-   - Validation updates
-   - Event handler cleanup
+   - Regular dependency updates
+   - Security patches for vulnerabilities
+   - Performance monitoring with real-time logs
+   - Validation updates as new requirements emerge
+   - Event handler cleanup to prevent memory leaks
 
 3. **Translations**
-   - Quality checks
-   - Manual review
-   - Update process
-   - Sort accuracy verification
+   - Ongoing quality checks
+   - Manual review for crucial text
+   - Rolling updates in multiple languages
+   - Verification of sorting accuracy for translated text
 
 ## Success Metrics
 
@@ -328,7 +300,7 @@ The Food Pantry Management System is a web application designed to support non-p
    - Event handler efficiency
 
 2. **Service Impact**
-   - Staff hours saved
+   - **Staff hours saved** (improved staff performance)
    - Language accessibility
    - Client satisfaction
    - System reliability

@@ -4,13 +4,10 @@
 ├── LICENSE
 ├── README.md
 ├── codebase.md
-├── package-lock.json
-├── package.json
 ├── packages
 │   ├── backend
 │   │   ├── jest-setup.js
 │   │   ├── jest.config.js
-│   │   ├── package.json
 │   │   ├── prisma
 │   │   │   ├── migrations
 │   │   │   │   ├── 20241130003245_init
@@ -46,9 +43,37 @@
 │   │   │   │   ├── foodItems
 │   │   │   │   │   ├── FoodItemManager.js
 │   │   │   │   │   ├── __tests__
-│   │   │   │   │   │   └── handlers
-│   │   │   │   │   │       ├── submit.test.js
-│   │   │   │   │   │       └── validation.test.js
+│   │   │   │   │   │   ├── FoodItemManager.test.js
+│   │   │   │   │   │   ├── README.md
+│   │   │   │   │   │   ├── babel.config.js
+│   │   │   │   │   │   ├── coverage
+│   │   │   │   │   │   │   ├── clover.xml
+│   │   │   │   │   │   │   ├── lcov-report
+│   │   │   │   │   │   │   │   ├── base.css
+│   │   │   │   │   │   │   │   ├── block-navigation.js
+│   │   │   │   │   │   │   │   ├── favicon.png
+│   │   │   │   │   │   │   │   ├── index.html
+│   │   │   │   │   │   │   │   ├── prettify.css
+│   │   │   │   │   │   │   │   ├── prettify.js
+│   │   │   │   │   │   │   │   ├── sort-arrow-sprite.png
+│   │   │   │   │   │   │   │   └── sorter.js
+│   │   │   │   │   │   │   └── lcov.info
+│   │   │   │   │   │   ├── coverage-template.md
+│   │   │   │   │   │   ├── handlers
+│   │   │   │   │   │   │   ├── formData.test.js
+│   │   │   │   │   │   │   ├── submit.test.js
+│   │   │   │   │   │   │   └── validation.test.js
+│   │   │   │   │   │   ├── jest.config.js
+│   │   │   │   │   │   ├── setup.js
+│   │   │   │   │   │   ├── ui
+│   │   │   │   │   │   │   ├── forms.test.js
+│   │   │   │   │   │   │   ├── stats.test.js
+│   │   │   │   │   │   │   └── table.test.js
+│   │   │   │   │   │   └── utils
+│   │   │   │   │   │       ├── assertions.js
+│   │   │   │   │   │       ├── generateCoverage.js
+│   │   │   │   │   │       ├── testFactories.js
+│   │   │   │   │   │       └── testHelpers.js
 │   │   │   │   │   ├── handlers
 │   │   │   │   │   │   ├── formData.js
 │   │   │   │   │   │   ├── submit.js
@@ -73,58 +98,56 @@
 │   │   │   ├── sample-layout.html
 │   │   │   ├── sample-layoutv2.html
 │   │   │   └── sample.html
-│   │   ├── src
-│   │   │   ├── config
-│   │   │   │   └── languageConfig.ts
-│   │   │   ├── index.ts
-│   │   │   ├── middleware
-│   │   │   │   ├── errorHandler.ts
-│   │   │   │   └── requestLogger.ts
-│   │   │   ├── routes
-│   │   │   │   ├── categoryRoutes.ts
-│   │   │   │   ├── foodItemRoutes.ts
-│   │   │   │   ├── languageRoutes.ts
-│   │   │   │   ├── settingsRoutes.ts
-│   │   │   │   └── translationRoutes.ts
-│   │   │   ├── services
-│   │   │   │   ├── CategoryService.ts
-│   │   │   │   ├── FoodItemService.ts
-│   │   │   │   ├── LanguageService.ts
-│   │   │   │   ├── TranslationService.ts
-│   │   │   │   └── openai
-│   │   │   │       ├── OpenAIService.ts
-│   │   │   │       └── __tests__
-│   │   │   │           └── OpenAIService.test.ts
-│   │   │   ├── tests
-│   │   │   │   ├── CategoryService.test.ts
-│   │   │   │   ├── FoodItemService.test.ts
-│   │   │   │   ├── TranslationService.test.ts
-│   │   │   │   ├── categoryRoutes.test.ts
-│   │   │   │   ├── foodItemRoutes.test.ts
-│   │   │   │   ├── languageRoutes.test.ts
-│   │   │   │   ├── limitType.test.ts
-│   │   │   │   ├── settings.test.ts
-│   │   │   │   ├── settingsRoutes.test.ts
-│   │   │   │   ├── setup.ts
-│   │   │   │   ├── translationRoutes.test.ts
-│   │   │   │   └── utils
-│   │   │   │       ├── dbHelpers.ts
-│   │   │   │       ├── testFactories.ts
-│   │   │   │       └── testHelpers.ts
-│   │   │   └── utils
-│   │   │       ├── ApiError.ts
-│   │   │       ├── ApiResponse.ts
-│   │   │       ├── errorConstants.ts
-│   │   │       ├── errorHandler.ts
-│   │   │       └── validationUtils.ts
-│   │   └── tsconfig.json
-│   ├── frontend
-│   │   └── package.json
+│   │   └── src
+│   │       ├── config
+│   │       │   └── languageConfig.ts
+│   │       ├── index.ts
+│   │       ├── middleware
+│   │       │   ├── errorHandler.ts
+│   │       │   └── requestLogger.ts
+│   │       ├── routes
+│   │       │   ├── categoryRoutes.ts
+│   │       │   ├── foodItemRoutes.ts
+│   │       │   ├── languageRoutes.ts
+│   │       │   ├── settingsRoutes.ts
+│   │       │   └── translationRoutes.ts
+│   │       ├── services
+│   │       │   ├── CategoryService.ts
+│   │       │   ├── FoodItemService.ts
+│   │       │   ├── LanguageService.ts
+│   │       │   ├── TranslationService.ts
+│   │       │   └── openai
+│   │       │       ├── OpenAIService.ts
+│   │       │       └── __tests__
+│   │       │           └── OpenAIService.test.ts
+│   │       ├── tests
+│   │       │   ├── CategoryService.test.ts
+│   │       │   ├── FoodItemService.test.ts
+│   │       │   ├── TranslationService.test.ts
+│   │       │   ├── categoryRoutes.test.ts
+│   │       │   ├── foodItemRoutes.test.ts
+│   │       │   ├── languageRoutes.test.ts
+│   │       │   ├── limitType.test.ts
+│   │       │   ├── settings.test.ts
+│   │       │   ├── settingsRoutes.test.ts
+│   │       │   ├── setup.ts
+│   │       │   ├── translationRoutes.test.ts
+│   │       │   └── utils
+│   │       │       ├── dbHelpers.ts
+│   │       │       ├── testFactories.ts
+│   │       │       └── testHelpers.ts
+│   │       └── utils
+│   │           ├── ApiError.ts
+│   │           ├── ApiResponse.ts
+│   │           ├── errorConstants.ts
+│   │           ├── errorHandler.ts
+│   │           └── validationUtils.ts
+│   ├── data
+│   │   └── food-pantry.db
 │   └── repomix-output.xml
 ├── project-overview.md
 ├── project-structure.md
 ├── project-tree.txt
-├── repomix-output.xml
-└── repomix.config.json
+└── repomix-output.xml
 
-35 directories, 93 files
+39 directories, 112 files
