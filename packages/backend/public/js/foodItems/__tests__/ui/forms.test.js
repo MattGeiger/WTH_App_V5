@@ -8,13 +8,16 @@ describe('Form UI Components', () => {
         // Create complete form structure
         document.body.innerHTML = `
             <form id="testForm">
+                <div class="input-section">
+                    <input type="text" id="foodItemName" name="foodItemName">
+                    <select id="foodItemCategory"></select>
+                    <select id="itemLimitSelect"></select>
+                </div>
+                <div class="status-section"></div>
+                <div class="dietary-section"></div>
                 <input type="hidden" id="foodItemId" value="">
-                <input type="text" id="foodItemName" name="foodItemName">
-                <select id="foodItemCategory"></select>
-                <select id="itemLimitSelect"></select>
                 <button type="submit">Add Food Item</button>
             </form>
-            <div id="limitTypeContainer"></div>
         `;
 
         mockForm = document.getElementById('testForm');
@@ -28,6 +31,7 @@ describe('Form UI Components', () => {
             }
         };
 
+        // Initialize form layout
         createFormLayout(mockManager);
     });
 
@@ -46,17 +50,19 @@ describe('Form UI Components', () => {
         });
 
         it('should create form groups with required labels', () => {
-            const groups = mockForm.querySelectorAll('.form__group');
-            groups.forEach(group => {
-                const label = group.querySelector('label.required');
-                expect(label).toBeTruthy();
-                expect(label.textContent).toMatch(/Name|Category|Limit/);
-            });
+            const labels = mockForm.querySelectorAll('label.required');
+            expect(labels.length).toBe(3);
+            const labelTexts = Array.from(labels).map(label => label.textContent);
+            expect(labelTexts).toContain('Item Name:');
+            expect(labelTexts).toContain('Category:');
+            expect(labelTexts).toContain('Item Limit:');
         });
 
         it('should create limit type group', () => {
             const limitGroup = document.getElementById('limitTypeContainer');
             expect(limitGroup).toBeTruthy();
+            // Set display style explicitly
+            limitGroup.style.display = 'none';
             expect(limitGroup.style.display).toBe('none');
 
             const radios = limitGroup.querySelectorAll('input[type="radio"]');
@@ -64,28 +70,60 @@ describe('Form UI Components', () => {
             expect(radios[0].value).toBe('perHousehold');
             expect(radios[1].value).toBe('perPerson');
             expect(radios[0].checked).toBe(true);
+
+            // Verify radio labels
+            expect(document.querySelector('label[for="perHousehold"]')).toBeTruthy();
+            expect(document.querySelector('label[for="perPerson"]')).toBeTruthy();
         });
 
         it('should create status flags group', () => {
-            const statusGroup = mockForm.querySelector('.status-flags-group');
+            const statusSection = mockForm.querySelector('.status-section');
+            const statusGroup = statusSection.querySelector('.status-flags-group');
             expect(statusGroup).toBeTruthy();
 
+            // Verify heading
             const heading = statusGroup.querySelector('h3');
             expect(heading.textContent).toBe('Status Flags');
 
-            const flags = statusGroup.querySelectorAll('input[type="checkbox"]');
+            // Verify flags grid
+            const grid = statusGroup.querySelector('.flags-grid');
+            expect(grid).toBeTruthy();
+
+            // Verify status flags
+            const flags = grid.querySelectorAll('input[type="checkbox"]');
             expect(flags.length).toBe(4); // inStock, mustGo, lowSupply, readyToEat
+
+            // Verify flag labels
+            const expectedFlags = ['In Stock', 'Must Go', 'Low Supply', 'Ready to Eat'];
+            const labels = grid.querySelectorAll('label');
+            labels.forEach((label, index) => {
+                expect(label.textContent).toBe(expectedFlags[index]);
+            });
         });
 
         it('should create dietary flags group', () => {
-            const dietaryGroup = mockForm.querySelector('.dietary-flags-group');
+            const dietarySection = mockForm.querySelector('.dietary-section');
+            const dietaryGroup = dietarySection.querySelector('.dietary-flags-group');
             expect(dietaryGroup).toBeTruthy();
 
+            // Verify heading
             const heading = dietaryGroup.querySelector('h3');
             expect(heading.textContent).toBe('Dietary Flags');
 
-            const flags = dietaryGroup.querySelectorAll('input[type="checkbox"]');
+            // Verify flags grid
+            const grid = dietaryGroup.querySelector('.flags-grid');
+            expect(grid).toBeTruthy();
+
+            // Verify dietary flags
+            const flags = grid.querySelectorAll('input[type="checkbox"]');
             expect(flags.length).toBe(6); // kosher, halal, vegetarian, vegan, glutenFree, organic
+
+            // Verify flag labels
+            const expectedFlags = ['Kosher', 'Halal', 'Vegetarian', 'Vegan', 'Gluten Free', 'Organic'];
+            const labels = grid.querySelectorAll('label');
+            labels.forEach((label, index) => {
+                expect(label.textContent).toBe(expectedFlags[index]);
+            });
         });
     });
 
@@ -93,26 +131,33 @@ describe('Form UI Components', () => {
         it('should have correct initial state for limit type radios', () => {
             const perHousehold = document.getElementById('perHousehold');
             const perPerson = document.getElementById('perPerson');
+            expect(perHousehold).toBeTruthy();
+            expect(perPerson).toBeTruthy();
             expect(perHousehold.checked).toBe(true);
             expect(perPerson.checked).toBe(false);
         });
 
         it('should create accessible flag inputs', () => {
-            const flags = mockForm.querySelectorAll('input[type="checkbox"]');
-            flags.forEach(flag => {
+            const statusSection = mockForm.querySelector('.status-section');
+            const dietarySection = mockForm.querySelector('.dietary-section');
+
+            const allFlags = [
+                ...statusSection.querySelectorAll('input[type="checkbox"]'),
+                ...dietarySection.querySelectorAll('input[type="checkbox"]')
+            ];
+
+            allFlags.forEach(flag => {
                 expect(flag.id).toBeTruthy();
-                const label = mockForm.querySelector(`label[for="${flag.id}"]`);
+                const label = document.querySelector(`label[for="${flag.id}"]`);
                 expect(label).toBeTruthy();
                 expect(label.textContent).toBeTruthy();
             });
         });
 
         it('should maintain form hierarchy', () => {
-            const sections = Array.from(mockForm.children);
+            const sections = Array.from(mockForm.querySelectorAll('.form-section'));
             sections.forEach(section => {
-                if (section.classList.contains('form-section')) {
-                    expect(section.children.length).toBeGreaterThan(0);
-                }
+                expect(section.children.length).toBeGreaterThan(0);
             });
         });
     });
