@@ -1,8 +1,9 @@
 import { handleSubmit } from '../../handlers/submit.js';
-import { showMessage } from '../../../utils.js';
 import { validateName } from '../../handlers/validation.js';
 import { collectFormData } from '../../handlers/formData.js';
+import { showMessage } from '../../../utils.js';
 
+// Mock dependencies
 jest.mock('../../../utils.js');
 jest.mock('../../handlers/validation.js');
 jest.mock('../../handlers/formData.js');
@@ -13,15 +14,8 @@ describe('Submit Handler', () => {
     let mockData;
 
     beforeEach(() => {
-        // Setup DOM
-        document.body.innerHTML = `
-            <form id="foodItemForm">
-                <input type="text" id="foodItemName" value="Test Item">
-                <select id="foodItemCategory" value="1"></select>
-                <input type="hidden" id="foodItemId" value="">
-                <button type="submit">Add Food Item</button>
-            </form>
-        `;
+        // Reset mocks
+        jest.clearAllMocks();
 
         // Mock event
         mockEvent = {
@@ -32,30 +26,27 @@ describe('Submit Handler', () => {
         mockData = {
             name: 'Test Item',
             categoryId: 1,
-            itemLimit: 5,
-            limitType: 'perHousehold',
-            inStock: true
+            itemLimit: 5
         };
 
         // Mock manager
         mockManager = {
             nameInput: { value: 'Test Item' },
             categorySelect: { value: '1' },
-            updateItem: jest.fn().mockResolvedValue(true),
             createItem: jest.fn().mockResolvedValue(true),
+            updateItem: jest.fn().mockResolvedValue(true),
             resetForm: jest.fn(),
             loadFoodItems: jest.fn()
         };
 
-        // Setup default mock returns
+        // Set up default mock returns
         validateName.mockReturnValue(true);
         collectFormData.mockReturnValue(mockData);
-        showMessage.mockReset();
-    });
 
-    afterEach(() => {
-        document.body.innerHTML = '';
-        jest.clearAllMocks();
+        // Set up DOM
+        document.body.innerHTML = `
+            <input type="hidden" id="foodItemId" value="">
+        `;
     });
 
     it('should prevent default form submission', async () => {
@@ -66,8 +57,14 @@ describe('Submit Handler', () => {
     it('should validate name before submission', async () => {
         validateName.mockReturnValue(false);
         await handleSubmit(mockEvent, mockManager);
+        
         expect(validateName).toHaveBeenCalledWith('Test Item');
         expect(mockManager.createItem).not.toHaveBeenCalled();
+        expect(showMessage).toHaveBeenCalledWith(
+            'Invalid item name', 
+            'error', 
+            'foodItem'
+        );
     });
 
     it('should show error if category is not selected', async () => {
@@ -85,31 +82,37 @@ describe('Submit Handler', () => {
     });
 
     it('should create new item when no ID present', async () => {
-        mockManager.createItem.mockResolvedValue(true);
-        
         await handleSubmit(mockEvent, mockManager);
         
         expect(mockManager.createItem).toHaveBeenCalledWith(mockData);
         expect(mockManager.updateItem).not.toHaveBeenCalled();
         expect(mockManager.resetForm).toHaveBeenCalled();
         expect(mockManager.loadFoodItems).toHaveBeenCalled();
+        expect(showMessage).toHaveBeenCalledWith(
+            'Food item created successfully',
+            'success',
+            'foodItem'
+        );
     });
 
     it('should update existing item when ID present', async () => {
         document.getElementById('foodItemId').value = '1';
-        mockManager.updateItem.mockResolvedValue(true);
-        
         await handleSubmit(mockEvent, mockManager);
         
         expect(mockManager.updateItem).toHaveBeenCalledWith('1', mockData);
         expect(mockManager.createItem).not.toHaveBeenCalled();
         expect(mockManager.resetForm).toHaveBeenCalled();
         expect(mockManager.loadFoodItems).toHaveBeenCalled();
+        expect(showMessage).toHaveBeenCalledWith(
+            'Food item updated successfully',
+            'success',
+            'foodItem'
+        );
     });
 
     it('should handle API errors gracefully', async () => {
-        const apiError = new Error('API Error');
-        mockManager.createItem.mockRejectedValue(apiError);
+        const error = new Error('API Error');
+        mockManager.createItem.mockRejectedValue(error);
         
         await handleSubmit(mockEvent, mockManager);
         
@@ -150,5 +153,45 @@ describe('Submit Handler', () => {
             'foodItem'
         );
         expect(mockManager.createItem).not.toHaveBeenCalled();
+    });
+
+    it('should handle failed create operation', async () => {
+        mockManager.createItem.mockResolvedValue(false);
+        await handleSubmit(mockEvent, mockManager);
+        
+        expect(mockManager.resetForm).not.toHaveBeenCalled();
+        expect(mockManager.loadFoodItems).not.toHaveBeenCalled();
+        expect(showMessage).not.toHaveBeenCalledWith(
+            expect.stringContaining('successfully'),
+            'success',
+            'foodItem'
+        );
+    });
+
+    it('should handle failed update operation', async () => {
+        document.getElementById('foodItemId').value = '1';
+        mockManager.updateItem.mockResolvedValue(false);
+        await handleSubmit(mockEvent, mockManager);
+        
+        expect(mockManager.resetForm).not.toHaveBeenCalled();
+        expect(mockManager.loadFoodItems).not.toHaveBeenCalled();
+        expect(showMessage).not.toHaveBeenCalledWith(
+            expect.stringContaining('successfully'),
+            'success',
+            'foodItem'
+        );
+    });
+
+    it('should handle error without message', async () => {
+        const error = new Error();
+        mockManager.createItem.mockRejectedValue(error);
+        
+        await handleSubmit(mockEvent, mockManager);
+        
+        expect(showMessage).toHaveBeenCalledWith(
+            'An error occurred',
+            'error',
+            'foodItem'
+        );
     });
 });

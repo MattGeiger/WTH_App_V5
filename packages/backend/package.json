@@ -16,9 +16,10 @@
         "test:frontend": "jest src/tests/frontend/",
         "test:fooditems": "jest public/js/foodItems/__tests__/ --config public/js/foodItems/__tests__/jest.config.js",
         "test:fooditems:watch": "npm run test:fooditems -- --watch",
-        "test:fooditems:coverage": "npm run test:fooditems -- --coverage",
+        "test:fooditems:coverage": "jest public/js/foodItems/__tests__/ --config public/js/foodItems/__tests__/jest.config.js --coverage --coverageDirectory=public/js/foodItems/__tests__/coverage",
         "test:fooditems:report": "node public/js/foodItems/__tests__/utils/generateCoverage.js",
-        "test:fooditems:full": "npm run test:fooditems:coverage && npm run test:fooditems:report",
+        "test:fooditems:full": "rm -rf public/js/foodItems/__tests__/coverage && npm run test:fooditems:coverage && npm run test:fooditems:report",
+        "test:fooditems:check": "jest public/js/foodItems/__tests__/ --config public/js/foodItems/__tests__/jest.config.js --coverage --coverageThreshold='{\"global\":{\"statements\":80,\"branches\":80,\"functions\":80,\"lines\":80}}'",
         "lint": "eslint . --ext .ts"
     },
     "dependencies": {

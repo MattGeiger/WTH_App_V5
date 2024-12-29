@@ -221,4 +221,34 @@ describe('Form UI Components', () => {
             });
         });
     });
+
+    describe('Flag Group Creation', () => {
+        // New test for unknown flag group title
+        it('should handle unknown flag group titles', () => {
+            const flagsGroup = createFlagsGroup('Unknown Flags', [
+                { id: 'testFlag', label: 'Test Flag' }
+            ]);
+            expect(flagsGroup).toBeTruthy();
+            expect(flagsGroup.classList.contains('status-flags-group')).toBe(false);
+            expect(flagsGroup.classList.contains('dietary-flags-group')).toBe(false);
+        });
+
+        // Test for empty flags array
+        it('should handle empty flags array', () => {
+            const flagsGroup = createFlagsGroup('Status Flags', []);
+            const grid = flagsGroup.querySelector('.flags-grid');
+            expect(grid.children.length).toBe(0);
+        });
+
+        // Test for flags with missing properties
+        it('should handle flags with missing properties', () => {
+            const flagsGroup = createFlagsGroup('Status Flags', [
+                { id: 'testFlag' }, // missing label
+                { label: 'Test' }  // missing id
+            ]);
+            const grid = flagsGroup.querySelector('.flags-grid');
+            const toggles = grid.querySelectorAll('.flag-toggle');
+            expect(toggles.length).toBe(2);
+        });
+    });
 });

@@ -4,7 +4,7 @@ module.exports = {
   
   // Test file patterns
   testMatch: [
-    '**/foodItems/__tests__/**/*.test.js'
+    '**/__tests__/**/*.test.js'
   ],
 
   // Module file extensions
@@ -17,12 +17,14 @@ module.exports = {
 
   // Coverage configuration
   collectCoverage: true,
-  coverageDirectory: '<rootDir>/coverage',
-  coverageReporters: ['text', 'lcov', 'clover'],
+  coverageDirectory: '<rootDir>/__tests__/coverage',
+  coverageReporters: ['json', 'text', 'lcov', 'clover'],
   collectCoverageFrom: [
-    '**/foodItems/**/*.js',
-    '!**/foodItems/__tests__/**',
-    '!**/node_modules/**'
+    '<rootDir>/handlers/**/*.js',
+    '<rootDir>/ui/**/*.js',
+    '<rootDir>/utils/**/*.js',
+    '!<rootDir>/__tests__/**',
+    '!<rootDir>/node_modules/**'
   ],
   coverageThreshold: {
     global: {
@@ -33,15 +35,27 @@ module.exports = {
     }
   },
 
+  // Coverage paths
+  rootDir: '../',
+
   // Test setup file
   setupFilesAfterEnv: [
-    '<rootDir>/setup.js'
+    '<rootDir>/__tests__/setup.js'
   ],
 
   // Transform configuration
   transform: {
-    '^.+\\.js$': 'babel-jest'
+    '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest']
   },
+
+  // Module directories
+  moduleDirectories: ['node_modules', '<rootDir>'],
+
+  // Transform ignore patterns
+  transformIgnorePatterns: [
+    '/node_modules/',
+    '\\.pnp\\.[^\\/]+$'
+  ],
 
   // Mocking configuration
   clearMocks: true,
@@ -59,4 +73,4 @@ module.exports = {
   // Timeouts
   testTimeout: 5000,
   slowTestThreshold: 1000
-}
+};
