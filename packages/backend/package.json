@@ -20,6 +20,12 @@
         "test:fooditems:report": "node public/js/foodItems/__tests__/utils/generateCoverage.js",
         "test:fooditems:full": "rm -rf public/js/foodItems/__tests__/coverage && npm run test:fooditems:coverage && npm run test:fooditems:report",
         "test:fooditems:check": "jest public/js/foodItems/__tests__/ --config public/js/foodItems/__tests__/jest.config.js --coverage --coverageThreshold='{\"global\":{\"statements\":80,\"branches\":80,\"functions\":80,\"lines\":80}}'",
+        "test:categories": "jest public/js/categories/__tests__/ --config public/js/categories/__tests__/jest.config.js",
+        "test:categories:watch": "npm run test:categories -- --watch",
+        "test:categories:coverage": "jest public/js/categories/__tests__/ --config public/js/categories/__tests__/jest.config.js --coverage --coverageDirectory=public/js/categories/__tests__/coverage",
+        "test:categories:report": "node public/js/categories/__tests__/utils/generateCoverage.js",
+        "test:categories:full": "rm -rf public/js/categories/__tests__/coverage && npm run test:categories:coverage && npm run test:categories:report",
+        "test:categories:check": "jest public/js/categories/__tests__/ --config public/js/categories/__tests__/jest.config.js --coverage --coverageThreshold='{\"global\":{\"statements\":80,\"branches\":80,\"functions\":80,\"lines\":80}}'",
         "lint": "eslint . --ext .ts"
     },
     "dependencies": {
