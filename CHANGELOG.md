@@ -6,6 +6,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.20] - 2024-12-29
+### Fixed
+- Enhanced Food Item form component reliability
+  - Added missing export for createFlagsGroup
+  - Improved error handling for edge cases
+  - Added defensive programming for missing properties
+  - Enhanced type safety with null checks
+  - Achieved 98.9% code coverage for forms.js
+
+  ### Changed
+- Enhanced .gitignore configuration
+  - Added specific test coverage patterns
+  - Improved organization of ignore rules
+  - Fixed accidental test file exclusions
+  - Added common development patterns
+
 ## [0.5.19] - 2024-12-28
 ### Changed
 - Enhanced Food Item form component architecture

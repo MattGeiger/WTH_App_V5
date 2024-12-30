@@ -101,10 +101,12 @@ function createFlagGroupContainer(title) {
         container.className = 'status-flags-group';
     } else if (title === 'Dietary Flags') {
         container.className = 'dietary-flags-group';
+    } else {
+        container.className = 'custom-flags-group';
     }
 
     const heading = document.createElement('h3');
-    heading.textContent = title;
+    heading.textContent = title || 'Flags';
     container.appendChild(heading);
 
     const grid = document.createElement('div');
@@ -115,29 +117,35 @@ function createFlagGroupContainer(title) {
 }
 
 function createFlagToggle(flag) {
+    if (!flag || (!flag.id && !flag.label)) {
+        return null;
+    }
+
     const toggle = document.createElement('div');
     toggle.className = 'flag-toggle';
 
     const label = document.createElement('label');
-    label.htmlFor = flag.id;
+    label.htmlFor = flag.id || `flag-${Date.now()}-${Math.random()}`;
 
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
-    checkbox.id = flag.id;
-    checkbox.name = flag.id;
+    checkbox.id = flag.id || label.htmlFor;
+    checkbox.name = checkbox.id;
 
     label.appendChild(checkbox);
-    label.appendChild(document.createTextNode(flag.label));
+    label.appendChild(document.createTextNode(flag.label || 'Unknown Flag'));
     toggle.appendChild(label);
 
     return toggle;
 }
 
-function createFlagsGroup(title, flags) {
+export function createFlagsGroup(title, flags = []) {
     const { container, grid } = createFlagGroupContainer(title);
     flags.forEach(flag => {
         const toggle = createFlagToggle(flag);
-        grid.appendChild(toggle);
+        if (toggle) {
+            grid.appendChild(toggle);
+        }
     });
     return container;
 }
