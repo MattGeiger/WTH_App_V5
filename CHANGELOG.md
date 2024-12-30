@@ -6,6 +6,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.21] - 2024-12-30
+### Added
+- **Overhauled Category Management** into a modular architecture  
+  - Created dedicated `categories/` folder with `CategoryManager.js`, handlers (`validation.js`, `submit.js`, `formData.js`), UI components (`forms.js`, `table.js`, `stats.js`), and utilities (`formatters.js`)  
+  - Introduced `CategoryManager.test.js` plus supporting unit tests (`validation.test.js`, `submit.test.js`, `formData.test.js`, `forms.test.js`, `table.test.js`, `stats.test.js`, `formatters.test.js`)  
+  - Established new **integration test** suite covering end-to-end Category lifecycle (creation, validation, submission, and UI updates)
+
+- **Coverage & Configuration**  
+  - Added Jest/Babel configs and coverage settings to mirror Food Items module  
+  - Created documentation stubs for new Category structure  
+  - Set up comprehensive test coverage thresholds for Categories
+
+### Changed
+- **File Organization & Consistency**  
+  - Updated directory layout to align with existing Food Items architecture  
+  - Unified naming conventions for Category handlers and UI files  
+  - Streamlined import paths and error handling across Category components
+
+### Fixed
+- **Minor Refactoring Issues**  
+  - Addressed missing directory checks prior to file creation  
+  - Resolved naming conflicts between Food Items and Categories test utilities  
+  - Ensured consistency in BEM class naming and TypeScript-style JSDoc usage
+
 ## [0.5.20] - 2024-12-29
 ### Fixed
 - Enhanced Food Item form component reliability
