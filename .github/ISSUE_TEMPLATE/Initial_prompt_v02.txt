@@ -1,5 +1,3 @@
-Using MCP please explore the project path: /Users/russbook/Desktop/wth_app_clean
-
 Here's what I aim to do:
 
 How might we accomplish this?
@@ -41,4 +39,9 @@ While collaborating, please follow these guidelines:
 Before we begin, let's create a new branch and sync it to remote.
 
 In VS Code Terminal, this is the current state:
+
+
+
+Please proceed. Continue to echo the guidelines with each response. Remember to also explain how your actions adhere to these guidelines.
+
 
