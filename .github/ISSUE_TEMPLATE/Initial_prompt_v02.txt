@@ -1,3 +1,9 @@
+Using MCP please explore:
+
+- the project path: /Users/russbook/Desktop/wth_app_clean
+- README.md
+- CHANGELOG.md
+
 Here's what I aim to do:
 
 How might we accomplish this?

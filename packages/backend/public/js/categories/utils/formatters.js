@@ -1,131 +1,74 @@
 /**
- * Data formatting utilities
- * Provides consistent formatting functions for the categories module
+ * Formatting utilities for category data
  */
 
-/**
- * Formats an item limit for display
- * @param {number|string} limit - The limit value to format
- * @returns {string} Formatted limit string
- */
-export function formatLimit(limit) {
-    const limitNum = parseInt(limit);
-    return isNaN(limitNum) || limitNum === 0 ? 'No Limit' : limitNum.toString();
+export function formatLimit(value) {
+    const limit = parseInt(value, 10);
+    return limit <= 0 ? 'No Limit' : limit.toString();
 }
 
-/**
- * Formats a category name for display
- * @param {string} name - The name to format
- * @returns {string} Formatted name string
- */
-export function formatName(name) {
-    if (!name) return '';
-    
-    return name
-        .trim()
+export function formatName(value) {
+    if (!value || typeof value !== 'string') return '';
+    return value.trim()
+        .replace(/\s+/g, ' ')
         .split(' ')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
         .join(' ');
 }
 
-/**
- * Formats a date for the table display
- * @param {Date|string} date - The date to format
- * @returns {string} Formatted date string
- */
-export function formatTableDate(date) {
-    if (!date) return '';
+export function formatTableDate(value) {
+    try {
+        const date = value instanceof Date ? value : new Date(value);
+        return date.toLocaleDateString();
+    } catch {
+        return '';
+    }
+}
+
+export function formatRelativeTime(value) {
+    if (!value) return '';
     
-    const dateObj = new Date(date);
-    if (isNaN(dateObj.getTime())) return '';
+    const date = value instanceof Date ? value : new Date(value);
+    const now = new Date();
+    const diff = now - date;
     
-    return dateObj.toLocaleDateString(undefined, {
+    if (diff < 60000) return 'just now';
+    if (diff < 3600000) return 'less than a minute ago';
+    if (diff < 86400000) return 'about 1 hour ago';
+    
+    return date.toLocaleString(undefined, {
         year: 'numeric',
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
     });
 }
 
-/**
- * Formats a timestamp for relative time display
- * @param {Date|string} date - The date to format
- * @returns {string} Formatted relative time string
- */
-export function formatRelativeTime(date) {
-    if (!date) return 'Never';
+export function formatStatistic(value, { decimals = 0, type = 'number' } = {}) {
+    if (typeof value !== 'number' || isNaN(value)) return '0';
     
-    const dateObj = new Date(date);
-    if (isNaN(dateObj.getTime())) return 'Invalid date';
-    
-    const now = new Date();
-    const diff = now - dateObj;
-    
-    // Within the last minute
-    if (diff < 60000) {
-        return 'Just now';
+    switch (type) {
+        case 'percent':
+            return value.toFixed(decimals) + '%';
+        case 'decimal':
+            return value.toFixed(decimals);
+        default:
+            return Math.round(value).toString();
     }
-    
-    // Within the last hour
-    if (diff < 3600000) {
-        const minutes = Math.floor(diff / 60000);
-        return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
-    }
-    
-    // Within the last day
-    if (diff < 86400000) {
-        const hours = Math.floor(diff / 3600000);
-        return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
-    }
-    
-    // Over a day ago
-    return formatTableDate(date);
 }
 
-/**
- * Formats statistics for display
- * @param {number} value - The value to format
- * @param {Object} options - Formatting options
- * @returns {string} Formatted statistics string
- */
-export function formatStatistic(value, options = {}) {
-    const {
-        prefix = '',
-        suffix = '',
-        defaultValue = '0',
-        decimals = 0
-    } = options;
-
-    if (typeof value !== 'number' || isNaN(value)) {
-        return `${prefix}${defaultValue}${suffix}`;
-    }
-
-    const formatted = decimals > 0 
-        ? value.toFixed(decimals)
-        : Math.round(value).toString();
-
-    return `${prefix}${formatted}${suffix}`;
-}
-
-/**
- * Formats a category for API submission
- * @param {Object} category - The category data to format
- * @returns {Object} Formatted category object
- */
-export function formatForSubmission(category) {
+export function formatForSubmission(data) {
     return {
-        name: formatName(category.name),
-        itemLimit: parseInt(category.itemLimit) || 0,
-        ...(category.id && { id: parseInt(category.id) })
+        id: data.id ? parseInt(data.id, 10) : null,
+        name: formatName(data.name),
+        itemLimit: parseInt(data.itemLimit, 10)
     };
 }
 
-/**
- * Creates a display name for a category
- * @param {Object} category - The category object
- * @returns {string} Display name string
- */
 export function createDisplayName(category) {
-    const { name, itemLimit } = category;
-    const formattedLimit = formatLimit(itemLimit);
-    return `${formatName(name)} (${formattedLimit})`;
+    if (!category?.name) return '';
+    return category.itemLimit > 0 
+        ? `${category.name} (Limit: ${category.itemLimit})`
+        : `${category.name} (No Limit)`;
 }

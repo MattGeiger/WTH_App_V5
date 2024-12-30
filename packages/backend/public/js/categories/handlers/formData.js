@@ -1,114 +1,48 @@
 /**
- * Form data collection and transformation utilities
- * Handles form data gathering and processing for categories
+ * Form data collection and formatting
  */
 
 /**
- * Collects and processes form data from the category form
- * @returns {Object} Processed form data object
+ * Collects form data from category form
+ * @returns {Object} Collected form data
  */
 export function collectFormData() {
-    const formData = {
-        id: getFormId(),
-        name: getFormName(),
-        itemLimit: getFormItemLimit()
+    const form = document.getElementById('categoryForm');
+    if (!form) return null;
+
+    const data = {
+        id: parseInt(document.getElementById('categoryId').value, 10) || null,
+        name: document.getElementById('categoryName').value.trim(),
+        itemLimit: parseInt(document.getElementById('itemLimit').value, 10) || 0
     };
 
-    return sanitizeFormData(formData);
+    return isFormEmpty(data) ? null : data;
 }
 
 /**
- * Gets the category ID from the form
- * @returns {number|null} The category ID or null if not present
- */
-function getFormId() {
-    const idElement = document.getElementById('categoryId');
-    const id = idElement?.value;
-    return id ? parseInt(id) : null;
-}
-
-/**
- * Gets the category name from the form
- * @returns {string} The sanitized category name
- */
-function getFormName() {
-    const nameElement = document.getElementById('categoryName');
-    return nameElement?.value?.trim() || '';
-}
-
-/**
- * Gets the item limit from the form
- * @returns {number} The parsed item limit
- */
-function getFormItemLimit() {
-    const limitElement = document.getElementById('categoryItemLimit');
-    const limit = parseInt(limitElement?.value);
-    return isNaN(limit) ? 0 : limit;
-}
-
-/**
- * Sanitizes the form data object
- * @param {Object} data - Raw form data object
- * @returns {Object} Sanitized form data object
- */
-function sanitizeFormData(data) {
-    return {
-        ...data,
-        name: sanitizeName(data.name),
-        itemLimit: sanitizeLimit(data.itemLimit)
-    };
-}
-
-/**
- * Sanitizes the category name
- * @param {string} name - Raw category name
- * @returns {string} Sanitized category name
- */
-function sanitizeName(name) {
-    if (!name) return '';
-    
-    return name
-        .trim()
-        // Remove multiple spaces
-        .replace(/\s+/g, ' ')
-        // Convert to title case
-        .split(' ')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-        .join(' ')
-        // Remove any non-letter characters (except spaces)
-        .replace(/[^a-zA-Z\s]/g, '');
-}
-
-/**
- * Sanitizes the item limit value
- * @param {number|string} limit - Raw item limit value
- * @returns {number} Sanitized item limit
- */
-function sanitizeLimit(limit) {
-    const parsed = parseInt(limit);
-    if (isNaN(parsed) || parsed < 0) return 0;
-    return parsed;
-}
-
-/**
- * Checks if the form data is empty
- * @param {Object} data - The form data to check
- * @returns {boolean} True if the form is effectively empty
+ * Checks if form data is empty
+ * @param {Object} data - Form data to check
+ * @returns {boolean} True if empty
  */
 export function isFormEmpty(data) {
-    return !data.name.trim() && !data.itemLimit && !data.id;
+    if (!data || typeof data !== 'object') return true;
+    return !data.name?.trim() && !data.itemLimit && !data.id;
 }
 
 /**
- * Formats form data for display
- * @param {Object} data - The form data to format
- * @returns {Object} Formatted form data
+ * Formats form data for submission
+ * @param {Object} data - Data to format
+ * @returns {Object} Formatted data
  */
 export function formatFormData(data) {
+    if (!data || typeof data !== 'object') {
+        return { name: '', itemLimit: 0, id: null };
+    }
+
     return {
-        ...data,
-        name: data.name || 'Unnamed Category',
-        itemLimit: data.itemLimit || 'No Limit',
-        id: data.id || 'New'
+        name: data.name?.trim() || '',
+        itemLimit: data.itemLimit || 0,
+        id: data.id ? parseInt(data.id, 10) : null,
+        ...(data.extraField ? { extraField: data.extraField } : {})
     };
 }

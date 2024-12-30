@@ -1,6 +1,6 @@
-import * as assertions from './utils/assertions';
-import * as testHelpers from './utils/testHelpers';
-import * as testFactories from './utils/testFactories';
+const assertions = require('./utils/assertions');
+const testHelpers = require('./utils/testHelpers');
+const testFactories = require('./utils/testFactories');
 
 // Enable fake timers
 jest.useFakeTimers();
@@ -14,6 +14,12 @@ const localStorageMock = {
 };
 global.localStorage = localStorageMock;
 
+// Mock API methods
+global.apiGet = jest.fn(() => Promise.resolve([]));
+global.apiPost = jest.fn(() => Promise.resolve({}));
+global.apiPut = jest.fn(() => Promise.resolve({}));
+global.apiDelete = jest.fn(() => Promise.resolve({}));
+
 // Mock window.fetch
 global.fetch = jest.fn(() =>
     Promise.resolve({
@@ -26,6 +32,7 @@ global.fetch = jest.fn(() =>
 // Mock window.alert and window.confirm
 global.alert = jest.fn();
 global.confirm = jest.fn(() => true);
+global.showMessage = jest.fn();
 
 // Add custom matchers
 expect.extend({

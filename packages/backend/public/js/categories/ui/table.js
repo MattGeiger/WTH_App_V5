@@ -1,125 +1,85 @@
 /**
- * Table UI generation and management
- * Creates and manages category table elements
+ * Table UI management for categories
  */
 
-import { SortableTable } from '../../utils/sortableTable.js';
-import { formatLimit } from '../utils/formatters.js';
+const COLUMNS = [
+    { key: 'name', label: 'Name' },
+    { key: 'limit', label: 'Item Limit' },
+    { key: 'created', label: 'Created' },
+    { key: 'actions', label: 'Actions' }
+];
 
-/**
- * Creates the table layout and initializes sorting
- * @returns {Object} Table management interface
- */
 export function createTableLayout() {
-    const table = getTableElement();
-    const sortableTable = new SortableTable('categoryTableBody', getSortValue);
-
-    return {
-        displayCategories: (categories) => displayCategories(categories, table, sortableTable),
-        getSortValue: (row, key) => getSortValue(row, key, sortableTable)
-    };
-}
-
-/**
- * Gets or creates the table element
- * @returns {HTMLTableElement} The table element
- */
-function getTableElement() {
     const existingTable = document.getElementById('categoryTable');
     if (existingTable) return existingTable;
 
     const table = document.createElement('table');
     table.id = 'categoryTable';
     table.className = 'table';
+    table.setAttribute('role', 'grid');
 
-    // Add table header
-    table.innerHTML = `
-        <thead>
-            <tr>
-                <th class="table__header" data-sort="name">Name</th>
-                <th class="table__header" data-sort="limit">Item Limit</th>
-                <th class="table__header" data-sort="created">Created</th>
-                <th class="table__header">Actions</th>
-            </tr>
-        </thead>
-        <tbody id="categoryTableBody"></tbody>
-    `;
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+
+    COLUMNS.forEach(({ key, label }) => {
+        const th = document.createElement('th');
+        th.textContent = label;
+        th.setAttribute('scope', 'col');
+        th.dataset.sortKey = key;
+        if (key !== 'actions') {
+            th.classList.add('sortable');
+            th.setAttribute('aria-sort', 'none');
+        }
+        headerRow.appendChild(th);
+    });
+
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    table.appendChild(tbody);
 
     return table;
 }
 
-/**
- * Displays categories in the table
- * @param {Array} categories - Array of category objects
- * @param {HTMLTableElement} table - The table element
- * @param {SortableTable} sortableTable - The sortable table instance
- */
-function displayCategories(categories, table, sortableTable) {
-    const tbody = table.querySelector('#categoryTableBody');
-    
+export function displayCategories(categories = []) {
+    const tbody = document.querySelector('#categoryTable tbody');
+    if (!tbody) return;
+
     if (!Array.isArray(categories) || categories.length === 0) {
         tbody.innerHTML = createEmptyState();
         return;
     }
 
-    tbody.innerHTML = categories.map(category => createTableRow(category)).join('');
-    sortableTable.setupSortingControls();
-}
-
-/**
- * Creates a table row for a category
- * @param {Object} category - Category data object
- * @returns {string} HTML string for the table row
- */
-function createTableRow(category) {
-    const { id, name, itemLimit, createdAt } = category;
-    
-    return `
+    tbody.innerHTML = categories.map(category => `
         <tr>
-            <td class="table__cell">${name}</td>
-            <td class="table__cell">${formatLimit(itemLimit)}</td>
-            <td class="table__cell">${new Date(createdAt).toLocaleDateString()}</td>
-            <td class="table__cell table__cell--actions">
-                ${createActionButtons(id, name, itemLimit)}
+            <td>${category.name}</td>
+            <td>${category.itemLimit || 'No Limit'}</td>
+            <td>${new Date(category.created).toLocaleDateString()}</td>
+            <td class="table__actions">
+                <button class="button button--icon edit-btn" 
+                    data-id="${category.id}"
+                    data-name="${category.name}"
+                    data-limit="${category.itemLimit}"
+                    aria-label="Edit ${category.name}">
+                    Edit
+                </button>
+                <button class="button button--icon delete-btn"
+                    data-id="${category.id}"
+                    aria-label="Delete ${category.name}">
+                    Delete
+                </button>
             </td>
         </tr>
-    `;
+    `).join('');
 }
 
-/**
- * Creates action buttons for a table row
- * @param {number} id - Category ID
- * @param {string} name - Category name
- * @param {number} itemLimit - Category item limit
- * @returns {string} HTML string for action buttons
- */
-function createActionButtons(id, name, itemLimit) {
-    return `
-        <button class="button button--small edit-btn" 
-                data-id="${id}" 
-                data-name="${name}"
-                data-limit="${itemLimit || 0}"
-                aria-label="Edit ${name}">
-            Edit
-        </button>
-        <button class="button button--small button--danger delete-btn" 
-                data-id="${id}"
-                aria-label="Delete ${name}">
-            Delete
-        </button>
-    `;
-}
-
-/**
- * Creates empty state message
- * @returns {string} HTML string for empty state
- */
 function createEmptyState() {
     return `
         <tr>
-            <td colspan="4" class="table__cell table__cell--empty">
+            <td class="table__cell--empty" colspan="4" role="cell">
                 <div class="empty-state">
-                    <p>No categories available</p>
+                    <p class="empty-state__message">No categories available</p>
                     <p class="empty-state__hint">Add a category using the form above</p>
                 </div>
             </td>
@@ -127,25 +87,16 @@ function createEmptyState() {
     `;
 }
 
-/**
- * Gets sort value for a table column
- * @param {HTMLTableRowElement} row - Table row element
- * @param {string} key - Sort key
- * @param {SortableTable} sortableTable - Sortable table instance
- * @returns {string|number} Sort value
- */
-function getSortValue(row, key, sortableTable) {
-    const columnIndex = sortableTable.getColumnIndex(key);
-    
+export function getSortValue(row, key) {
+    const cell = row.cells[COLUMNS.findIndex(col => col.key === key)];
+    if (!cell) return '';
+
     switch (key) {
-        case 'name':
-            return row.cells[columnIndex].textContent.toLowerCase();
         case 'limit':
-            const limitText = row.cells[columnIndex].textContent;
-            return limitText === 'No Limit' ? -1 : parseInt(limitText);
+            return cell.textContent === 'No Limit' ? -1 : parseInt(cell.textContent, 10);
         case 'created':
-            return SortableTable.dateSortValue(row, columnIndex);
+            return new Date(cell.textContent).getTime();
         default:
-            return row.cells[columnIndex].textContent.toLowerCase();
+            return cell.textContent.toLowerCase();
     }
 }

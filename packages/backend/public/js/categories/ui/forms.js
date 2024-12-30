@@ -1,171 +1,130 @@
 /**
- * Form UI generation and management
- * Creates and manages category form elements
+ * Form UI management for categories
  */
 
 /**
- * Creates the main form layout
- * @returns {HTMLFormElement} The configured form element
+ * Creates category form layout
+ * @returns {HTMLFormElement} Created form element
  */
 export function createFormLayout() {
-    // Get existing form or create new
-    const form = document.getElementById('categoryForm') || document.createElement('form');
+    const existingForm = document.getElementById('categoryForm');
+    if (existingForm) return existingForm;
+
+    const form = document.createElement('form');
     form.id = 'categoryForm';
     form.className = 'form';
+    form.setAttribute('aria-label', 'Category management form');
 
-    // Create form sections
-    const sections = {
-        hidden: createHiddenInputs(),
-        inputs: createInputSection(),
-        buttons: createButtonSection()
-    };
+    // Hidden fields
+    appendHiddenInputs(form);
 
-    // Assemble form
-    form.innerHTML = '';
-    Object.values(sections).forEach(section => {
-        form.appendChild(section);
-    });
+    // Name input group
+    appendNameInput(form);
+
+    // Item limit group
+    appendLimitInput(form);
+
+    // Button section
+    appendButtons(form);
 
     return form;
 }
 
-/**
- * Creates the hidden input fields
- * @returns {DocumentFragment} Fragment containing hidden inputs
- */
-function createHiddenInputs() {
-    const fragment = document.createDocumentFragment();
-    
-    // Category ID field
+function appendHiddenInputs(form) {
     const idInput = document.createElement('input');
     idInput.type = 'hidden';
     idInput.id = 'categoryId';
-    idInput.name = 'categoryId';
-    
-    fragment.appendChild(idInput);
-    return fragment;
+    form.appendChild(idInput);
 }
 
-/**
- * Creates the main input section
- * @returns {HTMLDivElement} The input section container
- */
-function createInputSection() {
-    const section = document.createElement('div');
-    section.className = 'form__section';
-
-    // Name input group
-    const nameGroup = createInputGroup({
-        id: 'categoryName',
-        label: 'Category Name',
-        type: 'text',
-        required: true,
-        placeholder: 'Enter category name',
-        minLength: 3,
-        maxLength: 36
-    });
-
-    // Item limit group
-    const limitGroup = createInputGroup({
-        id: 'categoryItemLimit',
-        label: 'Item Limit',
-        type: 'select',
-        required: false
-    });
-
-    section.appendChild(nameGroup);
-    section.appendChild(limitGroup);
-
-    return section;
-}
-
-/**
- * Creates a form input group
- * @param {Object} config - Input configuration
- * @returns {HTMLDivElement} The input group container
- */
-function createInputGroup({ id, label, type, required, placeholder, minLength, maxLength }) {
+function appendNameInput(form) {
     const group = document.createElement('div');
     group.className = 'form__group';
 
-    // Create label
-    const labelElement = document.createElement('label');
-    labelElement.htmlFor = id;
-    labelElement.className = 'form__label';
-    labelElement.textContent = label;
-    if (required) labelElement.classList.add('form__label--required');
+    const label = document.createElement('label');
+    label.htmlFor = 'categoryName';
+    label.className = 'form__label form__label--required';
+    label.textContent = 'Category Name';
 
-    // Create input/select
-    let input;
-    if (type === 'select') {
-        input = document.createElement('select');
-    } else {
-        input = document.createElement('input');
-        input.type = type;
-        if (placeholder) input.placeholder = placeholder;
-        if (minLength) input.minLength = minLength;
-        if (maxLength) input.maxLength = maxLength;
-    }
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.id = 'categoryName';
+    input.className = 'form__input';
+    input.required = true;
+    input.setAttribute('aria-required', 'true');
+    input.setAttribute('aria-invalid', 'false');
+    input.maxLength = 36;
 
-    input.id = id;
-    input.name = id;
-    input.className = type === 'select' ? 'form__select' : 'form__input';
-    if (required) input.required = true;
-
-    // Add to group
-    group.appendChild(labelElement);
+    group.appendChild(label);
     group.appendChild(input);
-
-    return group;
+    form.appendChild(group);
 }
 
-/**
- * Creates the button section
- * @returns {HTMLDivElement} The button section container
- */
-function createButtonSection() {
-    const section = document.createElement('div');
-    section.className = 'form__section form__section--buttons';
+function appendLimitInput(form) {
+    const group = document.createElement('div');
+    group.className = 'form__group';
 
-    // Submit button
+    const label = document.createElement('label');
+    label.htmlFor = 'itemLimit';
+    label.className = 'form__label';
+    label.textContent = 'Item Limit';
+
+    const select = document.createElement('select');
+    select.id = 'itemLimit';
+    select.className = 'form__select';
+
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '0';
+    defaultOption.textContent = 'No Limit';
+    select.appendChild(defaultOption);
+
+    group.appendChild(label);
+    group.appendChild(select);
+    form.appendChild(group);
+}
+
+function appendButtons(form) {
+    const buttonGroup = document.createElement('div');
+    buttonGroup.className = 'form__buttons';
+
     const submitBtn = document.createElement('button');
     submitBtn.type = 'submit';
     submitBtn.className = 'button button--primary';
     submitBtn.textContent = 'Add Category';
+    submitBtn.setAttribute('aria-label', 'Add category');
 
-    // Reset button
     const resetBtn = document.createElement('button');
-    resetBtn.type = 'button';
+    resetBtn.type = 'reset';
     resetBtn.id = 'resetForm';
     resetBtn.className = 'button button--secondary';
     resetBtn.textContent = 'Reset';
+    resetBtn.setAttribute('aria-label', 'Reset form');
 
-    section.appendChild(submitBtn);
-    section.appendChild(resetBtn);
-
-    return section;
+    buttonGroup.appendChild(submitBtn);
+    buttonGroup.appendChild(resetBtn);
+    form.appendChild(buttonGroup);
 }
 
 /**
- * Updates form state for editing
- * @param {HTMLFormElement} form - The form element
- * @param {boolean} isEditing - Whether in edit mode
+ * Updates form state for edit/add mode
+ * @param {boolean} isEdit - Whether form is in edit mode
  */
-export function updateFormState(form, isEditing) {
-    const submitBtn = form.querySelector('button[type="submit"]');
-    submitBtn.textContent = isEditing ? 'Update Category' : 'Add Category';
+export function updateFormState(isEdit) {
+    const submitBtn = document.querySelector('#categoryForm button[type="submit"]');
+    if (!submitBtn) return;
     
-    // Additional state updates can be added here
-    form.classList.toggle('form--editing', isEditing);
+    submitBtn.textContent = isEdit ? 'Update Category' : 'Add Category';
+    submitBtn.setAttribute('aria-label', isEdit ? 'Update category' : 'Add category');
 }
 
 /**
- * Clears all form inputs
- * @param {HTMLFormElement} form - The form element
+ * Clears form and resets to add mode
  */
-export function clearForm(form) {
+export function clearForm() {
+    const form = document.getElementById('categoryForm');
+    if (!form) return;
+    
     form.reset();
-    const idInput = form.querySelector('#categoryId');
-    if (idInput) idInput.value = '';
-    updateFormState(form, false);
+    document.getElementById('categoryId').value = '';
+    updateFormState(false);
 }

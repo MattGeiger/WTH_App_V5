@@ -43,21 +43,22 @@ module.exports = {
     '<rootDir>/__tests__/setup.js'
   ],
 
-  // Transform configuration
+  // Transform configuration 
   transform: {
-    '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest']
+    '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { 
+      configFile: './public/js/categories/__tests__/babel.config.js' 
+    }]
   },
+
+  // Transform ignore patterns
+  transformIgnorePatterns: [
+    '/node_modules/(?!(lodash-es|other-es-module)/)'
+  ],
 
   // Module directories
   moduleDirectories: ['node_modules', '<rootDir>'],
 
-  // Transform ignore patterns
-  transformIgnorePatterns: [
-    '/node_modules/',
-    '\\.pnp\\.[^\\/]+$'
-  ],
-
-  // Mocking configuration
+  // Test configuration
   clearMocks: true,
   resetMocks: true,
   restoreMocks: true,

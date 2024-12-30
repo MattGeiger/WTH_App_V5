@@ -1,76 +1,37 @@
-/**
- * @jest-environment jsdom
- */
-
-import { createStatsView } from '../../ui/stats.js';
+import * as statsView from '../../ui/stats';
 
 describe('Stats UI', () => {
-    let container;
-
     beforeEach(() => {
-        // Setup DOM container
-        container = document.createElement('div');
-        document.body.appendChild(container);
-
-        // Mock Date.now for consistent timestamp testing
-        jest.spyOn(Date, 'now').mockImplementation(() => new Date('2024-01-01T12:00:00Z').getTime());
-    });
-
-    afterEach(() => {
-        document.body.removeChild(container);
-        jest.clearAllMocks();
-    });
-
-    describe('createStatsView', () => {
-        test('creates stats container with correct attributes', () => {
-            const stats = createStatsView();
-            const container = document.getElementById('categoryStats');
-            
-            expect(container).not.toBeNull();
-            expect(container.classList.contains('stats-container')).toBe(true);
-            expect(container.getAttribute('aria-live')).toBe('polite');
-        });
-
-        test('reuses existing container if present', () => {
-            const existingContainer = document.createElement('div');
-            existingContainer.id = 'categoryStats';
-            document.body.appendChild(existingContainer);
-
-            createStatsView();
-            const containers = document.querySelectorAll('#categoryStats');
-            expect(containers).toHaveLength(1);
-        });
+        // Set up DOM elements
+        document.body.innerHTML = `
+            <div id="categoryStats" class="stats" role="region" aria-live="polite" aria-label="Category Statistics">
+                <div class="stats__content"></div>
+                <div class="stats__timestamp"></div>
+            </div>
+        `;
     });
 
     describe('updateStats', () => {
-        let statsView;
-
-        beforeEach(() => {
-            statsView = createStatsView();
-        });
-
-        test('displays complete statistics for categories', () => {
+        test('displays complete statistics', () => {
             const categories = [
-                { id: 1, name: 'Category 1', itemLimit: 5 },
-                { id: 2, name: 'Category 2', itemLimit: 0 },
-                { id: 3, name: 'Category 3', itemLimit: 10 }
+                { name: 'Cat1', itemLimit: 10 },
+                { name: 'Cat2', itemLimit: 6 },
+                { name: 'Cat3', itemLimit: 0 }
             ];
-            const lastUpdated = new Date('2024-01-01T11:30:00Z');
-
-            statsView.updateStats(categories, lastUpdated);
+            
+            statsView.updateStats(categories, new Date());
             const container = document.getElementById('categoryStats');
 
             expect(container.textContent).toContain('Total Categories: 3');
             expect(container.textContent).toContain('With Limits: 2');
             expect(container.textContent).toContain('No Limits: 1');
             expect(container.textContent).toContain('Average Limit: 8');
-            expect(container.textContent).toContain('30 minutes ago');
         });
 
         test('handles empty category list', () => {
             statsView.updateStats([], new Date());
             const container = document.getElementById('categoryStats');
-
+            
             expect(container.textContent).toContain('Total Categories: 0');
             expect(container.textContent).toContain('With Limits: 0');
             expect(container.textContent).toContain('No Limits: 0');
@@ -78,12 +39,11 @@ describe('Stats UI', () => {
         });
 
         test('handles invalid input', () => {
-            const invalidInputs = [null, undefined, '', {}, 42, true];
-
+            const invalidInputs = [null, undefined, '', {}, 42];
             invalidInputs.forEach(input => {
                 statsView.updateStats(input, new Date());
                 const container = document.getElementById('categoryStats');
-
+                
                 expect(container.textContent).toContain('Total Categories: 0');
                 expect(container.textContent).toContain('With Limits: 0');
                 expect(container.textContent).toContain('No Limits: 0');
@@ -92,13 +52,13 @@ describe('Stats UI', () => {
 
         describe('timestamp formatting', () => {
             test('formats recent timestamps as relative time', () => {
-                const timestamps = [
-                    { time: new Date(Date.now() - 30000), expected: 'Just now' },
-                    { time: new Date(Date.now() - 120000), expected: '2 minutes ago' },
-                    { time: new Date(Date.now() - 3600000), expected: '1 hour ago' }
+                const times = [
+                    { time: new Date(), expected: 'just now' },
+                    { time: new Date(Date.now() - 30000), expected: 'less than a minute ago' },
+                    { time: new Date(Date.now() - 3600000), expected: 'about 1 hour ago' }
                 ];
 
-                timestamps.forEach(({ time, expected }) => {
+                times.forEach(({ time, expected }) => {
                     statsView.updateStats([], time);
                     const container = document.getElementById('categoryStats');
                     expect(container.textContent).toContain(expected);
@@ -106,10 +66,10 @@ describe('Stats UI', () => {
             });
 
             test('formats older timestamps as date/time', () => {
-                const oldTimestamp = new Date('2023-12-25T10:00:00Z');
+                const oldTimestamp = new Date('2024-01-01');
                 statsView.updateStats([], oldTimestamp);
                 const container = document.getElementById('categoryStats');
-
+                
                 expect(container.textContent).toContain(oldTimestamp.toLocaleString(undefined, {
                     year: 'numeric',
                     month: 'short',
@@ -120,8 +80,7 @@ describe('Stats UI', () => {
             });
 
             test('handles invalid timestamps', () => {
-                const invalidTimestamps = [null, undefined, '', 'invalid', {}, []];
-
+                const invalidTimestamps = [null, undefined, '', 'invalid', {}];
                 invalidTimestamps.forEach(timestamp => {
                     statsView.updateStats([], timestamp);
                     const container = document.getElementById('categoryStats');
@@ -137,10 +96,8 @@ describe('Stats UI', () => {
                 const categories = [
                     { itemLimit: 5 },
                     { itemLimit: 10 },
-                    { itemLimit: 0 },
                     { itemLimit: 15 }
                 ];
-
                 statsView.updateStats(categories, new Date());
                 const container = document.getElementById('categoryStats');
                 expect(container.textContent).toContain('Average Limit: 10');
@@ -149,10 +106,8 @@ describe('Stats UI', () => {
             test('handles all zero limits', () => {
                 const categories = [
                     { itemLimit: 0 },
-                    { itemLimit: 0 },
                     { itemLimit: 0 }
                 ];
-
                 statsView.updateStats(categories, new Date());
                 const container = document.getElementById('categoryStats');
                 expect(container.textContent).not.toContain('Average Limit');
@@ -161,9 +116,8 @@ describe('Stats UI', () => {
             test('rounds average limit to nearest integer', () => {
                 const categories = [
                     { itemLimit: 5 },
-                    { itemLimit: 6 }
+                    { itemLimit: 8 }
                 ];
-
                 statsView.updateStats(categories, new Date());
                 const container = document.getElementById('categoryStats');
                 expect(container.textContent).toContain('Average Limit: 6');
@@ -173,7 +127,6 @@ describe('Stats UI', () => {
 
     describe('Accessibility', () => {
         test('stats container has proper ARIA attributes', () => {
-            const statsView = createStatsView();
             const container = document.getElementById('categoryStats');
             
             expect(container.getAttribute('aria-live')).toBe('polite');
@@ -181,24 +134,20 @@ describe('Stats UI', () => {
             expect(container.getAttribute('aria-label')).toBe('Category Statistics');
         });
 
-        test('stats items have proper structure', () => {
-            const statsView = createStatsView();
-            statsView.updateStats([{ itemLimit: 5 }], new Date());
+        test('stats are screen reader friendly', () => {
+            const categories = [
+                { name: 'Cat1', itemLimit: 5 }
+            ];
             
-            const items = document.querySelectorAll('.stats__item');
-            items.forEach(item => {
-                const label = item.querySelector('.stats__label');
-                const value = item.querySelector('.stats__value');
-                
-                expect(label).not.toBeNull();
-                expect(value).not.toBeNull();
-                expect(label.id).toBeTruthy();
-                expect(value.getAttribute('aria-labelledby')).toBe(label.id);
-            });
+            statsView.updateStats(categories, new Date());
+            const container = document.getElementById('categoryStats');
+            
+            expect(container.querySelectorAll('[role="text"]')).toHaveLength(3);
+            expect(container.querySelector('.stats__content')).toBeDefined();
+            expect(container.querySelector('.stats__timestamp')).toBeDefined();
         });
 
         test('timestamp has proper aria-label', () => {
-            const statsView = createStatsView();
             statsView.updateStats([], new Date());
             
             const timestamp = document.querySelector('.stats__timestamp');

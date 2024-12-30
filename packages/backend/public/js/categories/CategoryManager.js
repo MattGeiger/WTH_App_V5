@@ -1,120 +1,155 @@
 /**
- * CategoryManager class
- * Manages category-related functionality and coordinates between UI components
+ * Category Management System
+ * Handles CRUD operations and UI updates for categories
  */
 
-import { showMessage, apiGet, apiPost, apiPut, apiDelete } from '../utils.js';
-import { managers, EVENTS } from '../main.js';
-import { handleSubmit } from './handlers/submit.js';
-import { validateCategoryName } from './handlers/validation.js';
-import { createFormLayout } from './ui/forms.js';
-import { createTableLayout } from './ui/table.js';
-import { createStatsView } from './ui/stats.js';
-import { formatLimit } from './utils/formatters.js';
+import { createFormLayout, updateFormState, clearForm } from './ui/forms';
+import { createTableLayout, displayCategories, getSortValue } from './ui/table';
+import { updateStats } from './ui/stats';
+import { validateName, validateItemLimit, validateCategoryName } from './handlers/validation';
+import { collectFormData, formatFormData } from './handlers/formData';
 
-export class CategoryManager {
+export default class CategoryManager {
     constructor() {
-        // Core properties
-        this.lastUpdated = null;
-        this.categories = [];
-        
-        // Initialize UI components
-        this.initializeComponents();
+        this.initializeElements();
         this.setupEventListeners();
+        this.loadCategories();
     }
 
-    initializeComponents() {
-        // Initialize UI layouts
+    initializeElements() {
+        // Form elements
         this.form = createFormLayout();
-        this.table = createTableLayout();
-        this.stats = createStatsView();
-
-        // Cache DOM elements
         this.nameInput = document.getElementById('categoryName');
-        this.itemLimitSelect = document.getElementById('categoryItemLimit');
-        this.resetButton = document.getElementById('resetForm');
-
-        // Initialize dropdown with current settings
-        this.initializeItemLimitDropdown();
-    }
-
-    initializeItemLimitDropdown() {
-        if (!this.itemLimitSelect) return;
-
-        const globalLimit = managers.settings.getCurrentLimit();
-        let options = ['<option value="0">No Limit</option>'];
+        this.itemLimitSelect = document.getElementById('itemLimit');
         
-        for (let i = 1; i <= globalLimit; i++) {
-            options.push(`<option value="${i}">${i}</option>`);
-        }
+        // Table elements
+        const table = createTableLayout();
+        this.tableBody = table.querySelector('tbody');
         
-        this.itemLimitSelect.innerHTML = options.join('');
+        // Stats container
+        this.categoryStats = document.getElementById('categoryStats');
+        
+        // Initialize sorting
+        this.sortableTable = this.initializeSortableTable(table);
     }
 
     setupEventListeners() {
-        // Form events
-        this.form.addEventListener('submit', (e) => handleSubmit(e, this));
-        this.resetButton.addEventListener('click', () => this.resetForm());
-        this.nameInput.addEventListener('input', (e) => validateCategoryName(e, this));
+        this.form.addEventListener('submit', this.handleSubmit.bind(this));
+        this.form.addEventListener('reset', this.handleReset.bind(this));
+        this.nameInput.addEventListener('input', this.handleNameInput.bind(this));
+        document.addEventListener('settingsUpdated', this.handleSettingsUpdate.bind(this));
+    }
 
-        // Listen for global events
-        document.addEventListener(EVENTS.SETTINGS_UPDATED, () => {
-            this.initializeItemLimitDropdown();
-        });
+    initializeSortableTable(table) {
+        return {
+            currentSort: { key: null, direction: 'asc' },
+            sort: (key) => {
+                const rows = Array.from(this.tableBody.querySelectorAll('tr'));
+                const direction = key === this.currentSort.key && 
+                    this.currentSort.direction === 'asc' ? 'desc' : 'asc';
+
+                rows.sort((a, b) => {
+                    const aVal = getSortValue(a, key);
+                    const bVal = getSortValue(b, key);
+                    return direction === 'asc' ? 
+                        (aVal > bVal ? 1 : -1) : 
+                        (aVal < bVal ? 1 : -1);
+                });
+
+                this.tableBody.append(...rows);
+                this.currentSort = { key, direction };
+            }
+        };
     }
 
     async loadCategories() {
         try {
-            const response = await apiGet('/api/categories');
-            if (response && response.data) {
-                this.categories = response.data;
-                this.table.displayCategories(this.categories);
-                this.stats.updateStats(this.categories);
-                this.lastUpdated = new Date();
-            }
+            const categories = await window.apiGet('/api/categories');
+            this.displayCategories(categories);
+            this.updateStats(categories);
+            this.lastUpdated = new Date();
         } catch (error) {
-            showMessage(error.message || 'Error loading categories', 'error', 'category');
+            this.showMessage(error.message, 'error', 'category');
         }
+    }
+
+    async handleSubmit(event) {
+        event.preventDefault();
+        const data = collectFormData();
+        if (!data) return;
+
+        const isEdit = !!data.id;
+        const endpoint = isEdit ? `/api/categories/${data.id}` : '/api/categories';
+        const apiMethod = isEdit ? window.apiPut : window.apiPost;
+
+        try {
+            if (!validateName(data.name, this)) return;
+            if (!validateItemLimit(data.itemLimit, this.globalLimit || 100, this)) return;
+
+            const formatted = formatFormData(data);
+            await apiMethod(endpoint, formatted);
+            
+            this.showMessage(
+                `Category ${isEdit ? 'updated' : 'created'} successfully`,
+                'success',
+                'category'
+            );
+            
+            this.form.reset();
+            await this.loadCategories();
+        } catch (error) {
+            this.showMessage(error.message, 'error', 'category');
+        }
+    }
+
+    handleReset() {
+        clearForm();
+        this.nameInput.setAttribute('aria-invalid', 'false');
+    }
+
+    handleNameInput(event) {
+        validateCategoryName(event, this);
+    }
+
+    handleSettingsUpdate(event) {
+        this.globalLimit = event.detail.maxItemLimit;
+        this.updateLimitOptions();
+    }
+
+    updateLimitOptions() {
+        const select = this.itemLimitSelect;
+        select.innerHTML = '<option value="0">No Limit</option>';
+        
+        if (this.globalLimit) {
+            for (let i = 1; i <= this.globalLimit; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i;
+                select.appendChild(option);
+            }
+        }
+    }
+
+    editCategory(id, name, limit) {
+        document.getElementById('categoryId').value = id;
+        this.nameInput.value = name;
+        this.itemLimitSelect.value = limit;
+        updateFormState(true);
     }
 
     async deleteCategory(id) {
-        if (!confirm('Are you sure you want to delete this category?')) return;
+        if (!window.confirm('Are you sure you want to delete this category?')) return;
 
         try {
-            await apiDelete(`/api/categories/${id}`);
-            showMessage('Category deleted successfully', 'success', 'category');
+            await window.apiDelete(`/api/categories/${id}`);
+            this.showMessage('Category deleted successfully', 'success', 'category');
             await this.loadCategories();
-            
-            document.dispatchEvent(new Event(EVENTS.CATEGORY_UPDATED));
         } catch (error) {
-            showMessage(error.message || 'Error deleting category', 'error', 'category');
+            this.showMessage(error.message, 'error', 'category');
         }
     }
 
-    editCategory(id, name, itemLimit) {
-        document.getElementById('categoryId').value = id;
-        this.nameInput.value = name || '';
-        this.itemLimitSelect.value = itemLimit || 0;
-        this.form.querySelector('button[type="submit"]').textContent = 'Update Category';
-    }
-
-    resetForm() {
-        this.form.reset();
-        document.getElementById('categoryId').value = '';
-        this.itemLimitSelect.value = '0';
-        this.form.querySelector('button[type="submit"]').textContent = 'Add Category';
-    }
-
-    // Utility methods
-    getCategories() {
-        return this.categories;
-    }
-
-    getLastUpdated() {
-        return this.lastUpdated;
-    }
-
-    formatLimit(limit) {
-        return formatLimit(limit);
+    showMessage(message, type, context) {
+        window.showMessage(message, type, context);
     }
 }
