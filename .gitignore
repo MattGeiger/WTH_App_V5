@@ -1,9 +1,26 @@
-# Base .gitignore entries
+# Operating System Files
 .DS_Store
+Thumbs.db
+desktop.ini
+
+# Environment and Configuration
 packages/backend/.env
-node_modules
-*.log
+.env
+.env.*
+!.env.example
+
+# Dependencies
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build and Generate
+dist/
+build/
+*.log
+
+# Project Specific
 data/
 .repomixignore
 repomix-output.xml
@@ -14,26 +31,27 @@ project-overview.md
 project-structure.md
 Initial_prompt_v02.txt
 
-# Added: Ignore test coverage reports
+# Test Coverage and Reports
 coverage/
-public/js/foodItems/__tests__/coverage/
-public/js/foodItems/__tests__/lcov-report/
+**/coverage/
+**/__coverage__/
+**/lcov-report/
+**/.nyc_output/
+packages/backend/public/js/foodItems/__tests__/coverage/
+packages/backend/public/js/foodItems/__tests__/reports/
+packages/backend/public/js/foodItems/__tests__/template/
 
-# Added: Ignore temporary test files
-*.test.js
-*.test.ts
-*.test.jsx
-*.test.tsx
-.babelrc
-*.config.js
-public/js/foodItems/__tests__/public/
-public/js/foodItems/__tests__/reports/
-public/js/foodItems/__tests__/template/
+# Keep Test Source Files
+!**/*.test.js
+!**/*.test.ts
+!**/*.test.jsx
+!**/*.test.tsx
+!**/jest.config.js
+!**/babel.config.js
 
-# Added: Ignore generated logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Added: Ignore generated outputs
-public/js/foodItems/public/
+# IDE and Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
