@@ -3,8 +3,8 @@
  */
 
 /**
- * Creates category form layout
- * @returns {HTMLFormElement} Created form element
+ * Creates form layout
+ * @returns {HTMLFormElement} Form element
  */
 export function createFormLayout() {
     const existingForm = document.getElementById('categoryForm');
@@ -15,29 +15,31 @@ export function createFormLayout() {
     form.className = 'form';
     form.setAttribute('aria-label', 'Category management form');
 
-    // Hidden fields
-    appendHiddenInputs(form);
-
-    // Name input group
-    appendNameInput(form);
-
-    // Item limit group
-    appendLimitInput(form);
-
-    // Button section
+    // Setup form structure
+    appendHiddenFields(form);
+    appendNameField(form);
+    appendLimitField(form);
     appendButtons(form);
 
     return form;
 }
 
-function appendHiddenInputs(form) {
+/**
+ * Appends hidden fields to form
+ * @param {HTMLFormElement} form - Form element
+ */
+function appendHiddenFields(form) {
     const idInput = document.createElement('input');
     idInput.type = 'hidden';
     idInput.id = 'categoryId';
     form.appendChild(idInput);
 }
 
-function appendNameInput(form) {
+/**
+ * Appends name field to form
+ * @param {HTMLFormElement} form - Form element
+ */
+function appendNameField(form) {
     const group = document.createElement('div');
     group.className = 'form__group';
 
@@ -60,7 +62,11 @@ function appendNameInput(form) {
     form.appendChild(group);
 }
 
-function appendLimitInput(form) {
+/**
+ * Appends limit field to form
+ * @param {HTMLFormElement} form - Form element
+ */
+function appendLimitField(form) {
     const group = document.createElement('div');
     group.className = 'form__group';
 
@@ -83,9 +89,13 @@ function appendLimitInput(form) {
     form.appendChild(group);
 }
 
+/**
+ * Appends action buttons to form
+ * @param {HTMLFormElement} form - Form element
+ */
 function appendButtons(form) {
-    const buttonGroup = document.createElement('div');
-    buttonGroup.className = 'form__buttons';
+    const group = document.createElement('div');
+    group.className = 'form__buttons';
 
     const submitBtn = document.createElement('button');
     submitBtn.type = 'submit';
@@ -100,31 +110,40 @@ function appendButtons(form) {
     resetBtn.textContent = 'Reset';
     resetBtn.setAttribute('aria-label', 'Reset form');
 
-    buttonGroup.appendChild(submitBtn);
-    buttonGroup.appendChild(resetBtn);
-    form.appendChild(buttonGroup);
+    group.appendChild(submitBtn);
+    group.appendChild(resetBtn);
+    form.appendChild(group);
 }
 
 /**
- * Updates form state for edit/add mode
+ * Updates form state
  * @param {boolean} isEdit - Whether form is in edit mode
  */
 export function updateFormState(isEdit) {
-    const submitBtn = document.querySelector('#categoryForm button[type="submit"]');
+    const form = document.getElementById('categoryForm');
+    if (!form) return;
+
+    const submitBtn = form.querySelector('button[type="submit"]');
     if (!submitBtn) return;
-    
-    submitBtn.textContent = isEdit ? 'Update Category' : 'Add Category';
-    submitBtn.setAttribute('aria-label', isEdit ? 'Update category' : 'Add category');
+
+    if (isEdit) {
+        submitBtn.textContent = 'Update Category';
+        submitBtn.setAttribute('aria-label', 'Update category');
+    } else {
+        submitBtn.textContent = 'Add Category';
+        submitBtn.setAttribute('aria-label', 'Add category');
+    }
 }
 
 /**
- * Clears form and resets to add mode
+ * Clears form
  */
 export function clearForm() {
     const form = document.getElementById('categoryForm');
     if (!form) return;
-    
+
     form.reset();
     document.getElementById('categoryId').value = '';
+    document.getElementById('categoryName').setAttribute('aria-invalid', 'false');
     updateFormState(false);
 }

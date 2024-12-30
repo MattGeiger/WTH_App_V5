@@ -2,9 +2,6 @@ const assertions = require('./utils/assertions');
 const testHelpers = require('./utils/testHelpers');
 const testFactories = require('./utils/testFactories');
 
-// Enable fake timers
-jest.useFakeTimers();
-
 // Mock window.localStorage
 const localStorageMock = {
     getItem: jest.fn(),
@@ -90,14 +87,7 @@ global.createTestEnvironment = testFactories.createTestEnvironment;
 // Cleanup after each test
 afterEach(() => {
     jest.clearAllMocks();
-    jest.runOnlyPendingTimers();
     document.body.innerHTML = '';
     localStorage.clear();
     fetch.mockClear();
-});
-
-// Test environment configuration
-beforeAll(() => {
-    jest.spyOn(console, 'error').mockImplementation(() => {});
-    process.env.TZ = 'UTC';
 });

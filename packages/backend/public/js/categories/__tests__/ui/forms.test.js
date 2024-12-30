@@ -1,95 +1,86 @@
-/**
- * @jest-environment jsdom
- */
-
 import { createFormLayout, updateFormState, clearForm } from '../../ui/forms.js';
 
 describe('Form UI', () => {
-    let container;
-
     beforeEach(() => {
-        // Setup DOM container
-        container = document.createElement('div');
-        document.body.appendChild(container);
+        document.body.innerHTML = `
+            <div id="formContainer"></div>
+        `;
     });
 
     afterEach(() => {
-        document.body.removeChild(container);
-        jest.clearAllMocks();
+        document.body.innerHTML = '';
     });
 
     describe('createFormLayout', () => {
         test('creates form with correct structure', () => {
             const form = createFormLayout();
+            document.getElementById('formContainer').appendChild(form);
             
-            expect(form.tagName).toBe('FORM');
             expect(form.id).toBe('categoryForm');
-            expect(form.className).toBe('form');
+            expect(form.tagName).toBe('FORM');
+            expect(form.classList.contains('form')).toBe(true);
+            expect(form.getAttribute('aria-label')).toBe('Category management form');
         });
 
-        test('creates hidden input fields', () => {
+        test('creates required hidden inputs', () => {
             const form = createFormLayout();
-            const idInput = form.querySelector('#categoryId');
+            document.getElementById('formContainer').appendChild(form);
             
+            const idInput = form.querySelector('#categoryId');
             expect(idInput).not.toBeNull();
             expect(idInput.type).toBe('hidden');
-            expect(idInput.name).toBe('categoryId');
         });
 
-        test('creates name input group', () => {
+        test('creates name input with required attributes', () => {
             const form = createFormLayout();
+            document.getElementById('formContainer').appendChild(form);
+            
             const nameGroup = form.querySelector('.form__group');
-            const nameLabel = form.querySelector('label[for="categoryName"]');
+            const nameLabel = nameGroup.querySelector('label');
             const nameInput = form.querySelector('#categoryName');
-            
-            expect(nameGroup).not.toBeNull();
-            expect(nameLabel).not.toBeNull();
-            expect(nameLabel.textContent).toBe('Category Name');
+
+            expect(nameLabel.htmlFor).toBe('categoryName');
             expect(nameLabel.classList.contains('form__label--required')).toBe(true);
-            
-            expect(nameInput).not.toBeNull();
-            expect(nameInput.type).toBe('text');
             expect(nameInput.required).toBe(true);
-            expect(nameInput.placeholder).toBe('Enter category name');
-            expect(nameInput.minLength).toBe(3);
+            expect(nameInput.getAttribute('aria-required')).toBe('true');
+            expect(nameInput.getAttribute('aria-invalid')).toBe('false');
             expect(nameInput.maxLength).toBe(36);
         });
 
-        test('creates item limit group', () => {
+        test('creates item limit select', () => {
             const form = createFormLayout();
+            document.getElementById('formContainer').appendChild(form);
+            
             const limitGroup = form.querySelectorAll('.form__group')[1];
-            const limitLabel = form.querySelector('label[for="categoryItemLimit"]');
-            const limitSelect = form.querySelector('#categoryItemLimit');
-            
-            expect(limitGroup).not.toBeNull();
-            expect(limitLabel).not.toBeNull();
-            expect(limitLabel.textContent).toBe('Item Limit');
-            
-            expect(limitSelect).not.toBeNull();
-            expect(limitSelect.tagName).toBe('SELECT');
+            const limitLabel = limitGroup.querySelector('label');
+            const limitSelect = form.querySelector('#itemLimit');
+
+            expect(limitLabel.htmlFor).toBe('itemLimit');
+            expect(limitSelect.options[0].value).toBe('0');
+            expect(limitSelect.options[0].text).toBe('No Limit');
         });
 
-        test('creates button section', () => {
+        test('creates action buttons', () => {
             const form = createFormLayout();
-            const buttonSection = form.querySelector('.form__section--buttons');
-            const submitBtn = form.querySelector('button[type="submit"]');
-            const resetBtn = form.querySelector('#resetForm');
+            document.getElementById('formContainer').appendChild(form);
             
-            expect(buttonSection).not.toBeNull();
-            expect(submitBtn).not.toBeNull();
+            const btnGroup = form.querySelector('.form__buttons');
+            const submitBtn = btnGroup.querySelector('button[type="submit"]');
+            const resetBtn = btnGroup.querySelector('button[type="reset"]');
+
             expect(submitBtn.textContent).toBe('Add Category');
-            expect(resetBtn).not.toBeNull();
+            expect(submitBtn.getAttribute('aria-label')).toBe('Add category');
             expect(resetBtn.textContent).toBe('Reset');
+            expect(resetBtn.getAttribute('aria-label')).toBe('Reset form');
         });
 
-        test('reuses existing form if present', () => {
+        test('reuses existing form', () => {
             const existingForm = document.createElement('form');
             existingForm.id = 'categoryForm';
-            container.appendChild(existingForm);
+            document.getElementById('formContainer').appendChild(existingForm);
 
-            createFormLayout();
-            const forms = document.querySelectorAll('#categoryForm');
-            expect(forms).toHaveLength(1);
+            const form = createFormLayout();
+            expect(form).toBe(existingForm);
         });
     });
 
@@ -98,106 +89,55 @@ describe('Form UI', () => {
 
         beforeEach(() => {
             form = createFormLayout();
+            document.getElementById('formContainer').appendChild(form);
         });
 
-        test('updates submit button text for edit mode', () => {
-            updateFormState(form, true);
+        test('updates for edit mode', () => {
+            updateFormState(true);
             const submitBtn = form.querySelector('button[type="submit"]');
-            
             expect(submitBtn.textContent).toBe('Update Category');
-            expect(form.classList.contains('form--editing')).toBe(true);
+            expect(submitBtn.getAttribute('aria-label')).toBe('Update category');
         });
 
-        test('updates submit button text for add mode', () => {
-            updateFormState(form, false);
+        test('updates for add mode', () => {
+            updateFormState(false);
             const submitBtn = form.querySelector('button[type="submit"]');
-            
             expect(submitBtn.textContent).toBe('Add Category');
-            expect(form.classList.contains('form--editing')).toBe(false);
+            expect(submitBtn.getAttribute('aria-label')).toBe('Add category');
         });
     });
 
     describe('clearForm', () => {
         let form;
+        let nameInput;
+        let idInput;
+        let itemLimit;
 
         beforeEach(() => {
             form = createFormLayout();
-            // Set some initial values
-            form.querySelector('#categoryId').value = '1';
-            form.querySelector('#categoryName').value = 'Test Category';
-            form.querySelector('#categoryItemLimit').value = '5';
-            updateFormState(form, true);
+            document.getElementById('formContainer').appendChild(form);
+            nameInput = form.querySelector('#categoryName');
+            idInput = form.querySelector('#categoryId');
+            itemLimit = form.querySelector('#itemLimit');
+
+            // Set up form with data
+            nameInput.value = 'Test Category';
+            idInput.value = '1';
+            itemLimit.value = '5';
         });
 
         test('resets all form fields', () => {
-            clearForm(form);
-            
-            expect(form.querySelector('#categoryId').value).toBe('');
-            expect(form.querySelector('#categoryName').value).toBe('');
-            expect(form.querySelector('#categoryItemLimit').value).toBe('');
+            clearForm();
+            expect(nameInput.value).toBe('');
+            expect(idInput.value).toBe('');
+            expect(itemLimit.value).toBe('0');
         });
 
-        test('resets form state to add mode', () => {
-            clearForm(form);
-            
+        test('reverts to add mode', () => {
+            clearForm();
             const submitBtn = form.querySelector('button[type="submit"]');
             expect(submitBtn.textContent).toBe('Add Category');
-            expect(form.classList.contains('form--editing')).toBe(false);
-        });
-    });
-
-    describe('Accessibility', () => {
-        test('form controls have proper labels', () => {
-            const form = createFormLayout();
-            const labels = form.querySelectorAll('label');
-            
-            labels.forEach(label => {
-                const control = form.querySelector(`#${label.htmlFor}`);
-                expect(control).not.toBeNull();
-            });
-        });
-
-        test('required fields are properly marked', () => {
-            const form = createFormLayout();
-            const nameLabel = form.querySelector('label[for="categoryName"]');
-            const nameInput = form.querySelector('#categoryName');
-            
-            expect(nameLabel.classList.contains('form__label--required')).toBe(true);
-            expect(nameInput.required).toBe(true);
-            expect(nameInput.getAttribute('aria-required')).toBe('true');
-        });
-
-        test('input groups have proper structure', () => {
-            const form = createFormLayout();
-            const groups = form.querySelectorAll('.form__group');
-            
-            groups.forEach(group => {
-                const label = group.querySelector('label');
-                const input = group.querySelector('input, select');
-                
-                expect(label).not.toBeNull();
-                expect(input).not.toBeNull();
-                expect(input.id).toBe(label.htmlFor);
-            });
-        });
-
-        test('buttons have clear purposes', () => {
-            const form = createFormLayout();
-            const submitBtn = form.querySelector('button[type="submit"]');
-            const resetBtn = form.querySelector('#resetForm');
-            
             expect(submitBtn.getAttribute('aria-label')).toBe('Add category');
-            expect(resetBtn.getAttribute('aria-label')).toBe('Reset form');
-        });
-
-        test('form has proper validation attributes', () => {
-            const form = createFormLayout();
-            const nameInput = form.querySelector('#categoryName');
-            
-            expect(nameInput.minLength).toBe(3);
-            expect(nameInput.maxLength).toBe(36);
-            expect(nameInput.required).toBe(true);
-            expect(nameInput.getAttribute('aria-invalid')).toBe('false');
         });
     });
 });

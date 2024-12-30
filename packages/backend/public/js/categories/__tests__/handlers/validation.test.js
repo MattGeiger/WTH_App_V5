@@ -2,155 +2,164 @@
  * @jest-environment jsdom
  */
 
-import { validateName, validateCategoryName, validateItemLimit } from '../../handlers/validation.js';
-import { showMessage } from '../../../utils.js';
-
-// Mock utils
-jest.mock('../../../utils.js', () => ({
-    showMessage: jest.fn()
-}));
+import { validateName, validateItemLimit, validateCategoryName } from '../../handlers/validation.js';
 
 describe('Category Validation', () => {
+    let mockManager;
+
     beforeEach(() => {
-        // Clear mocks between tests
-        jest.clearAllMocks();
+        mockManager = {
+            showMessage: jest.fn()
+        };
+
+        document.body.innerHTML = `
+            <form id="categoryForm">
+                <input type="text" id="categoryName" value="" />
+            </form>
+        `;
     });
 
     describe('validateName', () => {
         test('accepts valid category names', () => {
-            const validNames = [
-                'Fresh Produce',
-                'Canned Goods',
-                'Dairy Products'
-            ];
-
-            validNames.forEach(name => {
-                const result = validateName(name);
-                expect(result.isValid).toBe(true);
-                expect(result.error).toBeNull();
-            });
+            expect(validateName('Fresh Produce', mockManager)).toBe(true);
+            expect(validateName('Canned Goods', mockManager)).toBe(true);
+            expect(mockManager.showMessage).not.toHaveBeenCalled();
         });
 
         test('rejects names that are too short', () => {
-            const result = validateName('Ab');
-            expect(result.isValid).toBe(false);
-            expect(result.error).toContain('at least 3 characters');
-        });
-
-        test('rejects names that are too long', () => {
-            const longName = 'This Category Name Is Way Too Long For Our System';
-            const result = validateName(longName);
-            expect(result.isValid).toBe(false);
-            expect(result.error).toContain('cannot exceed 36 characters');
-        });
-
-        test('rejects names with insufficient letters', () => {
-            const result = validateName('A B');
-            expect(result.isValid).toBe(false);
-            expect(result.error).toContain('at least 3 letters');
-        });
-
-        test('rejects names with repeated words', () => {
-            const result = validateName('Fresh Fresh Produce');
-            expect(result.isValid).toBe(false);
-            expect(result.error).toContain('repeated words');
-        });
-
-        test('rejects names with special characters', () => {
-            const result = validateName('Fresh! Produce@');
-            expect(result.isValid).toBe(false);
-            expect(result.error).toContain('only contain letters and spaces');
-        });
-
-        test('trims whitespace before validation', () => {
-            const result = validateName('  Fresh Produce  ');
-            expect(result.isValid).toBe(true);
-            expect(result.error).toBeNull();
-        });
-    });
-
-    describe('validateCategoryName', () => {
-        let mockEvent;
-        let mockManager;
-
-        beforeEach(() => {
-            mockEvent = {
-                target: {
-                    value: 'Test Category',
-                    selectionStart: 12,
-                    selectionEnd: 12
-                }
-            };
-            mockManager = {};
-        });
-
-        test('handles input longer than maximum length', () => {
-            mockEvent.target.value = 'This Category Name Is Way Too Long For The System To Handle';
-            validateCategoryName(mockEvent, mockManager);
-            
-            expect(mockEvent.target.value.length).toBeLessThanOrEqual(36);
-            expect(showMessage).toHaveBeenCalledWith(
-                expect.stringContaining('cannot exceed 36 characters'),
-                'warning',
+            expect(validateName('ab', mockManager)).toBe(false);
+            expect(mockManager.showMessage).toHaveBeenCalledWith(
+                'Category name must be at least three characters long',
+                'error',
                 'category'
             );
         });
 
-        test('removes consecutive spaces', () => {
-            mockEvent.target.value = 'Fresh   Produce';
+        test('rejects names that are too long', () => {
+            const longName = 'This Category Name Is Way Too Long To Be Valid';
+            expect(validateName(longName, mockManager)).toBe(false);
+            expect(mockManager.showMessage).toHaveBeenCalledWith(
+                'Category name cannot exceed 36 characters',
+                'error',
+                'category'
+            );
+        });
+
+        test('rejects names with insufficient letters', () => {
+            expect(validateName('12 34', mockManager)).toBe(false);
+            expect(mockManager.showMessage).toHaveBeenCalledWith(
+                'Category name must contain at least three letters',
+                'error',
+                'category'
+            );
+        });
+
+        test('rejects names with repeated words', () => {
+            expect(validateName('Fresh Fresh', mockManager)).toBe(false);
+            expect(mockManager.showMessage).toHaveBeenCalledWith(
+                'Category name cannot contain repeated words',
+                'error',
+                'category'
+            );
+        });
+
+        test('rejects names with special characters', () => {
+            expect(validateName('Fresh! Produce', mockManager)).toBe(false);
+            expect(mockManager.showMessage).toHaveBeenCalledWith(
+                'Category name can only contain letters and spaces',
+                'error',
+                'category'
+            );
+        });
+
+        test('trims whitespace before validation', () => {
+            expect(validateName('  Fresh Produce  ', mockManager)).toBe(true);
+            expect(mockManager.showMessage).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('validateCategoryName', () => {
+        test('handles input longer than maximum length', () => {
+            const mockEvent = {
+                target: document.getElementById('categoryName')
+            };
+            mockEvent.target.value = 'This Is A Very Long Category Name That Should Be Truncated';
+
             validateCategoryName(mockEvent, mockManager);
-            
+            expect(mockEvent.target.value.length).toBeLessThanOrEqual(36);
+        });
+
+        test('removes consecutive spaces', () => {
+            const mockEvent = {
+                target: document.getElementById('categoryName')
+            };
+            mockEvent.target.value = 'Fresh   Produce';
+
+            validateCategoryName(mockEvent, mockManager);
             expect(mockEvent.target.value).toBe('Fresh Produce');
         });
 
         test('warns about repeated words', () => {
+            const mockEvent = {
+                target: document.getElementById('categoryName')
+            };
             mockEvent.target.value = 'Fresh Fresh Produce';
+
             validateCategoryName(mockEvent, mockManager);
-            
-            expect(showMessage).toHaveBeenCalledWith(
-                expect.stringContaining('repeated words'),
-                'warning',
+            expect(mockManager.showMessage).toHaveBeenCalledWith(
+                'Category name cannot contain repeated words',
+                'error',
                 'category'
             );
         });
 
         test('converts to title case', () => {
+            const mockEvent = {
+                target: document.getElementById('categoryName')
+            };
             mockEvent.target.value = 'fresh produce';
+
             validateCategoryName(mockEvent, mockManager);
-            
             expect(mockEvent.target.value).toBe('Fresh Produce');
         });
     });
 
     describe('validateItemLimit', () => {
         test('accepts valid limits', () => {
-            const result = validateItemLimit(5, 10);
-            expect(result.isValid).toBe(true);
-            expect(result.error).toBeNull();
+            expect(validateItemLimit(5, 10, mockManager)).toBe(true);
+            expect(mockManager.showMessage).not.toHaveBeenCalled();
         });
 
         test('accepts zero as valid limit', () => {
-            const result = validateItemLimit(0, 10);
-            expect(result.isValid).toBe(true);
-            expect(result.error).toBeNull();
+            expect(validateItemLimit(0, 10, mockManager)).toBe(true);
+            expect(mockManager.showMessage).not.toHaveBeenCalled();
         });
 
         test('rejects non-numeric values', () => {
-            const result = validateItemLimit('abc', 10);
-            expect(result.isValid).toBe(false);
-            expect(result.error).toContain('must be a number');
+            expect(validateItemLimit('abc', 10, mockManager)).toBe(false);
+            expect(mockManager.showMessage).toHaveBeenCalledWith(
+                'Item limit must be a valid number',
+                'error',
+                'category'
+            );
         });
 
         test('rejects negative values', () => {
-            const result = validateItemLimit(-1, 10);
-            expect(result.isValid).toBe(false);
-            expect(result.error).toContain('cannot be negative');
+            expect(validateItemLimit(-1, 10, mockManager)).toBe(false);
+            expect(mockManager.showMessage).toHaveBeenCalledWith(
+                'Item limit cannot be negative',
+                'error',
+                'category'
+            );
         });
 
         test('rejects limits exceeding global limit', () => {
-            const result = validateItemLimit(15, 10);
-            expect(result.isValid).toBe(false);
-            expect(result.error).toContain('cannot exceed global limit');
+            expect(validateItemLimit(15, 10, mockManager)).toBe(false);
+            expect(mockManager.showMessage).toHaveBeenCalledWith(
+                'Item limit cannot exceed global limit of 10',
+                'error',
+                'category'
+            );
         });
     });
 });

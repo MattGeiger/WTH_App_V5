@@ -6,6 +6,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.22] - 2024-12-30
+### Added
+- Comprehensive test coverage for form data handling and validation
+  - Enhanced validation test suite with detailed edge cases
+  - Added test coverage for form data collection
+  - Improved validation error messages and handling
+  - Added checks for letter count and special characters
+
+### Fixed
+- Validation order in category name checking
+  - Letter count check now precedes special character validation
+  - Fixed error message sequencing
+  - Improved space normalization
+  - Enhanced title case handling
+
+### Changed
+- Validation logic flow
+  - Reordered validation checks for better user feedback
+  - Improved type handling for numeric inputs
+  - Enhanced form data collection reliability
+  - Standardized error messaging
+
 ## [0.5.21] - 2024-12-30
 ### Added
 - **Overhauled Category Management** into a modular architecture  

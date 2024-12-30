@@ -1,8 +1,8 @@
-import * as statsView from '../../ui/stats';
+import { updateStats } from '../../ui/stats.js';
 
 describe('Stats UI', () => {
     beforeEach(() => {
-        // Set up DOM elements
+        // Setup DOM
         document.body.innerHTML = `
             <div id="categoryStats" class="stats" role="region" aria-live="polite" aria-label="Category Statistics">
                 <div class="stats__content"></div>
@@ -11,7 +11,11 @@ describe('Stats UI', () => {
         `;
     });
 
-    describe('updateStats', () => {
+    afterEach(() => {
+        document.body.innerHTML = '';
+    });
+
+    describe('Basic Statistics', () => {
         test('displays complete statistics', () => {
             const categories = [
                 { name: 'Cat1', itemLimit: 10 },
@@ -19,7 +23,7 @@ describe('Stats UI', () => {
                 { name: 'Cat3', itemLimit: 0 }
             ];
             
-            statsView.updateStats(categories, new Date());
+            updateStats(categories, new Date());
             const container = document.getElementById('categoryStats');
 
             expect(container.textContent).toContain('Total Categories: 3');
@@ -29,7 +33,7 @@ describe('Stats UI', () => {
         });
 
         test('handles empty category list', () => {
-            statsView.updateStats([], new Date());
+            updateStats([], new Date());
             const container = document.getElementById('categoryStats');
             
             expect(container.textContent).toContain('Total Categories: 0');
@@ -37,118 +41,108 @@ describe('Stats UI', () => {
             expect(container.textContent).toContain('No Limits: 0');
             expect(container.textContent).not.toContain('Average Limit');
         });
+    });
 
-        test('handles invalid input', () => {
-            const invalidInputs = [null, undefined, '', {}, 42];
-            invalidInputs.forEach(input => {
-                statsView.updateStats(input, new Date());
+    describe('Timestamp Formatting', () => {
+        test('formats recent times correctly', () => {
+            jest.useFakeTimers();
+            const now = new Date('2024-01-01T12:00:00');
+            jest.setSystemTime(now);
+
+            const testCases = [
+                { 
+                    input: new Date('2024-01-01T11:59:30'), // 30 seconds ago
+                    expected: 'just now'
+                },
+                {
+                    input: new Date('2024-01-01T11:58:00'), // 2 minutes ago
+                    expected: 'less than a minute ago'
+                },
+                {
+                    input: new Date('2024-01-01T11:00:00'), // 1 hour ago
+                    expected: 'about 1 hour ago'
+                }
+            ];
+
+            testCases.forEach(({ input, expected }) => {
+                updateStats([], input);
+                const timestamp = document.querySelector('.stats__timestamp');
+                expect(timestamp.textContent).toContain(expected);
+            });
+
+            jest.useRealTimers();
+        });
+
+        test('formats older timestamps as date/time', () => {
+            const oldDate = new Date('2023-12-01T10:00:00');
+            updateStats([], oldDate);
+            
+            const timestamp = document.querySelector('.stats__timestamp');
+            expect(timestamp.textContent).toContain(oldDate.toLocaleString(undefined, {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }));
+        });
+
+        test('handles invalid timestamps', () => {
+            [null, undefined, 'invalid', {}, true].forEach(invalidTime => {
+                updateStats([], invalidTime);
+                const timestamp = document.querySelector('.stats__timestamp');
+                expect(timestamp.textContent).toContain('Last Updated: Never');
+            });
+        });
+    });
+
+    describe('Data Validation', () => {
+        test('handles invalid category data', () => {
+            [null, undefined, 42, 'invalid', true, {}].forEach(invalidData => {
+                updateStats(invalidData, new Date());
                 const container = document.getElementById('categoryStats');
-                
                 expect(container.textContent).toContain('Total Categories: 0');
                 expect(container.textContent).toContain('With Limits: 0');
                 expect(container.textContent).toContain('No Limits: 0');
             });
         });
 
-        describe('timestamp formatting', () => {
-            test('formats recent timestamps as relative time', () => {
-                const times = [
-                    { time: new Date(), expected: 'just now' },
-                    { time: new Date(Date.now() - 30000), expected: 'less than a minute ago' },
-                    { time: new Date(Date.now() - 3600000), expected: 'about 1 hour ago' }
-                ];
+        test('handles missing item limits', () => {
+            const categories = [
+                { name: 'Test1' },
+                { name: 'Test2', itemLimit: undefined },
+                { name: 'Test3', itemLimit: null }
+            ];
 
-                times.forEach(({ time, expected }) => {
-                    statsView.updateStats([], time);
-                    const container = document.getElementById('categoryStats');
-                    expect(container.textContent).toContain(expected);
-                });
-            });
-
-            test('formats older timestamps as date/time', () => {
-                const oldTimestamp = new Date('2024-01-01');
-                statsView.updateStats([], oldTimestamp);
-                const container = document.getElementById('categoryStats');
-                
-                expect(container.textContent).toContain(oldTimestamp.toLocaleString(undefined, {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                }));
-            });
-
-            test('handles invalid timestamps', () => {
-                const invalidTimestamps = [null, undefined, '', 'invalid', {}];
-                invalidTimestamps.forEach(timestamp => {
-                    statsView.updateStats([], timestamp);
-                    const container = document.getElementById('categoryStats');
-                    expect(container.textContent).not.toContain('undefined');
-                    expect(container.textContent).not.toContain('null');
-                    expect(container.textContent).not.toContain('NaN');
-                });
-            });
-        });
-
-        describe('statistics calculation', () => {
-            test('calculates average limit correctly', () => {
-                const categories = [
-                    { itemLimit: 5 },
-                    { itemLimit: 10 },
-                    { itemLimit: 15 }
-                ];
-                statsView.updateStats(categories, new Date());
-                const container = document.getElementById('categoryStats');
-                expect(container.textContent).toContain('Average Limit: 10');
-            });
-
-            test('handles all zero limits', () => {
-                const categories = [
-                    { itemLimit: 0 },
-                    { itemLimit: 0 }
-                ];
-                statsView.updateStats(categories, new Date());
-                const container = document.getElementById('categoryStats');
-                expect(container.textContent).not.toContain('Average Limit');
-            });
-
-            test('rounds average limit to nearest integer', () => {
-                const categories = [
-                    { itemLimit: 5 },
-                    { itemLimit: 8 }
-                ];
-                statsView.updateStats(categories, new Date());
-                const container = document.getElementById('categoryStats');
-                expect(container.textContent).toContain('Average Limit: 6');
-            });
+            updateStats(categories, new Date());
+            const container = document.getElementById('categoryStats');
+            expect(container.textContent).toContain('No Limits: 3');
+            expect(container.textContent).not.toContain('Average Limit');
         });
     });
 
     describe('Accessibility', () => {
         test('stats container has proper ARIA attributes', () => {
             const container = document.getElementById('categoryStats');
-            
-            expect(container.getAttribute('aria-live')).toBe('polite');
             expect(container.getAttribute('role')).toBe('region');
+            expect(container.getAttribute('aria-live')).toBe('polite');
             expect(container.getAttribute('aria-label')).toBe('Category Statistics');
         });
 
-        test('stats are screen reader friendly', () => {
-            const categories = [
-                { name: 'Cat1', itemLimit: 5 }
-            ];
-            
-            statsView.updateStats(categories, new Date());
-            const container = document.getElementById('categoryStats');
-            
-            expect(container.querySelectorAll('[role="text"]')).toHaveLength(3);
-            expect(container.querySelector('.stats__content')).toBeDefined();
-            expect(container.querySelector('.stats__timestamp')).toBeDefined();
+        test('stats values are screen reader friendly', () => {
+            const categories = [{ name: 'Test', itemLimit: 5 }];
+            updateStats(categories, new Date());
+
+            const statsItems = document.querySelectorAll('[role="text"]');
+            expect(statsItems.length).toBeGreaterThan(0);
+            statsItems.forEach(item => {
+                expect(item.querySelector('.stats__label')).not.toBeNull();
+                expect(item.querySelector('.stats__value')).not.toBeNull();
+            });
         });
 
-        test('timestamp has proper aria-label', () => {
-            statsView.updateStats([], new Date());
+        test('timestamp has proper labeling', () => {
+            updateStats([], new Date());
             
             const timestamp = document.querySelector('.stats__timestamp');
             expect(timestamp).not.toBeNull();

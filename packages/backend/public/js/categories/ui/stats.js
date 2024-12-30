@@ -1,115 +1,70 @@
 /**
- * Statistics display management
- * Handles calculation and display of category statistics
+ * Statistics display management for categories
  */
 
 /**
- * Updates the statistics display
- * @param {Array} categories - Array of category objects
+ * Updates statistics display
+ * @param {Array} categories - Category data
  * @param {Date} lastUpdated - Last update timestamp
  */
-export function updateStats(categories, lastUpdated) {
-    const container = getStatsContainer();
+export function updateStats(categories = [], lastUpdated = null) {
+    const container = document.getElementById('categoryStats');
     if (!container) return;
 
     const stats = calculateStats(categories);
     container.innerHTML = createStatsDisplay(stats, lastUpdated);
 }
 
-/**
- * Gets or creates the stats container
- * @returns {HTMLElement} The stats container element
- */
-function getStatsContainer() {
-    const existing = document.getElementById('categoryStats');
-    if (existing) return existing;
-
-    const container = document.createElement('div');
-    container.id = 'categoryStats';
-    container.className = 'stats';
-    container.setAttribute('role', 'region');
-    container.setAttribute('aria-live', 'polite');
-    container.setAttribute('aria-label', 'Category Statistics');
-    
-    return container;
-}
-
-/**
- * Calculates category statistics
- * @param {Array} categories - Array of category objects
- * @returns {Object} Calculated statistics
- */
 function calculateStats(categories) {
     if (!Array.isArray(categories)) {
-        return {
-            total: 0,
-            limited: 0,
-            unlimited: 0,
-            averageLimit: 0
-        };
+        categories = [];
     }
 
-    const limited = categories.filter(cat => cat.itemLimit > 0);
-    const averageLimit = limited.length > 0
-        ? Math.round(limited.reduce((sum, cat) => sum + cat.itemLimit, 0) / limited.length)
+    const withLimits = categories.filter(cat => cat?.itemLimit > 0);
+    const averageLimit = withLimits.length > 0
+        ? Math.round(withLimits.reduce((sum, cat) => sum + cat.itemLimit, 0) / withLimits.length)
         : 0;
 
     return {
         total: categories.length,
-        limited: limited.length,
-        unlimited: categories.length - limited.length,
-        averageLimit
+        withLimits: withLimits.length,
+        noLimits: categories.length - withLimits.length,
+        averageLimit: withLimits.length > 0 ? averageLimit : null
     };
 }
 
-/**
- * Creates the statistics display HTML
- * @param {Object} stats - Calculated statistics
- * @param {Date} lastUpdated - Last update timestamp
- * @returns {string} HTML string for stats display
- */
 function createStatsDisplay(stats, lastUpdated) {
+    const statsContent = [
+        `Total Categories: ${stats.total}`,
+        `With Limits: ${stats.withLimits}`,
+        `No Limits: ${stats.noLimits}`
+    ];
+
+    if (stats.averageLimit !== null) {
+        statsContent.push(`Average Limit: ${stats.averageLimit}`);
+    }
+
     return `
         <div class="stats__content">
-            <div role="text" class="stats__item">
-                <span class="stats__label">Total Categories:</span>
-                <span class="stats__value">${stats.total}</span>
-            </div>
-            <div role="text" class="stats__item">
-                <span class="stats__label">With Limits:</span>
-                <span class="stats__value">${stats.limited}</span>
-            </div>
-            <div role="text" class="stats__item">
-                <span class="stats__label">No Limits:</span>
-                <span class="stats__value">${stats.unlimited}</span>
-            </div>
-            ${stats.limited > 0 ? `
+            ${statsContent.map(text => `
                 <div role="text" class="stats__item">
-                    <span class="stats__label">Average Limit:</span>
-                    <span class="stats__value">${stats.averageLimit}</span>
+                    <span class="stats__label">${text.split(':')[0]}:</span>
+                    <span class="stats__value">${text.split(':')[1].trim()}</span>
                 </div>
-            ` : ''}
+            `).join('')}
         </div>
-        ${lastUpdated ? `
-            <div class="stats__timestamp" aria-label="Last updated">
-                Last Updated: ${formatTimestamp(lastUpdated)}
-            </div>
-        ` : ''}
-    `;
+        <div class="stats__timestamp" aria-label="Last updated">
+            Last Updated: ${formatTimestamp(lastUpdated)}
+        </div>
+    `.trim().replace(/\s+/g, ' ');
 }
 
-/**
- * Formats a timestamp for display
- * @param {Date} date - Date object to format
- * @returns {string} Formatted timestamp string
- */
 function formatTimestamp(date) {
-    if (!(date instanceof Date) || isNaN(date)) {
+    if (!date || !(date instanceof Date) || isNaN(date)) {
         return 'Never';
     }
 
-    const now = new Date();
-    const diff = now - date;
+    const diff = Date.now() - date.getTime();
     
     if (diff < 60000) return 'just now';
     if (diff < 3600000) return 'less than a minute ago';

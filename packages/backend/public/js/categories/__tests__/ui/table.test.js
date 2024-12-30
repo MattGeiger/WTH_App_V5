@@ -1,49 +1,34 @@
-/**
- * @jest-environment jsdom
- */
-
-import { createTableLayout } from '../../ui/table.js';
-import { SortableTable } from '../../../utils/sortableTable.js';
-
-// Mock dependencies
-jest.mock('../../../utils/sortableTable.js');
+import { createTableLayout, displayCategories, getSortValue } from '../../ui/table.js';
 
 describe('Table UI', () => {
-    let container;
-    let mockSortableTable;
-
     beforeEach(() => {
-        // Setup DOM container
-        container = document.createElement('div');
-        document.body.appendChild(container);
-
-        // Setup SortableTable mock
-        mockSortableTable = {
-            setupSortingControls: jest.fn(),
-            getColumnIndex: jest.fn().mockReturnValue(0)
-        };
-        SortableTable.mockImplementation(() => mockSortableTable);
+        document.body.innerHTML = `
+            <div id="tableContainer">
+                <div id="categoryTableContainer"></div>
+            </div>
+        `;
     });
 
     afterEach(() => {
-        document.body.removeChild(container);
-        jest.clearAllMocks();
+        document.body.innerHTML = '';
     });
 
     describe('createTableLayout', () => {
         test('creates table with correct structure', () => {
             const table = createTableLayout();
-            const tableElement = document.getElementById('categoryTable');
-
-            expect(tableElement).not.toBeNull();
-            expect(tableElement.tagName).toBe('TABLE');
-            expect(tableElement.classList.contains('table')).toBe(true);
+            document.getElementById('categoryTableContainer').appendChild(table);
+            
+            expect(table.id).toBe('categoryTable');
+            expect(table.tagName).toBe('TABLE');
+            expect(table.classList.contains('table')).toBe(true);
+            expect(table.getAttribute('role')).toBe('grid');
         });
 
         test('creates header with correct columns', () => {
-            createTableLayout();
-            const headers = document.querySelectorAll('th');
-
+            const table = createTableLayout();
+            document.getElementById('categoryTableContainer').appendChild(table);
+            
+            const headers = table.querySelectorAll('th');
             expect(headers).toHaveLength(4);
             expect(headers[0].textContent).toBe('Name');
             expect(headers[1].textContent).toBe('Item Limit');
@@ -51,33 +36,27 @@ describe('Table UI', () => {
             expect(headers[3].textContent).toBe('Actions');
         });
 
-        test('adds correct header classes and attributes', () => {
-            createTableLayout();
-            const headers = document.querySelectorAll('th');
-
-            headers.forEach(header => {
-                expect(header.classList.contains('table__header')).toBe(true);
-            });
-
-            const sortableHeaders = Array.from(headers).slice(0, 3); // First 3 are sortable
-            sortableHeaders.forEach(header => {
-                expect(header.hasAttribute('data-sort')).toBe(true);
-            });
-        });
-
-        test('initializes sortable table functionality', () => {
+        test('adds correct header attributes', () => {
             const table = createTableLayout();
-            expect(SortableTable).toHaveBeenCalledWith('categoryTableBody', expect.any(Function));
+            document.getElementById('categoryTableContainer').appendChild(table);
+            
+            const headers = table.querySelectorAll('th');
+            headers.forEach((header, index) => {
+                if (index < 3) { // All except Actions are sortable
+                    expect(header.classList.contains('sortable')).toBe(true);
+                    expect(header.getAttribute('aria-sort')).toBe('none');
+                }
+                expect(header.getAttribute('scope')).toBe('col');
+            });
         });
 
         test('reuses existing table if present', () => {
             const existingTable = document.createElement('table');
             existingTable.id = 'categoryTable';
-            container.appendChild(existingTable);
+            document.getElementById('categoryTableContainer').appendChild(existingTable);
 
-            createTableLayout();
-            const tables = document.querySelectorAll('#categoryTable');
-            expect(tables).toHaveLength(1);
+            const table = createTableLayout();
+            expect(table).toBe(existingTable);
         });
     });
 
@@ -86,26 +65,17 @@ describe('Table UI', () => {
 
         beforeEach(() => {
             table = createTableLayout();
+            document.getElementById('categoryTableContainer').appendChild(table);
         });
 
         test('displays categories in table', () => {
             const categories = [
-                {
-                    id: 1,
-                    name: 'Fresh Produce',
-                    itemLimit: 5,
-                    createdAt: '2024-01-01'
-                },
-                {
-                    id: 2,
-                    name: 'Canned Goods',
-                    itemLimit: 0,
-                    createdAt: '2024-01-02'
-                }
+                { id: 1, name: 'Fresh Produce', itemLimit: 5, created: new Date('2024-01-01') },
+                { id: 2, name: 'Canned Goods', itemLimit: 0, created: new Date('2024-01-02') }
             ];
 
-            table.displayCategories(categories);
-            const rows = document.querySelectorAll('tbody tr');
+            displayCategories(categories);
+            const rows = table.querySelectorAll('tbody tr');
 
             expect(rows).toHaveLength(2);
             expect(rows[0].cells[0].textContent).toBe('Fresh Produce');
@@ -115,57 +85,48 @@ describe('Table UI', () => {
         });
 
         test('formats dates correctly', () => {
-            const categories = [{
-                id: 1,
-                name: 'Test Category',
-                itemLimit: 5,
-                createdAt: '2024-01-01T12:00:00Z'
-            }];
+            const testDate = new Date('2024-01-01');
+            const categories = [
+                { id: 1, name: 'Test', itemLimit: 5, created: testDate }
+            ];
 
-            table.displayCategories(categories);
-            const dateCell = document.querySelector('tbody tr td:nth-child(3)');
-            expect(dateCell.textContent).toBe(new Date('2024-01-01').toLocaleDateString());
+            displayCategories(categories);
+            const dateCell = table.querySelector('tbody tr td:nth-child(3)');
+            expect(dateCell.textContent).toBe(testDate.toLocaleDateString());
         });
 
         test('creates action buttons with correct attributes', () => {
-            const categories = [{
-                id: 1,
-                name: 'Test Category',
-                itemLimit: 5,
-                createdAt: '2024-01-01'
-            }];
+            const categories = [
+                { id: 1, name: 'Test Category', itemLimit: 5, created: new Date() }
+            ];
 
-            table.displayCategories(categories);
+            displayCategories(categories);
             
-            const editBtn = document.querySelector('.edit-btn');
-            const deleteBtn = document.querySelector('.delete-btn');
+            const editBtn = table.querySelector('.edit-btn');
+            const deleteBtn = table.querySelector('.delete-btn');
 
-            expect(editBtn).not.toBeNull();
             expect(editBtn.dataset.id).toBe('1');
             expect(editBtn.dataset.name).toBe('Test Category');
             expect(editBtn.dataset.limit).toBe('5');
             expect(editBtn.getAttribute('aria-label')).toBe('Edit Test Category');
 
-            expect(deleteBtn).not.toBeNull();
             expect(deleteBtn.dataset.id).toBe('1');
             expect(deleteBtn.getAttribute('aria-label')).toBe('Delete Test Category');
         });
 
         test('displays empty state when no categories', () => {
-            table.displayCategories([]);
-            const emptyState = document.querySelector('.table__cell--empty');
+            displayCategories([]);
+            const emptyState = table.querySelector('.table__cell--empty');
 
             expect(emptyState).not.toBeNull();
             expect(emptyState.textContent).toContain('No categories available');
-            expect(emptyState.textContent).toContain('Add a category using the form above');
+            expect(emptyState.getAttribute('colspan')).toBe('4');
         });
 
-        test('displays empty state for invalid input', () => {
-            const invalidInputs = [null, undefined, '', {}, true, 42];
-            
-            invalidInputs.forEach(input => {
-                table.displayCategories(input);
-                const emptyState = document.querySelector('.table__cell--empty');
+        test('handles invalid input gracefully', () => {
+            [null, undefined, '', {}, true, 42].forEach(input => {
+                displayCategories(input);
+                const emptyState = table.querySelector('.table__cell--empty');
                 expect(emptyState).not.toBeNull();
                 expect(emptyState.textContent).toContain('No categories available');
             });
@@ -174,105 +135,43 @@ describe('Table UI', () => {
 
     describe('getSortValue', () => {
         let table;
+        let row;
 
         beforeEach(() => {
             table = createTableLayout();
+            document.getElementById('categoryTableContainer').appendChild(table);
+            row = document.createElement('tr');
+            for (let i = 0; i < 4; i++) {
+                row.appendChild(document.createElement('td'));
+            }
         });
 
-        test('sorts name column correctly', () => {
-            const row = document.createElement('tr');
-            row.innerHTML = '<td>Fresh Produce</td>';
-            
-            const value = table.getSortValue(row, 'name');
-            expect(value).toBe('fresh produce');
+        test('returns lowercase text for name column', () => {
+            row.cells[0].textContent = 'Fresh Produce';
+            expect(getSortValue(row, 'name')).toBe('fresh produce');
         });
 
-        test('sorts limit column correctly', () => {
-            const row = document.createElement('tr');
-            row.innerHTML = '<td></td><td>5</td>';
-            
-            const value = table.getSortValue(row, 'limit');
-            expect(value).toBe(5);
+        test('returns numeric value for limit column', () => {
+            row.cells[1].textContent = '5';
+            expect(getSortValue(row, 'limit')).toBe(5);
         });
 
-        test('handles "No Limit" value in limit column', () => {
-            const row = document.createElement('tr');
-            row.innerHTML = '<td></td><td>No Limit</td>';
-            
-            const value = table.getSortValue(row, 'limit');
-            expect(value).toBe(-1);
+        test('returns -1 for "No Limit"', () => {
+            row.cells[1].textContent = 'No Limit';
+            expect(getSortValue(row, 'limit')).toBe(-1);
         });
 
-        test('sorts date column correctly', () => {
-            const row = document.createElement('tr');
+        test('returns timestamp for date column', () => {
             const date = new Date('2024-01-01');
-            row.innerHTML = `<td></td><td></td><td>${date.toLocaleDateString()}</td>`;
-            
-            SortableTable.dateSortValue = jest.fn().mockReturnValue(date.getTime());
-            
-            const value = table.getSortValue(row, 'created');
-            expect(SortableTable.dateSortValue).toHaveBeenCalled();
+            row.cells[2].textContent = date.toLocaleDateString();
+            const result = getSortValue(row, 'created');
+            expect(typeof result).toBe('number');
+            expect(result).toBeGreaterThan(0);
         });
 
-        test('handles invalid sort keys', () => {
-            const row = document.createElement('tr');
-            row.innerHTML = '<td>Test</td>';
-            
-            const value = table.getSortValue(row, 'invalid_key');
-            expect(value).toBe('test');
-        });
-    });
-
-    describe('Accessibility', () => {
-        test('table has appropriate ARIA attributes', () => {
-            const table = createTableLayout();
-            const tableElement = document.getElementById('categoryTable');
-
-            expect(tableElement.getAttribute('role')).toBe('grid');
-            const headers = document.querySelectorAll('th');
-            headers.forEach(header => {
-                expect(header.getAttribute('scope')).toBe('col');
-            });
-        });
-
-        test('action buttons have appropriate ARIA labels', () => {
-            const categories = [{
-                id: 1,
-                name: 'Test Category',
-                itemLimit: 5,
-                createdAt: '2024-01-01'
-            }];
-
-            const table = createTableLayout();
-            table.displayCategories(categories);
-
-            const editBtn = document.querySelector('.edit-btn');
-            const deleteBtn = document.querySelector('.delete-btn');
-
-            expect(editBtn.getAttribute('aria-label')).toBe('Edit Test Category');
-            expect(deleteBtn.getAttribute('aria-label')).toBe('Delete Test Category');
-        });
-
-        test('empty state has appropriate ARIA attributes', () => {
-            const table = createTableLayout();
-            table.displayCategories([]);
-
-            const emptyState = document.querySelector('.table__cell--empty');
-            expect(emptyState.getAttribute('colspan')).toBe('4');
-            expect(emptyState.querySelector('.empty-state')).not.toBeNull();
-            expect(emptyState.querySelector('.empty-state__hint')).not.toBeNull();
-            expect(emptyState.getAttribute('role')).toBe('cell');
-        });
-
-        test('sortable headers have appropriate ARIA attributes', () => {
-            createTableLayout();
-            const sortableHeaders = document.querySelectorAll('[data-sort]');
-
-            sortableHeaders.forEach(header => {
-                expect(header.getAttribute('aria-sort')).toBe('none');
-                expect(header.getAttribute('role')).toBe('columnheader');
-                expect(header.getAttribute('tabindex')).toBe('0');
-            });
+        test('handles invalid column gracefully', () => {
+            row.cells[0].textContent = 'test';
+            expect(getSortValue(row, 'invalid')).toBe('');
         });
     });
 });

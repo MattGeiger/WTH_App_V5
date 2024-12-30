@@ -10,15 +10,14 @@ import {
 
 describe('Form Data Handlers', () => {
     beforeEach(() => {
-        // Setup DOM for testing
         document.body.innerHTML = `
             <form id="categoryForm">
-                <input type="hidden" id="categoryId" value="" />
-                <input type="text" id="categoryName" value="" />
+                <input type="hidden" id="categoryId" />
+                <input type="text" id="categoryName" />
                 <select id="categoryItemLimit">
                     <option value="0">No Limit</option>
-                    <option value="1">1</option>
-                    <option value="2">2</option>
+                    <option value="5">5</option>
+                    <option value="10">10</option>
                 </select>
             </form>
         `;
@@ -27,9 +26,13 @@ describe('Form Data Handlers', () => {
     describe('collectFormData', () => {
         test('collects complete form data', () => {
             // Setup form values
-            document.getElementById('categoryId').value = '1';
-            document.getElementById('categoryName').value = 'Fresh Produce';
-            document.getElementById('categoryItemLimit').value = '5';
+            const categoryId = document.getElementById('categoryId');
+            const categoryName = document.getElementById('categoryName');
+            const categoryItemLimit = document.getElementById('categoryItemLimit');
+
+            categoryId.value = '1';
+            categoryName.value = 'Fresh Produce';
+            categoryItemLimit.value = '5';
 
             const result = collectFormData();
 
@@ -51,20 +54,21 @@ describe('Form Data Handlers', () => {
         });
 
         test('sanitizes input data', () => {
-            document.getElementById('categoryName').value = '  Fresh   Produce  ';
-            document.getElementById('categoryItemLimit').value = '5';
+            const categoryName = document.getElementById('categoryName');
+            categoryName.value = '  Fresh   Produce  ';
 
             const result = collectFormData();
-
             expect(result.name).toBe('Fresh Produce');
         });
 
         test('converts types correctly', () => {
-            document.getElementById('categoryId').value = '42';
-            document.getElementById('categoryItemLimit').value = '7';
+            const categoryId = document.getElementById('categoryId');
+            const categoryItemLimit = document.getElementById('categoryItemLimit');
+
+            categoryId.value = '42';
+            categoryItemLimit.value = '7';
 
             const result = collectFormData();
-
             expect(typeof result.id).toBe('number');
             expect(typeof result.itemLimit).toBe('number');
         });
@@ -73,7 +77,6 @@ describe('Form Data Handlers', () => {
             document.body.innerHTML = '<form id="categoryForm"></form>';
 
             const result = collectFormData();
-
             expect(result).toEqual({
                 id: null,
                 name: '',
@@ -82,11 +85,13 @@ describe('Form Data Handlers', () => {
         });
 
         test('handles invalid number inputs', () => {
-            document.getElementById('categoryId').value = 'not-a-number';
-            document.getElementById('categoryItemLimit').value = 'invalid';
+            const categoryId = document.getElementById('categoryId');
+            const categoryItemLimit = document.getElementById('categoryItemLimit');
+
+            categoryId.value = 'not-a-number';
+            categoryItemLimit.value = 'invalid';
 
             const result = collectFormData();
-
             expect(result.id).toBeNull();
             expect(result.itemLimit).toBe(0);
         });
@@ -125,7 +130,6 @@ describe('Form Data Handlers', () => {
 
         test('handles missing properties', () => {
             const incompleteData = {};
-
             expect(isFormEmpty(incompleteData)).toBe(true);
         });
 
@@ -149,7 +153,6 @@ describe('Form Data Handlers', () => {
             };
 
             const formatted = formatFormData(data);
-
             expect(formatted).toEqual({
                 name: 'Fresh Produce',
                 itemLimit: '5',
@@ -159,7 +162,6 @@ describe('Form Data Handlers', () => {
 
         test('handles missing data with defaults', () => {
             const data = {};
-
             const formatted = formatFormData(data);
 
             expect(formatted).toEqual({
@@ -176,7 +178,6 @@ describe('Form Data Handlers', () => {
             };
 
             const formatted = formatFormData(data);
-
             expect(formatted.itemLimit).toBe('No Limit');
         });
 
@@ -188,7 +189,6 @@ describe('Form Data Handlers', () => {
             };
 
             const formatted = formatFormData(data);
-
             expect(formatted).toEqual({
                 name: 'Unnamed Category',
                 itemLimit: 'No Limit',
@@ -205,7 +205,6 @@ describe('Form Data Handlers', () => {
             };
 
             const formatted = formatFormData(data);
-
             expect(formatted).toEqual({
                 name: 'Test Category',
                 itemLimit: '10',
