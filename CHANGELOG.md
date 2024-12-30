@@ -13,6 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Introduced `CategoryManager.test.js` plus supporting unit tests (`validation.test.js`, `submit.test.js`, `formData.test.js`, `forms.test.js`, `table.test.js`, `stats.test.js`, `formatters.test.js`)  
   - Established new **integration test** suite covering end-to-end Category lifecycle (creation, validation, submission, and UI updates)
 
+  ### Added
+- Comprehensive test suite for Categories module
+  - Test configuration with Jest
+  - Custom assertions and helpers
+  - Test factories and utilities
+  - Integration tests
+  - Coverage reporting setup
+  - Documentation and examples
+
 - **Coverage & Configuration**  
   - Added Jest/Babel configs and coverage settings to mirror Food Items module  
   - Created documentation stubs for new Category structure  
