@@ -6,6 +6,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.23] - 2024-12-30
+### Fixed
+- Unit test stability improvements
+  - Fixed recursion in form reset handling
+  - Corrected submit handler validation flow
+  - Updated sorting test expectations
+  - Enhanced mock implementations
+  - Improved DOM cleanup in tests
+
+### Changed
+- Enhanced test suite robustness
+  - Added proper mock data structures
+  - Improved test isolation
+  - Enhanced error handling coverage
+  - Added validation scenario coverage
+
+### Added
+- Expanded integration test coverage
+  - Added form reset validation
+  - Enhanced sort indicator tests
+  - Added table content validation
+
 ## [0.5.22] - 2024-12-30
 ### Added
 - Comprehensive test coverage for form data handling and validation

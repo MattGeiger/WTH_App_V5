@@ -3,7 +3,9 @@
  */
 
 import { validateName, validateItemLimit } from './validation';
-import { collectFormData, formatFormData } from './formData';
+import { collectFormData, formatForSubmission } from './formData';
+import { showMessage, apiPost, apiPut } from '../../utils.js';
+import { EVENTS } from '../../main.js';
 
 /**
  * Handles form submission
@@ -12,29 +14,58 @@ import { collectFormData, formatFormData } from './formData';
  */
 export async function handleSubmit(event, manager) {
     event.preventDefault();
+
+    // Early validation of manager
+    if (!manager || typeof manager.showMessage !== 'function') {
+        showMessage('Invalid manager configuration', 'error', 'category');
+        return;
+    }
+
     const data = collectFormData();
-    if (!data) return;
+    if (!data || !data.name) {
+        manager.showMessage('Invalid form data', 'error', 'category');
+        return;
+    }
 
     const isEdit = !!data.id;
     const endpoint = isEdit ? `/api/categories/${data.id}` : '/api/categories';
-    const apiMethod = isEdit ? window.apiPut : window.apiPost;
+    const apiMethod = isEdit ? apiPut : apiPost;
 
     try {
-        if (!validateName(data.name, manager)) return;
-        if (!validateItemLimit(data.itemLimit, manager.globalLimit || 100, manager)) return;
+        // Validate form data
+        if (!validateName(data.name)) {
+            manager.showMessage('Category name must be at least three characters', 'error', 'category');
+            return;
+        }
 
-        const formatted = formatFormData(data);
+        const globalLimit = manager.managers?.settings?.getCurrentLimit?.() || 100;
+        if (!validateItemLimit(data.itemLimit, globalLimit)) {
+            manager.showMessage(`Item limit cannot exceed global limit of ${globalLimit}`, 'error', 'category');
+            return;
+        }
+
+        // Format and submit data
+        const formatted = formatForSubmission(data);
+        if (!formatted) {
+            manager.showMessage('Error formatting data', 'error', 'category');
+            return;
+        }
+
         await apiMethod(endpoint, formatted);
         
+        // Success handling
         manager.showMessage(
             `Category ${isEdit ? 'updated' : 'created'} successfully`,
             'success',
             'category'
         );
         
-        manager.form.reset();
+        manager.resetForm();
         await manager.loadCategories();
+        
+        // Notify other components
+        document.dispatchEvent(new Event(EVENTS.CATEGORY_UPDATED));
     } catch (error) {
-        manager.showMessage(error.message, 'error', 'category');
+        manager.showMessage(error.message || 'An error occurred', 'error', 'category');
     }
 }

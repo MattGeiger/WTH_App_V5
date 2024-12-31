@@ -118,8 +118,9 @@ function appendButtons(form) {
 /**
  * Updates form state
  * @param {boolean} isEdit - Whether form is in edit mode
+ * @param {boolean} [skipReset=false] - Whether to skip form reset
  */
-export function updateFormState(isEdit) {
+export function updateFormState(isEdit, skipReset = false) {
     const form = document.getElementById('categoryForm');
     if (!form) return;
 
@@ -132,18 +133,42 @@ export function updateFormState(isEdit) {
     } else {
         submitBtn.textContent = 'Add Category';
         submitBtn.setAttribute('aria-label', 'Add category');
+        
+        if (!skipReset) {
+            // Only reset if not already being called from reset handler
+            clearFormFields();
+        }
     }
 }
 
 /**
- * Clears form
+ * Internal helper to clear form fields without triggering events
+ * @private
+ */
+function clearFormFields() {
+    const nameInput = document.getElementById('categoryName');
+    const idInput = document.getElementById('categoryId');
+    const limitSelect = document.getElementById('itemLimit');
+    
+    if (nameInput) {
+        nameInput.value = '';
+        nameInput.setAttribute('aria-invalid', 'false');
+    }
+    
+    if (idInput) {
+        idInput.value = '';
+    }
+    
+    if (limitSelect) {
+        limitSelect.selectedIndex = 0;
+    }
+}
+
+/**
+ * Public method to clear form
+ * Prevents circular dependency with CategoryManager reset handler
  */
 export function clearForm() {
-    const form = document.getElementById('categoryForm');
-    if (!form) return;
-
-    form.reset();
-    document.getElementById('categoryId').value = '';
-    document.getElementById('categoryName').setAttribute('aria-invalid', 'false');
-    updateFormState(false);
+    clearFormFields();
+    updateFormState(false, true); // Skip reset in updateFormState
 }

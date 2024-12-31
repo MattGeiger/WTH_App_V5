@@ -3,7 +3,7 @@
  */
 
 import { handleSubmit } from '../../handlers/submit.js';
-import { collectFormData } from '../../handlers/formData.js';
+import { collectFormData, formatForSubmission } from '../../handlers/formData.js';
 import { showMessage, apiPost, apiPut } from '../../../utils.js';
 import { EVENTS } from '../../../main.js';
 
@@ -24,10 +24,11 @@ describe('Submit Handler', () => {
             preventDefault: jest.fn()
         };
         
-        // Setup mock manager
+        // Setup mock manager with proper structure
         mockManager = {
             resetForm: jest.fn(),
             loadCategories: jest.fn(),
+            showMessage: jest.fn(),
             managers: {
                 settings: {
                     getCurrentLimit: jest.fn().mockReturnValue(10)
@@ -37,6 +38,12 @@ describe('Submit Handler', () => {
 
         // Setup mock document
         document.dispatchEvent = jest.fn();
+
+        // Default form data setup
+        formatForSubmission.mockImplementation(data => ({
+            name: data.name,
+            itemLimit: parseInt(data.itemLimit, 10)
+        }));
     });
 
     describe('handleSubmit', () => {
@@ -52,8 +59,8 @@ describe('Submit Handler', () => {
             });
 
             await handleSubmit(mockEvent, mockManager);
-            expect(showMessage).toHaveBeenCalledWith(
-                expect.any(String),
+            expect(mockManager.showMessage).toHaveBeenCalledWith(
+                'Invalid form data',
                 'error',
                 'category'
             );
@@ -62,6 +69,10 @@ describe('Submit Handler', () => {
         describe('new category submission', () => {
             beforeEach(() => {
                 collectFormData.mockReturnValue({
+                    name: 'Fresh Produce',
+                    itemLimit: 5
+                });
+                formatForSubmission.mockReturnValue({
                     name: 'Fresh Produce',
                     itemLimit: 5
                 });
@@ -76,7 +87,7 @@ describe('Submit Handler', () => {
                     name: 'Fresh Produce',
                     itemLimit: 5
                 });
-                expect(showMessage).toHaveBeenCalledWith(
+                expect(mockManager.showMessage).toHaveBeenCalledWith(
                     'Category created successfully',
                     'success',
                     'category'
@@ -94,7 +105,7 @@ describe('Submit Handler', () => {
 
                 await handleSubmit(mockEvent, mockManager);
 
-                expect(showMessage).toHaveBeenCalledWith(
+                expect(mockManager.showMessage).toHaveBeenCalledWith(
                     error.message,
                     'error',
                     'category'
@@ -110,6 +121,11 @@ describe('Submit Handler', () => {
                     name: 'Updated Produce',
                     itemLimit: 7
                 });
+                formatForSubmission.mockReturnValue({
+                    id: 1,
+                    name: 'Updated Produce',
+                    itemLimit: 7
+                });
             });
 
             test('successfully updates existing category', async () => {
@@ -121,7 +137,7 @@ describe('Submit Handler', () => {
                     name: 'Updated Produce',
                     itemLimit: 7
                 });
-                expect(showMessage).toHaveBeenCalledWith(
+                expect(mockManager.showMessage).toHaveBeenCalledWith(
                     'Category updated successfully',
                     'success',
                     'category'
@@ -139,7 +155,7 @@ describe('Submit Handler', () => {
 
                 await handleSubmit(mockEvent, mockManager);
 
-                expect(showMessage).toHaveBeenCalledWith(
+                expect(mockManager.showMessage).toHaveBeenCalledWith(
                     error.message,
                     'error',
                     'category'
@@ -157,8 +173,8 @@ describe('Submit Handler', () => {
 
                 await handleSubmit(mockEvent, mockManager);
 
-                expect(showMessage).toHaveBeenCalledWith(
-                    expect.stringContaining('three characters'),
+                expect(mockManager.showMessage).toHaveBeenCalledWith(
+                    'Category name must be at least three characters',
                     'error',
                     'category'
                 );
@@ -173,7 +189,7 @@ describe('Submit Handler', () => {
 
                 await handleSubmit(mockEvent, mockManager);
 
-                expect(showMessage).toHaveBeenCalledWith(
+                expect(mockManager.showMessage).toHaveBeenCalledWith(
                     expect.stringContaining('global limit'),
                     'error',
                     'category'
@@ -186,12 +202,76 @@ describe('Submit Handler', () => {
 
                 await handleSubmit(mockEvent, mockManager);
 
-                expect(showMessage).toHaveBeenCalledWith(
-                    expect.any(String),
+                expect(mockManager.showMessage).toHaveBeenCalledWith(
+                    'Invalid form data',
                     'error',
                     'category'
                 );
                 expect(apiPost).not.toHaveBeenCalled();
+            });
+        });
+
+        describe('error handling edge cases', () => {
+            test('handles null manager gracefully', async () => {
+                await handleSubmit(mockEvent, null);
+                expect(showMessage).toHaveBeenCalledWith(
+                    'Invalid manager configuration',
+                    'error',
+                    'category'
+                );
+            });
+
+            test('handles undefined manager settings gracefully', async () => {
+                const managerWithoutSettings = {
+                    resetForm: jest.fn(),
+                    loadCategories: jest.fn(),
+                    showMessage: jest.fn(),
+                    managers: {}
+                };
+
+                collectFormData.mockReturnValue({
+                    name: 'Valid Name',
+                    itemLimit: 5
+                });
+
+                await handleSubmit(mockEvent, managerWithoutSettings);
+                expect(managerWithoutSettings.showMessage).not.toHaveBeenCalledWith(
+                    expect.stringContaining('global limit'),
+                    'error',
+                    'category'
+                );
+            });
+
+            test('handles formatForSubmission errors', async () => {
+                collectFormData.mockReturnValue({
+                    name: 'Valid Name',
+                    itemLimit: 5
+                });
+                formatForSubmission.mockReturnValue(null);
+
+                await handleSubmit(mockEvent, mockManager);
+                expect(mockManager.showMessage).toHaveBeenCalledWith(
+                    'Error formatting data',
+                    'error',
+                    'category'
+                );
+                expect(apiPost).not.toHaveBeenCalled();
+            });
+
+            test('handles network error with empty message', async () => {
+                collectFormData.mockReturnValue({
+                    name: 'Valid Name',
+                    itemLimit: 5
+                });
+                const error = new Error();
+                apiPost.mockRejectedValue(error);
+
+                await handleSubmit(mockEvent, mockManager);
+                expect(mockManager.showMessage).toHaveBeenCalledWith(
+                    'An error occurred',
+                    'error',
+                    'category'
+                );
             });
         });
     });

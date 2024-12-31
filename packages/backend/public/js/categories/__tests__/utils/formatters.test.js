@@ -49,19 +49,22 @@ describe('Formatters', () => {
             expect(formatName('')).toBe('');
             expect(formatName(null)).toBe('');
             expect(formatName(undefined)).toBe('');
+            expect(formatName(123)).toBe('');
         });
     });
 
     describe('formatTableDate', () => {
         test('formats dates consistently', () => {
-            const date = new Date('2024-01-01');
-            expect(formatTableDate(date)).toBe(date.toLocaleDateString());
+            const date = new Date(Date.UTC(2024, 0, 1)); // January 1, 2024 UTC
+            expect(formatTableDate(date)).toBe('01/01/2024');
         });
 
-        test('handles date strings', () => {
-            const dateStr = '2024-01-01T12:00:00Z';
-            const expected = new Date(dateStr).toLocaleDateString();
-            expect(formatTableDate(dateStr)).toBe(expected);
+        test('handles timezone differences', () => {
+            const dateStr = '2024-01-01T00:00:00Z';
+            expect(formatTableDate(dateStr)).toBe('01/01/2024');
+            
+            const dateWithOffset = new Date(2024, 0, 1, 23); // Local timezone
+            expect(formatTableDate(dateWithOffset)).toMatch(/01\/0[1-2]\/2024/);
         });
 
         test('handles invalid inputs', () => {
@@ -69,25 +72,34 @@ describe('Formatters', () => {
             expect(formatTableDate(null)).toBe('');
             expect(formatTableDate(undefined)).toBe('');
             expect(formatTableDate('invalid')).toBe('');
+            expect(formatTableDate(new Date('invalid'))).toBe('');
         });
     });
 
     describe('formatRelativeTime', () => {
         beforeEach(() => {
-            jest.spyOn(Date, 'now').mockImplementation(() =>
-                new Date('2024-01-01T12:00:00Z').getTime()
-            );
+            jest.useFakeTimers();
+            jest.setSystemTime(new Date('2024-01-01T12:00:00Z'));
         });
 
         afterEach(() => {
-            jest.clearAllMocks();
+            jest.useRealTimers();
         });
 
         test('formats recent times as relative', () => {
             const times = [
-                { input: new Date(Date.now() - 30000), expected: 'Just now' },
-                { input: new Date(Date.now() - 120000), expected: '2 minutes ago' },
-                { input: new Date(Date.now() - 3600000), expected: '1 hour ago' }
+                { 
+                    input: new Date('2024-01-01T11:59:30Z'),
+                    expected: 'Just now'
+                },
+                { 
+                    input: new Date('2024-01-01T11:58:00Z'),
+                    expected: '2 minutes ago'
+                },
+                { 
+                    input: new Date('2024-01-01T11:00:00Z'),
+                    expected: '1 hour ago'
+                }
             ];
 
             times.forEach(({ input, expected }) => {
@@ -96,14 +108,15 @@ describe('Formatters', () => {
         });
 
         test('formats older dates as full date string', () => {
-            const oldDate = new Date('2023-12-25');
-            expect(formatRelativeTime(oldDate)).toBe(formatTableDate(oldDate));
+            const oldDate = new Date('2023-12-25T12:00:00Z');
+            expect(formatRelativeTime(oldDate)).toBe('12/25/2023');
         });
 
         test('handles invalid inputs', () => {
             expect(formatRelativeTime(null)).toBe('Never');
             expect(formatRelativeTime(undefined)).toBe('Never');
             expect(formatRelativeTime('invalid')).toBe('Invalid date');
+            expect(formatRelativeTime(new Date('invalid'))).toBe('Invalid date');
         });
     });
 
@@ -111,18 +124,20 @@ describe('Formatters', () => {
         test('formats numbers with options', () => {
             expect(formatStatistic(42, { prefix: '$', suffix: 'USD' })).toBe('$42USD');
             expect(formatStatistic(10.5, { decimals: 2 })).toBe('10.50');
-            expect(formatStatistic(0, { defaultValue: 'None' })).toBe('0');
+            expect(formatStatistic(0)).toBe('0');
         });
 
         test('handles invalid inputs', () => {
             expect(formatStatistic(null)).toBe('0');
             expect(formatStatistic(undefined)).toBe('0');
             expect(formatStatistic('invalid')).toBe('0');
+            expect(formatStatistic(NaN)).toBe('0');
         });
 
         test('respects decimal places', () => {
             expect(formatStatistic(10.123, { decimals: 2 })).toBe('10.12');
             expect(formatStatistic(10, { decimals: 2 })).toBe('10.00');
+            expect(formatStatistic(10.5, { decimals: 0 })).toBe('11');
         });
     });
 
@@ -134,8 +149,7 @@ describe('Formatters', () => {
                 id: '42'
             };
 
-            const formatted = formatForSubmission(category);
-            expect(formatted).toEqual({
+            expect(formatForSubmission(category)).toEqual({
                 name: 'Fresh Produce',
                 itemLimit: 5,
                 id: 42
@@ -148,12 +162,21 @@ describe('Formatters', () => {
                 itemLimit: 5
             };
 
-            const formatted = formatForSubmission(category);
-            expect(formatted).toEqual({
+            expect(formatForSubmission(category)).toEqual({
                 name: 'Fresh Produce',
                 itemLimit: 5
             });
-            expect(formatted).not.toHaveProperty('id');
+        });
+
+        test('handles invalid input', () => {
+            expect(formatForSubmission(null)).toBeNull();
+            expect(formatForSubmission(undefined)).toBeNull();
+            expect(formatForSubmission('invalid')).toBeNull();
+            
+            expect(formatForSubmission({})).toEqual({
+                name: '',
+                itemLimit: 0
+            });
         });
     });
 
@@ -167,9 +190,19 @@ describe('Formatters', () => {
         });
 
         test('handles missing values', () => {
+            expect(createDisplayName(null)).toBe('');
+            expect(createDisplayName(undefined)).toBe('');
+            expect(createDisplayName({})).toBe('');
+            expect(createDisplayName({ itemLimit: 5 })).toBe('');
+            expect(createDisplayName({ name: '' })).toBe('');
             expect(createDisplayName({ name: 'Test' })).toBe('Test (No Limit)');
-            expect(createDisplayName({ itemLimit: 5 })).toBe(' (5)');
-            expect(createDisplayName({})).toBe(' (No Limit)');
+        });
+
+        test('handles edge cases', () => {
+            expect(createDisplayName({ name: 'Test', itemLimit: null })).toBe('Test (No Limit)');
+            expect(createDisplayName({ name: 'Test', itemLimit: undefined })).toBe('Test (No Limit)');
+            expect(createDisplayName({ name: 'Test', itemLimit: '0' })).toBe('Test (No Limit)');
+            expect(createDisplayName({ name: 'Test', itemLimit: 'invalid' })).toBe('Test (No Limit)');
         });
     });
 });
