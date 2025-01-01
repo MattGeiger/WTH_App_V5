@@ -9,6 +9,18 @@ const COLUMNS = [
     { key: 'actions', label: 'Actions' }
 ];
 
+/**
+ * HTML escapes a string
+ * @private
+ * @param {string} str - String to escape
+ * @returns {string} Escaped string
+ */
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
 export function createTableLayout() {
     const existingTable = document.getElementById('categoryTable');
     if (existingTable) return existingTable;
@@ -51,27 +63,34 @@ export function displayCategories(categories = []) {
         return;
     }
 
-    tbody.innerHTML = categories.map(category => `
-        <tr>
-            <td>${category.name}</td>
-            <td>${category.itemLimit || 'No Limit'}</td>
-            <td>${new Date(category.created).toLocaleDateString()}</td>
-            <td class="table__actions">
-                <button class="button button--icon edit-btn" 
-                    data-id="${category.id}"
-                    data-name="${category.name}"
-                    data-limit="${category.itemLimit}"
-                    aria-label="Edit ${category.name}">
-                    Edit
-                </button>
-                <button class="button button--icon delete-btn"
-                    data-id="${category.id}"
-                    aria-label="Delete ${category.name}">
-                    Delete
-                </button>
-            </td>
-        </tr>
-    `).join('');
+    tbody.innerHTML = categories.map(category => {
+        const safeName = escapeHtml(category.name || '');
+        const safeLimit = category.itemLimit || 'No Limit';
+        const date = category.created ? new Date(category.created) : new Date();
+        const safeDate = !isNaN(date.getTime()) ? date.toLocaleDateString() : 'Invalid Date';
+
+        return `
+            <tr>
+                <td>${safeName}</td>
+                <td>${safeLimit}</td>
+                <td>${safeDate}</td>
+                <td class="table__actions">
+                    <button class="button button--icon edit-btn" 
+                        data-id="${category.id || ''}"
+                        data-name="${safeName}"
+                        data-limit="${category.itemLimit || ''}"
+                        aria-label="Edit ${safeName}">
+                        Edit
+                    </button>
+                    <button class="button button--icon delete-btn"
+                        data-id="${category.id || ''}"
+                        aria-label="Delete ${safeName}">
+                        Delete
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
 function createEmptyState() {
@@ -94,8 +113,10 @@ export function getSortValue(row, key) {
     switch (key) {
         case 'limit':
             return cell.textContent === 'No Limit' ? -1 : parseInt(cell.textContent, 10);
-        case 'created':
-            return new Date(cell.textContent).getTime();
+        case 'created': {
+            const timestamp = new Date(cell.textContent).getTime();
+            return isNaN(timestamp) ? 0 : timestamp;
+        }
         default:
             return cell.textContent.toLowerCase();
     }
