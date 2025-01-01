@@ -10,10 +10,10 @@ Here's what I aim to do:
 We are going to [debug,improve,add]. While collaborating, please follow these guidelines:
 
 ### Plan
-Create a new branch for staging these changes. Implement in phases:
+Create a new branch for staging these changes. Implement in steps:
 
-Phase 1: ...
-Phase 2: ...
+Step 1: ...
+Step 2: ...
 
 ### File Editing Guidelines
 1. For small, targeted changes (editing a few lines):
@@ -67,12 +67,16 @@ In VS Code Terminal, this is the current state:
 After each instruction from me, your response should follow this structure:
 
 1. **Guidelines Echo**
+[Guidelines from above listed here.]
 "I acknowledge the file editing guidelines and will proceed according to the instructions..."
 
-2. **Edit Strategy Declaration**
-"For this task, I will use [targeted edits/full rewrite] because [justification based on scope of changes]"
+2. **Analysis of the Problem**
+"The error occurs because..."
 
-3. **For Targeted Edits**
+3. **Edit Strategy Declaration**
+"For this task, I will use [MCP server: text-editor with get_text_file_contentsm(read text file contents from multiple files and line ranges.), and edit_text_file_contents (a line editor that supports editing text file contents by specifying line ranges and content)]. / [full rewrite with MCP server: read_multiple_files and/or read_file with write_file (create a new file or completely overwrite an existing file with new content).] because [justification based on scope of changes]"
+
+4a. **For Targeted Edits**
 ```
 Files to modify:
 - example.js
@@ -82,7 +86,7 @@ Files to modify:
 Approach: Bottom-up editing to maintain line numbers
 ```
 
-4. **For Full Rewrites**
+4b. **For Full Rewrites**
 ```
 Files to modify:
 - example.js
@@ -106,3 +110,5 @@ Justification for full rewrite:
 4. Verify changes:
    <show verification command>
 ```
+
+Please proceed. Continue to echo the guidelines with each response. Remember to also explain how your actions adhere to these guidelines.

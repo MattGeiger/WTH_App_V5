@@ -5,7 +5,8 @@
 import { 
     collectFormData, 
     isFormEmpty, 
-    formatFormData 
+    formatFormData,
+    formatForSubmission 
 } from '../../handlers/formData.js';
 
 describe('Form Data Handlers', () => {
@@ -25,7 +26,6 @@ describe('Form Data Handlers', () => {
 
     describe('collectFormData', () => {
         test('collects complete form data', () => {
-            // Setup form values
             const categoryId = document.getElementById('categoryId');
             const categoryName = document.getElementById('categoryName');
             const categoryItemLimit = document.getElementById('categoryItemLimit');
@@ -43,6 +43,14 @@ describe('Form Data Handlers', () => {
             });
         });
 
+        test('handles zero ID correctly', () => {
+            const categoryId = document.getElementById('categoryId');
+            categoryId.value = '0';
+
+            const result = collectFormData();
+            expect(result.id).toBeNull();
+        });
+
         test('handles empty form data', () => {
             const result = collectFormData();
 
@@ -56,6 +64,14 @@ describe('Form Data Handlers', () => {
         test('sanitizes input data', () => {
             const categoryName = document.getElementById('categoryName');
             categoryName.value = '  Fresh   Produce  ';
+
+            const result = collectFormData();
+            expect(result.name).toBe('Fresh Produce');
+        });
+
+        test('handles multiple spaces and special whitespace', () => {
+            const categoryName = document.getElementById('categoryName');
+            categoryName.value = '  Fresh \t\n  Produce \r\n ';
 
             const result = collectFormData();
             expect(result.name).toBe('Fresh Produce');
@@ -84,16 +100,38 @@ describe('Form Data Handlers', () => {
             });
         });
 
+        test('handles negative item limits', () => {
+            const categoryItemLimit = document.getElementById('categoryItemLimit');
+            categoryItemLimit.value = '-5';
+
+            const result = collectFormData();
+            expect(result.itemLimit).toBe(0);
+        });
+
         test('handles invalid number inputs', () => {
             const categoryId = document.getElementById('categoryId');
             const categoryItemLimit = document.getElementById('categoryItemLimit');
 
-            categoryId.value = 'not-a-number';
-            categoryItemLimit.value = 'invalid';
+            const invalidValues = ['not-a-number', 'NaN', 'Infinity', '-Infinity', '1.23', ''];
+            invalidValues.forEach(value => {
+                categoryId.value = value;
+                categoryItemLimit.value = value;
 
+                const result = collectFormData();
+                expect(result.id).toBeNull();
+                expect(result.itemLimit).toBe(0);
+            });
+        });
+
+        test('handles non-existent form', () => {
+            document.body.innerHTML = '';
             const result = collectFormData();
-            expect(result.id).toBeNull();
-            expect(result.itemLimit).toBe(0);
+            
+            expect(result).toEqual({
+                id: null,
+                name: '',
+                itemLimit: 0
+            });
         });
     });
 
@@ -129,18 +167,49 @@ describe('Form Data Handlers', () => {
         });
 
         test('handles missing properties', () => {
-            const incompleteData = {};
-            expect(isFormEmpty(incompleteData)).toBe(true);
+            const testCases = [
+                {},
+                { itemLimit: 5 },
+                { id: 1 },
+                { name: undefined },
+                { name: null }
+            ];
+
+            testCases.forEach(data => {
+                expect(isFormEmpty(data)).toBe(true);
+            });
         });
 
-        test('considers form with only limit as non-empty', () => {
-            const limitOnlyData = {
-                name: '',
-                itemLimit: 5,
-                id: null
-            };
+        test('handles invalid inputs', () => {
+            const invalidInputs = [
+                null,
+                undefined,
+                '',
+                'string',
+                123,
+                true,
+                false,
+                [],
+                new Date(),
+                /regex/
+            ];
 
-            expect(isFormEmpty(limitOnlyData)).toBe(false);
+            invalidInputs.forEach(input => {
+                expect(isFormEmpty(input)).toBe(true);
+            });
+        });
+
+        test('considers only name for emptiness', () => {
+            const testCases = [
+                { name: 'Test', itemLimit: 0, id: null },
+                { name: 'Test', itemLimit: 5, id: null },
+                { name: 'Test', itemLimit: null, id: 1 },
+                { name: 'Test' }
+            ];
+
+            testCases.forEach(data => {
+                expect(isFormEmpty(data)).toBe(false);
+            });
         });
     });
 
@@ -161,55 +230,179 @@ describe('Form Data Handlers', () => {
         });
 
         test('handles missing data with defaults', () => {
-            const data = {};
-            const formatted = formatFormData(data);
+            const testCases = [
+                {},
+                undefined,
+                null,
+                { someOtherProp: true }
+            ];
 
-            expect(formatted).toEqual({
-                name: 'Unnamed Category',
-                itemLimit: 'No Limit',
-                id: 'New'
+            testCases.forEach(data => {
+                const formatted = formatFormData(data);
+                expect(formatted).toEqual({
+                    name: 'Unnamed Category',
+                    itemLimit: 'No Limit',
+                    id: 'New'
+                });
             });
         });
 
         test('formats zero limit correctly', () => {
-            const data = {
-                name: 'Test',
-                itemLimit: 0
-            };
+            const testCases = [
+                { itemLimit: 0 },
+                { itemLimit: '0' },
+                { itemLimit: null },
+                { itemLimit: undefined }
+            ];
 
-            const formatted = formatFormData(data);
-            expect(formatted.itemLimit).toBe('No Limit');
-        });
-
-        test('handles null values', () => {
-            const data = {
-                name: null,
-                itemLimit: null,
-                id: null
-            };
-
-            const formatted = formatFormData(data);
-            expect(formatted).toEqual({
-                name: 'Unnamed Category',
-                itemLimit: 'No Limit',
-                id: 'New'
+            testCases.forEach(data => {
+                const formatted = formatFormData(data);
+                expect(formatted.itemLimit).toBe('No Limit');
             });
         });
 
-        test('preserves valid data while formatting', () => {
+        test('handles null and undefined values', () => {
+            const testCases = [
+                { name: null, itemLimit: null, id: null },
+                { name: undefined, itemLimit: undefined, id: undefined },
+                { name: '', itemLimit: '', id: '' }
+            ];
+
+            testCases.forEach(data => {
+                const formatted = formatFormData(data);
+                expect(formatted).toEqual({
+                    name: 'Unnamed Category',
+                    itemLimit: 'No Limit',
+                    id: 'New'
+                });
+            });
+        });
+
+        test('preserves additional fields', () => {
             const data = {
                 name: 'Test Category',
                 itemLimit: 10,
                 id: 42,
-                extraField: 'should be preserved'
+                extraField: 'preserve',
+                metadata: { key: 'value' }
             };
 
             const formatted = formatFormData(data);
+            expect(formatted).toMatchObject({
+                extraField: 'preserve',
+                metadata: { key: 'value' }
+            });
+        });
+
+        test('handles whitespace in names', () => {
+            const testCases = [
+                { name: '  Test  ' },
+                { name: '\tTest\n' },
+                { name: ' \r\n Test \r\n ' }
+            ];
+
+            testCases.forEach(data => {
+                const formatted = formatFormData(data);
+                expect(formatted.name).toBe('Test');
+            });
+        });
+    });
+
+    describe('formatForSubmission', () => {
+        test('formats valid data correctly', () => {
+            const data = {
+                name: 'Fresh Produce',
+                itemLimit: '5',
+                id: '1'
+            };
+
+            const formatted = formatForSubmission(data);
             expect(formatted).toEqual({
-                name: 'Test Category',
-                itemLimit: '10',
-                id: '42',
-                extraField: 'should be preserved'
+                name: 'Fresh Produce',
+                itemLimit: 5,
+                id: '1'
+            });
+        });
+
+        test('handles all types of itemLimit values', () => {
+            const testCases = [
+                { input: '10', expected: 10 },
+                { input: 10, expected: 10 },
+                { input: '0', expected: 0 },
+                { input: 0, expected: 0 },
+                { input: 'invalid', expected: 0 },
+                { input: undefined, expected: 0 },
+                { input: null, expected: 0 },
+                { input: true, expected: 0 },
+                { input: '', expected: 0 },
+                { input: [], expected: 0 },
+                { input: {}, expected: 0 }
+            ];
+
+            testCases.forEach(({ input, expected }) => {
+                const formatted = formatForSubmission({
+                    name: 'Test',
+                    itemLimit: input
+                });
+                expect(formatted.itemLimit).toBe(expected);
+            });
+        });
+
+        test('handles invalid input data', () => {
+            const invalidInputs = [
+                null,
+                undefined,
+                '',
+                'string',
+                123,
+                true,
+                false,
+                [],
+                new Date(),
+                /regex/,
+                {},
+                { itemLimit: 5 }
+            ];
+
+            invalidInputs.forEach(input => {
+                const result = formatForSubmission(input);
+                if (input && typeof input === 'object' && !Array.isArray(input)) {
+                    expect(result).toEqual({
+                        name: '',
+                        itemLimit: 0
+                    });
+                } else {
+                    expect(result).toBeNull();
+                }
+            });
+        });
+
+        test('handles id field correctly', () => {
+            const testCases = [
+                { input: { name: 'Test', id: '1' }, shouldHaveId: true },
+                { input: { name: 'Test', id: 'New' }, shouldHaveId: false },
+                { input: { name: 'Test', id: '' }, shouldHaveId: false },
+                { input: { name: 'Test', id: null }, shouldHaveId: false },
+                { input: { name: 'Test', id: undefined }, shouldHaveId: false },
+                { input: { name: 'Test' }, shouldHaveId: false }
+            ];
+
+            testCases.forEach(({ input, shouldHaveId }) => {
+                const result = formatForSubmission(input);
+                expect(result.hasOwnProperty('id')).toBe(shouldHaveId);
+            });
+        });
+
+        test('handles whitespace in names', () => {
+            const testCases = [
+                { input: '  Test  ', expected: 'Test' },
+                { input: '\tTest\n', expected: 'Test' },
+                { input: ' \r\n Test \r\n ', expected: 'Test' }
+            ];
+
+            testCases.forEach(({ input, expected }) => {
+                const result = formatForSubmission({ name: input });
+                expect(result.name).toBe(expected);
             });
         });
     });

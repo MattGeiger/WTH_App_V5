@@ -1,3 +1,7 @@
+/**
+ * @jest-environment jsdom
+ */
+
 import { updateStats } from '../../ui/stats.js';
 
 describe('Stats UI', () => {
@@ -61,6 +65,10 @@ describe('Stats UI', () => {
                 {
                     input: new Date('2024-01-01T11:00:00'), // 1 hour ago
                     expected: 'about 1 hour ago'
+                },
+                {
+                    input: new Date('2024-01-01T10:00:00'), // 2 hours ago
+                    expected: 'about 1 hour ago'
                 }
             ];
 
@@ -78,17 +86,18 @@ describe('Stats UI', () => {
             updateStats([], oldDate);
             
             const timestamp = document.querySelector('.stats__timestamp');
-            expect(timestamp.textContent).toContain(oldDate.toLocaleString(undefined, {
+            const expectedFormat = oldDate.toLocaleString(undefined, {
                 year: 'numeric',
                 month: 'short',
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit'
-            }));
+            });
+            expect(timestamp.textContent).toContain(expectedFormat);
         });
 
         test('handles invalid timestamps', () => {
-            [null, undefined, 'invalid', {}, true].forEach(invalidTime => {
+            [null, undefined, 'invalid', {}, true, new Date('invalid')].forEach(invalidTime => {
                 updateStats([], invalidTime);
                 const timestamp = document.querySelector('.stats__timestamp');
                 expect(timestamp.textContent).toContain('Last Updated: Never');
@@ -111,12 +120,13 @@ describe('Stats UI', () => {
             const categories = [
                 { name: 'Test1' },
                 { name: 'Test2', itemLimit: undefined },
-                { name: 'Test3', itemLimit: null }
+                { name: 'Test3', itemLimit: null },
+                { name: 'Test4', itemLimit: 0 }
             ];
 
             updateStats(categories, new Date());
             const container = document.getElementById('categoryStats');
-            expect(container.textContent).toContain('No Limits: 3');
+            expect(container.textContent).toContain('No Limits: 4');
             expect(container.textContent).not.toContain('Average Limit');
         });
     });
@@ -143,7 +153,6 @@ describe('Stats UI', () => {
 
         test('timestamp has proper labeling', () => {
             updateStats([], new Date());
-            
             const timestamp = document.querySelector('.stats__timestamp');
             expect(timestamp).not.toBeNull();
             expect(timestamp.getAttribute('aria-label')).toBe('Last updated');

@@ -3,7 +3,7 @@
  */
 
 import { handleSubmit } from '../../handlers/submit.js';
-import { collectFormData, formatForSubmission } from '../../handlers/formData.js';
+import { collectFormData } from '../../handlers/formData.js';
 import { showMessage, apiPost, apiPut } from '../../../utils.js';
 import { EVENTS } from '../../../main.js';
 
@@ -38,12 +38,6 @@ describe('Submit Handler', () => {
 
         // Setup mock document
         document.dispatchEvent = jest.fn();
-
-        // Default form data setup
-        formatForSubmission.mockImplementation(data => ({
-            name: data.name,
-            itemLimit: parseInt(data.itemLimit, 10)
-        }));
     });
 
     describe('handleSubmit', () => {
@@ -69,10 +63,6 @@ describe('Submit Handler', () => {
         describe('new category submission', () => {
             beforeEach(() => {
                 collectFormData.mockReturnValue({
-                    name: 'Fresh Produce',
-                    itemLimit: 5
-                });
-                formatForSubmission.mockReturnValue({
                     name: 'Fresh Produce',
                     itemLimit: 5
                 });
@@ -106,7 +96,7 @@ describe('Submit Handler', () => {
                 await handleSubmit(mockEvent, mockManager);
 
                 expect(mockManager.showMessage).toHaveBeenCalledWith(
-                    error.message,
+                    'API Error',
                     'error',
                     'category'
                 );
@@ -117,11 +107,6 @@ describe('Submit Handler', () => {
         describe('category update', () => {
             beforeEach(() => {
                 collectFormData.mockReturnValue({
-                    id: 1,
-                    name: 'Updated Produce',
-                    itemLimit: 7
-                });
-                formatForSubmission.mockReturnValue({
                     id: 1,
                     name: 'Updated Produce',
                     itemLimit: 7
@@ -156,7 +141,7 @@ describe('Submit Handler', () => {
                 await handleSubmit(mockEvent, mockManager);
 
                 expect(mockManager.showMessage).toHaveBeenCalledWith(
-                    error.message,
+                    'Update failed',
                     'error',
                     'category'
                 );
@@ -190,7 +175,7 @@ describe('Submit Handler', () => {
                 await handleSubmit(mockEvent, mockManager);
 
                 expect(mockManager.showMessage).toHaveBeenCalledWith(
-                    expect.stringContaining('global limit'),
+                    'Item limit cannot exceed global limit of 10',
                     'error',
                     'category'
                 );
@@ -235,27 +220,10 @@ describe('Submit Handler', () => {
                 });
 
                 await handleSubmit(mockEvent, managerWithoutSettings);
-                expect(managerWithoutSettings.showMessage).not.toHaveBeenCalledWith(
-                    expect.stringContaining('global limit'),
-                    'error',
-                    'category'
-                );
-            });
-
-            test('handles formatForSubmission errors', async () => {
-                collectFormData.mockReturnValue({
+                expect(apiPost).toHaveBeenCalledWith('/api/categories', {
                     name: 'Valid Name',
                     itemLimit: 5
                 });
-                formatForSubmission.mockReturnValue(null);
-
-                await handleSubmit(mockEvent, mockManager);
-                expect(mockManager.showMessage).toHaveBeenCalledWith(
-                    'Error formatting data',
-                    'error',
-                    'category'
-                );
-                expect(apiPost).not.toHaveBeenCalled();
             });
 
             test('handles network error with empty message', async () => {

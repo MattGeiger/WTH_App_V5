@@ -32,7 +32,7 @@ export function collectFormData() {
     // Parse item limit if present
     if (limitInput) {
         const parsedLimit = parseInt(limitInput.value, 10);
-        if (!isNaN(parsedLimit)) {
+        if (!isNaN(parsedLimit) && parsedLimit >= 0) {
             itemLimit = parsedLimit;
         }
     }
@@ -43,19 +43,19 @@ export function collectFormData() {
 /**
  * Checks if form data is empty
  * @param {Object} data - Form data to check
- * @returns {boolean} True if form is empty
+ * @returns {boolean} True if form is empty or contains only whitespace
  */
 export function isFormEmpty(data) {
     if (!data || typeof data !== 'object') return true;
     
-    const { name = '', itemLimit = 0, id = null } = data;
-    return !name.trim() && !itemLimit && !id;
+    const { name = '', itemLimit = 0 } = data;
+    return !name.trim();
 }
 
 /**
- * Formats form data for API submission
- * @param {Object} data - Form data to format
- * @returns {Object} Formatted data
+ * Formats form data for display/UI
+ * @param {Object} data - Raw form data
+ * @returns {Object} Formatted data with string values
  */
 export function formatFormData(data = {}) {
     const defaults = {
@@ -65,15 +65,53 @@ export function formatFormData(data = {}) {
     };
 
     if (!data || typeof data !== 'object') {
-        return defaults;
+        return { ...defaults };
     }
 
     const { name = defaults.name, itemLimit = defaults.itemLimit, id = defaults.id, ...rest } = data;
 
     return {
-        name: String(name || defaults.name),
+        ...rest,
+        name: String(name?.trim() || defaults.name),
         itemLimit: (itemLimit === 0 || itemLimit === '0') ? 'No Limit' : String(itemLimit || defaults.itemLimit),
-        id: String(id || defaults.id),
-        ...rest
+        id: id === null ? defaults.id : String(id)
     };
+}
+
+/**
+ * Formats form data for API submission
+ * @param {Object} data - Form data to format
+ * @returns {Object|null} Formatted data or null if invalid
+ */
+export function formatForSubmission(data) {
+    if (!data || typeof data !== 'object') {
+        return null;
+    }
+
+    const trimmedName = (data.name || '').trim();
+    
+    // Handle valid empty state
+    if (!trimmedName) {
+        return {
+            name: '',
+            itemLimit: 0
+        };
+    }
+
+    // Ensure numeric itemLimit
+    const itemLimit = typeof data.itemLimit === 'string' ? 
+        parseInt(data.itemLimit, 10) : 
+        (typeof data.itemLimit === 'number' ? data.itemLimit : 0);
+
+    const result = {
+        name: trimmedName,
+        itemLimit: isNaN(itemLimit) || itemLimit < 0 ? 0 : itemLimit
+    };
+
+    // Only include id if it exists and is valid
+    if (data.id && data.id !== 'New') {
+        result.id = data.id;
+    }
+
+    return result;
 }

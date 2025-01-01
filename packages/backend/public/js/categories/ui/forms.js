@@ -71,12 +71,12 @@ function appendLimitField(form) {
     group.className = 'form__group';
 
     const label = document.createElement('label');
-    label.htmlFor = 'itemLimit';
+    label.htmlFor = 'categoryItemLimit';
     label.className = 'form__label';
     label.textContent = 'Item Limit';
 
     const select = document.createElement('select');
-    select.id = 'itemLimit';
+    select.id = 'categoryItemLimit';
     select.className = 'form__select';
 
     const defaultOption = document.createElement('option');
@@ -148,7 +148,7 @@ export function updateFormState(isEdit, skipReset = false) {
 function clearFormFields() {
     const nameInput = document.getElementById('categoryName');
     const idInput = document.getElementById('categoryId');
-    const limitSelect = document.getElementById('itemLimit');
+    const limitSelect = document.getElementById('categoryItemLimit');
     
     if (nameInput) {
         nameInput.value = '';
