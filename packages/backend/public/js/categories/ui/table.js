@@ -10,16 +10,22 @@ const COLUMNS = [
 ];
 
 /**
- * HTML escapes a string
+ * HTML escapes a string with XSS protection
  * @private
- * @param {string} str - String to escape
+ * @param {*} input - Value to escape
  * @returns {string} Escaped string
  */
-function escapeHtml(str) {
-    if (str === null || str === undefined) return '';
-    const div = document.createElement('div');
-    div.textContent = String(str);
-    return div.innerHTML;
+function escapeHtml(input) {
+    try {
+        if (input === null || input === undefined) return '';
+        const str = String(input).trim();
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    } catch (error) {
+        console.error('Error escaping HTML:', error);
+        return '';
+    }
 }
 
 /**
@@ -27,98 +33,124 @@ function escapeHtml(str) {
  * @returns {HTMLTableElement} Table element
  */
 export function createTableLayout() {
-    const existingTable = document.getElementById('categoryTable');
-    if (existingTable) return existingTable;
+    try {
+        const existingTable = document.getElementById('categoryTable');
+        if (existingTable?.tagName === 'TABLE') return existingTable;
 
-    const table = document.createElement('table');
-    table.id = 'categoryTable';
-    table.className = 'table';
-    table.setAttribute('role', 'grid');
+        const table = document.createElement('table');
+        table.id = 'categoryTable';
+        table.className = 'table';
+        table.setAttribute('role', 'grid');
 
-    const thead = document.createElement('thead');
-    const headerRow = document.createElement('tr');
-    headerRow.setAttribute('role', 'row');
+        const thead = document.createElement('thead');
+        thead.setAttribute('role', 'rowgroup');
+        
+        const headerRow = document.createElement('tr');
+        headerRow.setAttribute('role', 'row');
 
-    COLUMNS.forEach(({ key, label }) => {
-        const th = document.createElement('th');
-        th.textContent = label;
-        th.setAttribute('scope', 'col');
-        th.setAttribute('role', 'columnheader');
-        th.dataset.sortKey = key;
-        if (key !== 'actions') {
-            th.classList.add('sortable');
-            th.setAttribute('aria-sort', 'none');
-        }
-        headerRow.appendChild(th);
-    });
+        COLUMNS.forEach(({ key, label }) => {
+            const th = document.createElement('th');
+            th.textContent = label;
+            th.setAttribute('scope', 'col');
+            th.setAttribute('role', 'columnheader');
+            th.dataset.sortKey = key;
+            
+            if (key !== 'actions') {
+                th.classList.add('sortable');
+                th.setAttribute('aria-sort', 'none');
+            }
+            
+            headerRow.appendChild(th);
+        });
 
-    thead.appendChild(headerRow);
-    table.appendChild(thead);
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
 
-    const tbody = document.createElement('tbody');
-    tbody.setAttribute('role', 'rowgroup');
-    table.appendChild(tbody);
+        const tbody = document.createElement('tbody');
+        tbody.setAttribute('role', 'rowgroup');
+        table.appendChild(tbody);
 
-    return table;
+        return table;
+    } catch (error) {
+        console.error('Error creating table layout:', error);
+        return document.createElement('table');
+    }
 }
 
 /**
  * Displays categories in table
  * @param {Array} categories - Category data
+ * @returns {boolean} Success status
  */
 export function displayCategories(categories = []) {
-    const tbody = document.querySelector('#categoryTable tbody');
-    if (!tbody) return;
+    try {
+        const tbody = document.querySelector('#categoryTable tbody');
+        if (!tbody) {
+            console.warn('Table body not found');
+            return false;
+        }
 
-    if (!Array.isArray(categories) || categories.length === 0) {
-        tbody.innerHTML = createEmptyState();
-        return;
+        if (!Array.isArray(categories) || categories.length === 0) {
+            tbody.innerHTML = createEmptyState();
+            return true;
+        }
+
+        tbody.innerHTML = categories.map((category, index) => {
+            // Safely extract and format values
+            const safeName = escapeHtml(category?.name) || 'Unnamed Category';
+            const safeId = escapeHtml(category?.id) || '';
+            const rawLimit = category?.itemLimit;
+            const safeLimit = rawLimit > 0 ? String(rawLimit) : 'No Limit';
+            const safeDate = formatDate(category?.created);
+
+            return `
+                <tr role="row">
+                    <td role="gridcell">${safeName}</td>
+                    <td role="gridcell">${safeLimit}</td>
+                    <td role="gridcell">${safeDate}</td>
+                    <td role="gridcell" class="table__actions">
+                        <button class="button button--icon edit-btn" 
+                                data-id="${safeId}"
+                                data-name="${safeName}"
+                                data-limit="${rawLimit || ''}"
+                                aria-label="Edit ${safeName}">
+                            <span class="button__text">Edit</span>
+                        </button>
+                        <button class="button button--icon delete-btn"
+                                data-id="${safeId}"
+                                aria-label="Delete ${safeName}">
+                            <span class="button__text">Delete</span>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        return true;
+    } catch (error) {
+        console.error('Error displaying categories:', error);
+        if (tbody) {
+            tbody.innerHTML = createEmptyState('Error displaying categories');
+        }
+        return false;
     }
-
-    tbody.innerHTML = categories.map((category, index) => {
-        const safeName = escapeHtml(category?.name);
-        const safeId = escapeHtml(category?.id);
-        const safeLimit = category?.itemLimit > 0 ? String(category.itemLimit) : 'No Limit';
-        const safeDate = formatDate(category?.created);
-
-        return `
-            <tr role="row">
-                <td role="gridcell">${safeName}</td>
-                <td role="gridcell">${safeLimit}</td>
-                <td role="gridcell">${safeDate}</td>
-                <td role="gridcell" class="table__actions">
-                    <button class="button button--icon edit-btn" 
-                            data-id="${safeId}"
-                            data-name="${safeName}"
-                            data-limit="${category?.itemLimit || ''}"
-                            aria-label="Edit ${safeName}">
-                        <span class="button__text">Edit</span>
-                    </button>
-                    <button class="button button--icon delete-btn"
-                            data-id="${safeId}"
-                            aria-label="Delete ${safeName}">
-                        <span class="button__text">Delete</span>
-                    </button>
-                </td>
-            </tr>
-        `;
-    }).join('');
 }
 
 /**
  * Creates empty state message
  * @private
+ * @param {string} [message] - Optional custom message
  * @returns {string} Empty state HTML
  */
-function createEmptyState() {
+function createEmptyState(message = 'No categories available') {
     return `
         <tr role="row">
             <td class="table__cell--empty" 
                 colspan="4" 
                 role="gridcell"
-                aria-label="No categories available">
+                aria-label="${escapeHtml(message)}">
                 <div class="empty-state">
-                    <p class="empty-state__message">No categories available</p>
+                    <p class="empty-state__message">${escapeHtml(message)}</p>
                     <p class="empty-state__hint">Add a category using the form above</p>
                 </div>
             </td>
@@ -133,9 +165,23 @@ function createEmptyState() {
  * @returns {string} Formatted date
  */
 function formatDate(date) {
-    if (!date) return 'Invalid Date';
-    const dateObj = new Date(date);
-    return !isNaN(dateObj.getTime()) ? dateObj.toLocaleDateString() : 'Invalid Date';
+    try {
+        if (!date) return 'Invalid Date';
+        
+        // Handle both Date objects and strings
+        const dateObj = date instanceof Date ? date : new Date(date);
+        if (isNaN(dateObj.getTime())) return 'Invalid Date';
+        
+        // Format with browser locale
+        return dateObj.toLocaleDateString(undefined, {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    } catch (error) {
+        console.error('Error formatting date:', error);
+        return 'Invalid Date';
+    }
 }
 
 /**
@@ -145,27 +191,36 @@ function formatDate(date) {
  * @returns {string|number} Sort value
  */
 export function getSortValue(row, key) {
-    if (!row?.cells) return '';
-    
-    const columnIndex = COLUMNS.findIndex(col => col.key === key);
-    if (columnIndex === -1) return '';
-
-    const cell = row.cells[columnIndex];
-    if (!cell) return '';
-
-    const content = cell.textContent.trim();
-
-    switch (key) {
-        case 'limit':
-            if (content === 'No Limit') return -1;
-            const limit = parseInt(content, 10);
-            return isNaN(limit) ? -1 : limit;
+    try {
+        if (!row?.cells) return '';
         
-        case 'created':
-            const timestamp = new Date(content).getTime();
-            return isNaN(timestamp) ? 0 : timestamp;
-        
-        default:
-            return content.toLowerCase();
+        const columnIndex = COLUMNS.findIndex(col => col.key === key);
+        if (columnIndex === -1) return '';
+
+        const cell = row.cells[columnIndex];
+        if (!cell) return '';
+
+        const content = cell.textContent.trim();
+        if (!content) return '';
+
+        switch (key) {
+            case 'limit': {
+                if (content === 'No Limit') return -1;
+                const limit = parseInt(content, 10);
+                return !isNaN(limit) && isFinite(limit) ? limit : -1;
+            }
+            
+            case 'created': {
+                const date = new Date(content);
+                const timestamp = date.getTime();
+                return !isNaN(timestamp) && isFinite(timestamp) ? timestamp : 0;
+            }
+            
+            default:
+                return content.toLowerCase();
+        }
+    } catch (error) {
+        console.error('Error getting sort value:', error);
+        return '';
     }
 }
