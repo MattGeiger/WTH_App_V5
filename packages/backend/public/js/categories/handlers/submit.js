@@ -25,7 +25,7 @@ export async function handleSubmit(event, manager) {
     try {
         // Collect form data first
         const data = collectFormData();
-        if (!data || !data.name.trim()) {
+        if (!data || !data.name?.trim()) {
             manager.showMessage('Invalid form data', 'error', 'category');
             return;
         }
@@ -45,8 +45,17 @@ export async function handleSubmit(event, manager) {
             return;
         }
 
+        // Safely get global limit with fallback
+        const defaultLimit = 100;
+        let globalLimit = defaultLimit;
+        try {
+            const settingsLimit = manager.managers?.settings?.getCurrentLimit?.();
+            globalLimit = settingsLimit > 0 ? settingsLimit : defaultLimit;
+        } catch (err) {
+            console.warn('Error getting global limit, using default:', err);
+        }
+
         // Validate item limit
-        const globalLimit = manager.managers?.settings?.getCurrentLimit?.() || 100;
         const itemLimit = parseInt(data.itemLimit, 10);
         if (!validateItemLimit(itemLimit, globalLimit, manager)) {
             return;
@@ -77,6 +86,7 @@ export async function handleSubmit(event, manager) {
 
     } catch (error) {
         // Handle error cases
-        manager.showMessage(error.message || 'An error occurred', 'error', 'category');
+        const errorMessage = error?.message || 'An error occurred';
+        manager.showMessage(errorMessage, 'error', 'category');
     }
 }

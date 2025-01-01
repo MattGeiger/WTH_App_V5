@@ -89,7 +89,7 @@ export function validateName(name, manager) {
 export function validateItemLimit(itemLimit, globalLimit, manager) {
     const numLimit = parseInt(itemLimit, 10);
     
-    if (isNaN(numLimit)) {
+    if (isNaN(numLimit) || !Number.isFinite(numLimit)) {
         if (manager?.showMessage) {
             manager.showMessage(
                 'Item limit must be a valid number',
@@ -132,8 +132,22 @@ export function validateItemLimit(itemLimit, globalLimit, manager) {
  * @returns {boolean} True if valid
  */
 export function validateCategoryName(event, manager) {
+    // Validate event and target
+    if (!event?.target?.value) {
+        if (manager?.showMessage) {
+            manager.showMessage('Invalid input element', 'error', 'category');
+        }
+        return false;
+    }
+
     const input = event.target;
-    let value = input.value.trim();
+    let value = String(input.value || '').trim();
+
+    // Handle empty or whitespace input
+    if (!value) {
+        input.value = '';
+        return true;
+    }
 
     // Check maximum length
     if (value.length > MAX_LENGTH) {
@@ -155,7 +169,7 @@ export function validateCategoryName(event, manager) {
     }
 
     // Check for repeated words
-    const words = value.toLowerCase().split(' ');
+    const words = value.toLowerCase().split(' ').filter(Boolean);
     if (words.length !== new Set(words).size) {
         if (manager?.showMessage) {
             manager.showMessage('Category name cannot contain repeated words', 'error', 'category');
@@ -163,10 +177,13 @@ export function validateCategoryName(event, manager) {
         return false;
     }
 
-    // Convert to title case
-    input.value = value
-        .split(' ')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    // Convert to title case with proper handling of empty strings
+    input.value = words
+        .map(word => {
+            if (!word) return '';
+            return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+        })
+        .filter(Boolean)
         .join(' ');
 
     return true;
