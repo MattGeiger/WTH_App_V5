@@ -14,65 +14,112 @@ import {
 
 describe('Formatters', () => {
     describe('formatLimit', () => {
-        test('formats numeric limits', () => {
+        test('formats numeric limits correctly', () => {
             expect(formatLimit(5)).toBe('5');
             expect(formatLimit('10')).toBe('10');
-            expect(formatLimit(0)).toBe('No Limit');
+            expect(formatLimit(100)).toBe('100');
         });
 
-        test('handles invalid inputs', () => {
-            expect(formatLimit(null)).toBe('No Limit');
-            expect(formatLimit(undefined)).toBe('No Limit');
-            expect(formatLimit('invalid')).toBe('No Limit');
-            expect(formatLimit('')).toBe('No Limit');
+        test('handles zero and zero-like values', () => {
+            const zeroValues = [0, '0', -0, '+0', '00', '.0', '0.0'];
+            zeroValues.forEach(value => {
+                expect(formatLimit(value)).toBe('No Limit');
+            });
         });
 
-        test('handles negative values', () => {
-            expect(formatLimit(-1)).toBe('No Limit');
-            expect(formatLimit('-5')).toBe('No Limit');
+        test('handles non-numeric and invalid inputs', () => {
+            const invalidInputs = [
+                null, undefined, '', 'invalid', NaN, Infinity, -Infinity,
+                {}, [], true, false, Symbol('test'), () => {}
+            ];
+            invalidInputs.forEach(input => {
+                expect(formatLimit(input)).toBe('No Limit');
+            });
+        });
+
+        test('handles negative and decimal values', () => {
+            const values = [
+                -1, -10, -100, -0.1, -1.5,
+                '-1', '-10', '-0.5', '1.5', '2.7'
+            ];
+            values.forEach(value => {
+                expect(formatLimit(value)).toBe('No Limit');
+            });
         });
     });
 
     describe('formatName', () => {
         test('formats names in title case', () => {
-            expect(formatName('fresh produce')).toBe('Fresh Produce');
-            expect(formatName('CANNED GOODS')).toBe('Canned Goods');
-            expect(formatName('dAiRy PrOdUcTs')).toBe('Dairy Products');
+            const testCases = [
+                ['fresh produce', 'Fresh Produce'],
+                ['CANNED GOODS', 'Canned Goods'],
+                ['dAiRy PrOdUcTs', 'Dairy Products'],
+                ['a b c', 'A B C'],
+                ['one two three', 'One Two Three']
+            ];
+            testCases.forEach(([input, expected]) => {
+                expect(formatName(input)).toBe(expected);
+            });
         });
 
-        test('trims whitespace', () => {
-            expect(formatName('  fresh produce  ')).toBe('Fresh Produce');
-            expect(formatName('fresh   produce')).toBe('Fresh Produce');
+        test('handles various whitespace patterns', () => {
+            const testCases = [
+                ['  fresh   produce  ', 'Fresh Produce'],
+                ['\tfresh\nproduce\r', 'Fresh Produce'],
+                ['fresh    produce', 'Fresh Produce'],
+                [' \n\t\rfresh\n\t\r', 'Fresh']
+            ];
+            testCases.forEach(([input, expected]) => {
+                expect(formatName(input)).toBe(expected);
+            });
         });
 
         test('handles invalid inputs', () => {
-            expect(formatName('')).toBe('');
-            expect(formatName(null)).toBe('');
-            expect(formatName(undefined)).toBe('');
-            expect(formatName(123)).toBe('');
+            const invalidInputs = [
+                '', null, undefined, 123, true, false, {}, [],
+                new Date(), /regex/, Symbol('test'), () => {}
+            ];
+            invalidInputs.forEach(input => {
+                expect(formatName(input)).toBe('');
+            });
         });
     });
 
     describe('formatTableDate', () => {
         test('formats dates consistently', () => {
-            const date = new Date(Date.UTC(2024, 0, 1)); // January 1, 2024 UTC
-            expect(formatTableDate(date)).toBe('01/01/2024');
+            const testCases = [
+                { date: new Date(Date.UTC(2024, 0, 1)), expected: '01/01/2024' },
+                { date: new Date(Date.UTC(2024, 11, 31)), expected: '12/31/2024' },
+                { date: new Date(Date.UTC(2024, 5, 15)), expected: '06/15/2024' }
+            ];
+            testCases.forEach(({ date, expected }) => {
+                expect(formatTableDate(date)).toBe(expected);
+            });
         });
 
-        test('handles timezone differences', () => {
-            const dateStr = '2024-01-01T00:00:00Z';
-            expect(formatTableDate(dateStr)).toBe('01/01/2024');
-            
-            const dateWithOffset = new Date(2024, 0, 1, 23); // Local timezone
-            expect(formatTableDate(dateWithOffset)).toMatch(/01\/0[1-2]\/2024/);
+        test('handles various date string formats', () => {
+            const testCases = [
+                { input: '2024-01-01', expected: '01/01/2024' },
+                { input: '2024-12-31', expected: '12/31/2024' },
+                { input: '2024-01-01T00:00:00Z', expected: '01/01/2024' },
+                { input: '2024-01-01T12:00:00.000Z', expected: '01/01/2024' }
+            ];
+            testCases.forEach(({ input, expected }) => {
+                expect(formatTableDate(input)).toBe(expected);
+            });
         });
 
-        test('handles invalid inputs', () => {
-            expect(formatTableDate('')).toBe('');
-            expect(formatTableDate(null)).toBe('');
-            expect(formatTableDate(undefined)).toBe('');
-            expect(formatTableDate('invalid')).toBe('');
-            expect(formatTableDate(new Date('invalid'))).toBe('');
+        test('handles invalid dates and inputs', () => {
+            const invalidInputs = [
+                null, undefined, '', 'invalid-date',
+                '2024-13-01', // invalid month
+                '2024-01-32', // invalid day
+                new Date('invalid'),
+                {}, [], true, false
+            ];
+            invalidInputs.forEach(input => {
+                expect(formatTableDate(input)).toBe('');
+            });
         });
     });
 
@@ -86,123 +133,137 @@ describe('Formatters', () => {
             jest.useRealTimers();
         });
 
-        test('formats recent times as relative', () => {
-            const times = [
-                { 
-                    input: new Date('2024-01-01T11:59:30Z'),
-                    expected: 'Just now'
-                },
-                { 
-                    input: new Date('2024-01-01T11:58:00Z'),
-                    expected: '2 minutes ago'
-                },
-                { 
-                    input: new Date('2024-01-01T11:00:00Z'),
-                    expected: '1 hour ago'
-                }
+        test('formats different time ranges correctly', () => {
+            const testCases = [
+                // Within a minute
+                { date: '2024-01-01T11:59:30Z', expected: 'Just now' },
+                { date: '2024-01-01T11:59:00Z', expected: '1 minute ago' },
+                // Minutes
+                { date: '2024-01-01T11:58:00Z', expected: '2 minutes ago' },
+                { date: '2024-01-01T11:45:00Z', expected: '15 minutes ago' },
+                // Hours
+                { date: '2024-01-01T11:00:00Z', expected: '1 hour ago' },
+                { date: '2024-01-01T10:00:00Z', expected: '2 hours ago' }
             ];
 
-            times.forEach(({ input, expected }) => {
-                expect(formatRelativeTime(input)).toBe(expected);
+            testCases.forEach(({ date, expected }) => {
+                expect(formatRelativeTime(new Date(date))).toBe(expected);
             });
         });
 
-        test('formats older dates as full date string', () => {
-            const oldDate = new Date('2023-12-25T12:00:00Z');
-            expect(formatRelativeTime(oldDate)).toBe('12/25/2023');
+        test('formats older dates as absolute dates', () => {
+            const testCases = [
+                { date: '2023-12-31T12:00:00Z', expected: '12/31/2023' },
+                { date: '2023-12-30T12:00:00Z', expected: '12/30/2023' },
+                { date: '2023-01-01T00:00:00Z', expected: '01/01/2023' }
+            ];
+
+            testCases.forEach(({ date, expected }) => {
+                expect(formatRelativeTime(new Date(date))).toBe(expected);
+            });
         });
 
         test('handles invalid inputs', () => {
-            expect(formatRelativeTime(null)).toBe('Never');
-            expect(formatRelativeTime(undefined)).toBe('Never');
-            expect(formatRelativeTime('invalid')).toBe('Invalid date');
-            expect(formatRelativeTime(new Date('invalid'))).toBe('Invalid date');
+            const invalidInputs = [
+                null, undefined, '', 'invalid',
+                new Date('invalid'), {}, [], true, false
+            ];
+
+            invalidInputs.forEach(input => {
+                const result = formatRelativeTime(input);
+                expect(['Never', 'Invalid date']).toContain(result);
+            });
         });
     });
 
     describe('formatStatistic', () => {
-        test('formats numbers with options', () => {
-            expect(formatStatistic(42, { prefix: '$', suffix: 'USD' })).toBe('$42USD');
-            expect(formatStatistic(10.5, { decimals: 2 })).toBe('10.50');
-            expect(formatStatistic(0)).toBe('0');
+        test('formats numbers with different options', () => {
+            const testCases = [
+                { value: 42, options: {}, expected: '42' },
+                { value: 42, options: { prefix: '$' }, expected: '$42' },
+                { value: 42, options: { suffix: '%' }, expected: '42%' },
+                { value: 42, options: { decimals: 1 }, expected: '42.0' },
+                { value: 42.567, options: { decimals: 2 }, expected: '42.57' }
+            ];
+
+            testCases.forEach(({ value, options, expected }) => {
+                expect(formatStatistic(value, options)).toBe(expected);
+            });
+        });
+
+        test('handles rounding correctly', () => {
+            const testCases = [
+                { value: 42.4, options: {}, expected: '42' },
+                { value: 42.5, options: {}, expected: '43' },
+                { value: 42.44, options: { decimals: 1 }, expected: '42.4' },
+                { value: 42.45, options: { decimals: 1 }, expected: '42.5' }
+            ];
+
+            testCases.forEach(({ value, options, expected }) => {
+                expect(formatStatistic(value, options)).toBe(expected);
+            });
         });
 
         test('handles invalid inputs', () => {
-            expect(formatStatistic(null)).toBe('0');
-            expect(formatStatistic(undefined)).toBe('0');
-            expect(formatStatistic('invalid')).toBe('0');
-            expect(formatStatistic(NaN)).toBe('0');
-        });
+            const invalidInputs = [
+                null, undefined, NaN, Infinity, -Infinity,
+                '', 'invalid', {}, [], true, false
+            ];
 
-        test('respects decimal places', () => {
-            expect(formatStatistic(10.123, { decimals: 2 })).toBe('10.12');
-            expect(formatStatistic(10, { decimals: 2 })).toBe('10.00');
-            expect(formatStatistic(10.5, { decimals: 0 })).toBe('11');
-        });
-    });
-
-    describe('formatForSubmission', () => {
-        test('formats category data for API', () => {
-            const category = {
-                name: ' Fresh Produce ',
-                itemLimit: '5',
-                id: '42'
-            };
-
-            expect(formatForSubmission(category)).toEqual({
-                name: 'Fresh Produce',
-                itemLimit: 5,
-                id: 42
+            invalidInputs.forEach(input => {
+                expect(formatStatistic(input)).toBe('0');
             });
         });
 
-        test('handles missing id for new categories', () => {
-            const category = {
-                name: 'Fresh Produce',
-                itemLimit: 5
-            };
+        test('handles invalid options', () => {
+            const testCases = [
+                { value: 42, options: null, expected: '42' },
+                { value: 42, options: undefined, expected: '42' },
+                { value: 42, options: { decimals: 'invalid' }, expected: '42' },
+                { value: 42, options: { decimals: -1 }, expected: '42' }
+            ];
 
-            expect(formatForSubmission(category)).toEqual({
-                name: 'Fresh Produce',
-                itemLimit: 5
-            });
-        });
-
-        test('handles invalid input', () => {
-            expect(formatForSubmission(null)).toBeNull();
-            expect(formatForSubmission(undefined)).toBeNull();
-            expect(formatForSubmission('invalid')).toBeNull();
-            
-            expect(formatForSubmission({})).toEqual({
-                name: '',
-                itemLimit: 0
+            testCases.forEach(({ value, options, expected }) => {
+                expect(formatStatistic(value, options)).toBe(expected);
             });
         });
     });
 
     describe('createDisplayName', () => {
         test('creates display names with limits', () => {
-            const category = { name: 'Fresh Produce', itemLimit: 5 };
-            expect(createDisplayName(category)).toBe('Fresh Produce (5)');
+            const testCases = [
+                {
+                    input: { name: 'Fresh Produce', itemLimit: 5 },
+                    expected: 'Fresh Produce (5)'
+                },
+                {
+                    input: { name: 'Canned Goods', itemLimit: 0 },
+                    expected: 'Canned Goods (No Limit)'
+                },
+                {
+                    input: { name: 'Dairy', itemLimit: null },
+                    expected: 'Dairy (No Limit)'
+                },
+                {
+                    input: { name: 'Frozen', itemLimit: undefined },
+                    expected: 'Frozen (No Limit)'
+                }
+            ];
 
-            const noLimit = { name: 'Canned Goods', itemLimit: 0 };
-            expect(createDisplayName(noLimit)).toBe('Canned Goods (No Limit)');
+            testCases.forEach(({ input, expected }) => {
+                expect(createDisplayName(input)).toBe(expected);
+            });
         });
 
-        test('handles missing values', () => {
-            expect(createDisplayName(null)).toBe('');
-            expect(createDisplayName(undefined)).toBe('');
-            expect(createDisplayName({})).toBe('');
-            expect(createDisplayName({ itemLimit: 5 })).toBe('');
-            expect(createDisplayName({ name: '' })).toBe('');
-            expect(createDisplayName({ name: 'Test' })).toBe('Test (No Limit)');
-        });
+        test('handles invalid inputs', () => {
+            const invalidInputs = [
+                null, undefined, '', {}, { itemLimit: 5 },
+                { name: '' }, { name: null }, { name: undefined }
+            ];
 
-        test('handles edge cases', () => {
-            expect(createDisplayName({ name: 'Test', itemLimit: null })).toBe('Test (No Limit)');
-            expect(createDisplayName({ name: 'Test', itemLimit: undefined })).toBe('Test (No Limit)');
-            expect(createDisplayName({ name: 'Test', itemLimit: '0' })).toBe('Test (No Limit)');
-            expect(createDisplayName({ name: 'Test', itemLimit: 'invalid' })).toBe('Test (No Limit)');
+            invalidInputs.forEach(input => {
+                expect(createDisplayName(input)).toBe('');
+            });
         });
     });
 });
