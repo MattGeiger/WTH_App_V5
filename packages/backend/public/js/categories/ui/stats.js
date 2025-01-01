@@ -3,11 +3,11 @@
  */
 
 /**
- * Validates DOM container accessibility attributes
+ * Ensures container has required accessibility attributes
  * @private
  * @param {HTMLElement} container - Stats container element
  */
-function validateContainer(container) {
+function ensureAccessibility(container) {
     const requiredAttributes = {
         'role': 'region',
         'aria-live': 'polite',
@@ -22,35 +22,58 @@ function validateContainer(container) {
 }
 
 /**
+ * Creates or finds stats container
+ * @private
+ * @returns {HTMLElement|null} Stats container element or null
+ */
+function getStatsContainer() {
+    let container = document.getElementById('categoryStats');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'categoryStats';
+        container.className = 'stats';
+        
+        const parent = document.querySelector('#tableContainer') || document.body;
+        parent.appendChild(container);
+    }
+
+    ensureAccessibility(container);
+    return container;
+}
+
+/**
  * Updates statistics display
  * @param {Array} categories - Category data
  * @param {Date} lastUpdated - Last update timestamp
+ * @returns {boolean} Success indicator
  */
 export function updateStats(categories = [], lastUpdated = null) {
     try {
-        // Find or create container
-        let container = document.getElementById('categoryStats');
+        const container = getStatsContainer();
         if (!container) {
-            container = document.createElement('div');
-            container.id = 'categoryStats';
-            container.className = 'stats';
-            document.body.appendChild(container);
-            console.warn('Created missing stats container');
+            console.error('Failed to get stats container');
+            return false;
         }
 
-        // Ensure container has proper accessibility attributes
-        validateContainer(container);
-
-        // Calculate and display stats
         const stats = calculateStats(categories);
         container.innerHTML = createStatsDisplay(stats, lastUpdated);
-
-        // Return success for testability
         return true;
     } catch (error) {
         console.error('Error updating stats:', error);
         return false;
     }
+}
+
+/**
+ * Safely parses numeric values
+ * @private
+ * @param {*} value - Value to parse
+ * @returns {number} Parsed number or 0
+ */
+function safeParseInt(value) {
+    if (value === null || value === undefined) return 0;
+    const parsed = parseInt(value, 10);
+    return !isNaN(parsed) && isFinite(parsed) ? parsed : 0;
 }
 
 /**
@@ -61,32 +84,20 @@ export function updateStats(categories = [], lastUpdated = null) {
  */
 function calculateStats(categories) {
     try {
-        // Ensure categories is an array and handle malformed data
         if (!Array.isArray(categories)) {
-            categories = [];
+            return { total: 0, withLimits: 0, noLimits: 0, averageLimit: null };
         }
 
-        // Filter valid categories with positive limits
         const withLimits = categories.filter(cat => {
-            try {
-                if (!cat || typeof cat !== 'object') return false;
-                const limit = parseInt(cat?.itemLimit, 10);
-                return !isNaN(limit) && Number.isFinite(limit) && limit > 0;
-            } catch {
-                return false;
-            }
+            if (!cat || typeof cat !== 'object') return false;
+            const limit = safeParseInt(cat.itemLimit);
+            return limit > 0;
         });
 
-        // Calculate average if we have valid limits
         let averageLimit = null;
         if (withLimits.length > 0) {
             const total = withLimits.reduce((sum, cat) => {
-                try {
-                    const limit = parseInt(cat.itemLimit, 10);
-                    return sum + (isNaN(limit) ? 0 : limit);
-                } catch {
-                    return sum;
-                }
+                return sum + safeParseInt(cat.itemLimit);
             }, 0);
             averageLimit = Math.round(total / withLimits.length);
         }
@@ -99,67 +110,52 @@ function calculateStats(categories) {
         };
     } catch (error) {
         console.error('Error calculating stats:', error);
-        return {
-            total: 0,
-            withLimits: 0,
-            noLimits: 0,
-            averageLimit: null
-        };
+        return { total: 0, withLimits: 0, noLimits: 0, averageLimit: null };
     }
 }
 
 /**
- * Creates HTML display for statistics
+ * Creates HTML for stats display
  * @private
- * @param {Object} stats - Calculated statistics
+ * @param {Object} stats - Statistics object
  * @param {Date} lastUpdated - Last update timestamp
  * @returns {string} HTML content
  */
 function createStatsDisplay(stats = {}, lastUpdated = null) {
     try {
-        // Ensure stats has all required properties
         const safeStats = {
-            total: parseInt(stats?.total, 10) || 0,
-            withLimits: parseInt(stats?.withLimits, 10) || 0,
-            noLimits: parseInt(stats?.noLimits, 10) || 0,
-            averageLimit: stats?.averageLimit
+            total: Math.max(0, safeParseInt(stats.total)),
+            withLimits: Math.max(0, safeParseInt(stats.withLimits)),
+            noLimits: Math.max(0, safeParseInt(stats.noLimits)),
+            averageLimit: stats.averageLimit
         };
 
         const statsContent = [
-            {
-                label: 'Total Categories',
-                value: safeStats.total.toString()
-            },
-            {
-                label: 'With Limits',
-                value: safeStats.withLimits.toString()
-            },
-            {
-                label: 'No Limits',
-                value: safeStats.noLimits.toString()
-            }
+            { label: 'Total Categories', value: safeStats.total },
+            { label: 'With Limits', value: safeStats.withLimits },
+            { label: 'No Limits', value: safeStats.noLimits }
         ];
 
         if (safeStats.averageLimit !== null && 
             !isNaN(safeStats.averageLimit) && 
-            Number.isFinite(safeStats.averageLimit)) {
+            isFinite(safeStats.averageLimit)) {
             statsContent.push({
                 label: 'Average Limit',
-                value: Math.round(safeStats.averageLimit).toString()
+                value: Math.round(safeStats.averageLimit)
             });
         }
 
-        return `
-            <div class="stats__content">
-                ${statsContent.map(item => `
-                    <div role="text" class="stats__item">
-                        <span class="stats__label">${item.label}:</span>
-                        <span class="stats__value">${item.value}</span>
-                    </div>
-                `).join('')}
+        const statsHtml = statsContent.map(({ label, value }) => `
+            <div role="text" class="stats__item">
+                <span class="stats__label">${label}:</span>
+                <span class="stats__value">${value}</span>
             </div>
+        `).join('');
+
+        return `
+            <div class="stats__content">${statsHtml}</div>
             <div class="stats__timestamp" 
-                 aria-label="Last updated"
+                 aria-label="Last updated" 
                  role="status">
                 Last Updated: ${formatTimestamp(lastUpdated)}
             </div>
@@ -169,10 +165,10 @@ function createStatsDisplay(stats = {}, lastUpdated = null) {
         return `
             <div class="stats__content">
                 <div role="text" class="stats__item stats__item--error">
-                    <span class="stats__label">Error:</span>
-                    <span class="stats__value">Failed to display statistics</span>
+                    Error calculating statistics
                 </div>
             </div>
+            <div class="stats__timestamp">Last Updated: Never</div>
         `.trim();
     }
 }
@@ -180,25 +176,25 @@ function createStatsDisplay(stats = {}, lastUpdated = null) {
 /**
  * Formats timestamp for display
  * @private
- * @param {Date} date - Date to format
+ * @param {*} input - Timestamp input
  * @returns {string} Formatted timestamp
  */
-function formatTimestamp(date) {
+function formatTimestamp(input) {
     try {
-        if (!date) return 'Never';
-        
-        // Handle non-Date inputs
-        const dateObj = date instanceof Date ? date : new Date(date);
-        if (isNaN(dateObj.getTime())) return 'Never';
+        if (!input) return 'Never';
 
-        const diff = Date.now() - dateObj.getTime();
-        
-        if (diff < 0) return dateObj.toLocaleString(); // Future date
+        const date = input instanceof Date ? input : new Date(input);
+        if (isNaN(date.getTime())) return 'Never';
+
+        const now = Date.now();
+        const diff = now - date.getTime();
+
+        if (diff < 0) return date.toLocaleString(); // Future date
         if (diff < 60000) return 'just now';
         if (diff < 3600000) return 'less than a minute ago';
         if (diff < 86400000) return 'about 1 hour ago';
-        
-        return dateObj.toLocaleString(undefined, {
+
+        return date.toLocaleString(undefined, {
             year: 'numeric',
             month: 'short',
             day: 'numeric',
