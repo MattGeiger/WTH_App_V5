@@ -226,6 +226,53 @@ describe('Submit Handler', () => {
                 });
             });
 
+            test('handles falsy getCurrentLimit value', async () => {
+                const managerWithFalsyLimit = {
+                    ...mockManager,
+                    managers: {
+                        settings: {
+                            getCurrentLimit: jest.fn().mockReturnValue(0)
+                        }
+                    }
+                };
+
+                collectFormData.mockReturnValue({
+                    name: 'Valid Name',
+                    itemLimit: 150 // Should test against default 100
+                });
+
+                await handleSubmit(mockEvent, managerWithFalsyLimit);
+                expect(mockManager.showMessage).toHaveBeenCalledWith(
+                    'Item limit cannot exceed global limit of 100',
+                    'error',
+                    'category'
+                );
+                expect(apiPost).not.toHaveBeenCalled();
+            });
+
+            test('handles incomplete settings object', async () => {
+                const managerVariations = [
+                    { ...mockManager, managers: { settings: {} } },
+                    { ...mockManager, managers: { settings: null } },
+                    { ...mockManager, managers: { settings: { getCurrentLimit: null } } }
+                ];
+
+                collectFormData.mockReturnValue({
+                    name: 'Valid Name',
+                    itemLimit: 150 // Should test against default 100
+                });
+
+                for (const mgr of managerVariations) {
+                    await handleSubmit(mockEvent, mgr);
+                    expect(mockManager.showMessage).toHaveBeenCalledWith(
+                        'Item limit cannot exceed global limit of 100',
+                        'error',
+                        'category'
+                    );
+                    expect(apiPost).not.toHaveBeenCalled();
+                }
+            });
+
             test('handles network error with empty message', async () => {
                 collectFormData.mockReturnValue({
                     name: 'Valid Name',
