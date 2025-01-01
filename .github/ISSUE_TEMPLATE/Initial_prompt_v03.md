@@ -111,4 +111,4 @@ Justification for full rewrite:
    <show verification command>
 ```
 
-Please proceed. Continue to echo the guidelines with each response. Remember to also explain how your actions adhere to these guidelines.
+Please proceed. Remember to always follow the Example Response Format. This is an important error self-check and must be followed.
