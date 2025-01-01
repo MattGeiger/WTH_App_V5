@@ -4,15 +4,27 @@
 
 import { createFormLayout, updateFormState, clearForm } from '../../ui/forms.js';
 
+// Mock updateFormState to test it's called correctly
+jest.mock('../../ui/forms.js', () => {
+    const originalModule = jest.requireActual('../../ui/forms.js');
+    return {
+        ...originalModule,
+        updateFormState: jest.fn()
+    };
+});
+
 describe('Form UI', () => {
     beforeEach(() => {
         document.body.innerHTML = `
             <div id="formContainer"></div>
         `;
+        // Clear mock calls between tests
+        updateFormState.mockClear();
     });
 
     afterEach(() => {
         document.body.innerHTML = '';
+        jest.clearAllMocks();
     });
 
     describe('createFormLayout', () => {
@@ -192,16 +204,8 @@ describe('Form UI', () => {
         });
 
         test('reverts to add mode and skips reset', () => {
-            // First set to edit mode
-            updateFormState(true);
-            
-            // Mock updateFormState to verify skipReset
-            const mockUpdateFormState = jest.spyOn(require('../../ui/forms.js'), 'updateFormState');
-            
             clearForm();
-            
-            expect(mockUpdateFormState).toHaveBeenCalledWith(false, true);
-            mockUpdateFormState.mockRestore();
+            expect(updateFormState).toHaveBeenCalledWith(false, true);
         });
 
         test('resets aria states', () => {

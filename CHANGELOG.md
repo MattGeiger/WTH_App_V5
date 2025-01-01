@@ -6,6 +6,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.24] - 2024-12-30
+### Security
+- Added HTML escaping for category names in table display
+- Improved input validation and sanitization
+
+### Fixed
+- Fixed XSS vulnerability in category table display
+- Fixed invalid date handling in table sorting
+- Fixed form reset handling and mock testing
+- Fixed test coverage for validation edge cases
+- Fixed date format handling in table display
+- Fixed array type checking in form data collection
+
+### Added
+- Added comprehensive test suite for form validation
+- Added better error handling for invalid dates
+- Added null value checking for form fields
+- Added more robust input sanitization
+
+### Changed
+- Improved form state management testing
+- Enhanced validation error handling
+- Updated test coverage for edge cases
+- Improved error message handling
+
+### Development
+- Added missing test cases for validation
+- Improved test organization and structure
+- Enhanced mock setup for form tests
+- Added better documentation for test cases
+
 ## [0.5.23] - 2024-12-30
 ### Fixed
 - Unit test stability improvements
