@@ -6,123 +6,161 @@ const MIN_LENGTH = 3;
 const MAX_LENGTH = 36;
 
 /**
+ * Validates a string contains only letters and optional spaces
+ * @private
+ * @param {string} str - String to validate
+ * @returns {boolean} True if valid
+ */
+function isLettersAndSpacesOnly(str) {
+    return /^[a-zA-Z\s]+$/.test(str);
+}
+
+/**
+ * Checks for word repetition
+ * @private
+ * @param {string} str - String to check
+ * @returns {boolean} True if no repetition
+ */
+function hasNoRepeatedWords(str) {
+    const words = str.toLowerCase().split(/\s+/).filter(Boolean);
+    return words.length === new Set(words).size;
+}
+
+/**
+ * Counts letters in a string
+ * @private
+ * @param {string} str - String to count letters in
+ * @returns {number} Letter count
+ */
+function countLetters(str) {
+    return (str.match(/[a-zA-Z]/g) || []).length;
+}
+
+/**
  * Validates category name
  * @param {string} name - Category name to validate
  * @param {Object} [manager] - Category manager instance for showing messages
  * @returns {boolean} True if valid
  */
 export function validateName(name, manager) {
-    const normalizedName = String(name || '').trim();
+    try {
+        const normalizedName = String(name || '').trim();
 
-    // Check minimum length
-    if (normalizedName.length < MIN_LENGTH) {
-        if (manager?.showMessage) {
-            manager.showMessage(
+        // Check minimum length
+        if (normalizedName.length < MIN_LENGTH) {
+            manager?.showMessage?.(
                 'Category name must be at least three characters long',
                 'error',
                 'category'
             );
+            return false;
         }
-        return false;
-    }
 
-    // Check maximum length
-    if (normalizedName.length > MAX_LENGTH) {
-        if (manager?.showMessage) {
-            manager.showMessage(
+        // Check maximum length
+        if (normalizedName.length > MAX_LENGTH) {
+            manager?.showMessage?.(
                 'Category name cannot exceed 36 characters',
                 'error',
                 'category'
             );
+            return false;
         }
-        return false;
-    }
 
-    // Check letter count
-    const letterCount = (normalizedName.match(/[a-zA-Z]/g) || []).length;
-    if (letterCount < MIN_LENGTH) {
-        if (manager?.showMessage) {
-            manager.showMessage(
+        // Check letter count
+        if (countLetters(normalizedName) < MIN_LENGTH) {
+            manager?.showMessage?.(
                 'Category name must contain at least three letters',
                 'error',
                 'category'
             );
+            return false;
         }
-        return false;
-    }
 
-    // Check for special characters
-    if (!/^[a-zA-Z\s]+$/.test(normalizedName)) {
-        if (manager?.showMessage) {
-            manager.showMessage(
+        // Check for special characters
+        if (!isLettersAndSpacesOnly(normalizedName)) {
+            manager?.showMessage?.(
                 'Category name can only contain letters and spaces',
                 'error',
                 'category'
             );
+            return false;
         }
-        return false;
-    }
 
-    // Check for repeated words
-    const words = normalizedName.toLowerCase().split(/\s+/);
-    if (words.length !== new Set(words).size) {
-        if (manager?.showMessage) {
-            manager.showMessage(
+        // Check for repeated words
+        if (!hasNoRepeatedWords(normalizedName)) {
+            manager?.showMessage?.(
                 'Category name cannot contain repeated words',
                 'error',
                 'category'
             );
+            return false;
         }
+
+        return true;
+    } catch (error) {
+        console.error('Error validating category name:', error);
+        manager?.showMessage?.(
+            'Error validating category name',
+            'error',
+            'category'
+        );
         return false;
     }
-
-    return true;
 }
 
 /**
  * Validates item limit against global limit
- * @param {number} itemLimit - Item limit to validate
+ * @param {number|string} itemLimit - Item limit to validate
  * @param {number} globalLimit - Global limit to check against
  * @param {Object} [manager] - Category manager instance for showing messages
  * @returns {boolean} True if valid
  */
 export function validateItemLimit(itemLimit, globalLimit, manager) {
-    const numLimit = parseInt(itemLimit, 10);
-    
-    if (isNaN(numLimit) || !Number.isFinite(numLimit)) {
-        if (manager?.showMessage) {
-            manager.showMessage(
+    try {
+        const numLimit = parseInt(itemLimit, 10);
+        const numGlobalLimit = parseInt(globalLimit, 10);
+        
+        // Check for valid numbers
+        if (isNaN(numLimit) || !Number.isFinite(numLimit) || 
+            isNaN(numGlobalLimit) || !Number.isFinite(numGlobalLimit)) {
+            manager?.showMessage?.(
                 'Item limit must be a valid number',
                 'error',
                 'category'
             );
+            return false;
         }
-        return false;
-    }
 
-    if (numLimit < 0) {
-        if (manager?.showMessage) {
-            manager.showMessage(
+        // Check for negative values
+        if (numLimit < 0) {
+            manager?.showMessage?.(
                 'Item limit cannot be negative',
                 'error',
                 'category'
             );
+            return false;
         }
-        return false;
-    }
 
-    if (numLimit > globalLimit) {
-        if (manager?.showMessage) {
-            manager.showMessage(
-                `Item limit cannot exceed global limit of ${globalLimit}`,
+        // Check against global limit
+        if (numLimit > numGlobalLimit) {
+            manager?.showMessage?.(
+                `Item limit cannot exceed global limit of ${numGlobalLimit}`,
                 'error',
                 'category'
             );
+            return false;
         }
+
+        return true;
+    } catch (error) {
+        console.error('Error validating item limit:', error);
+        manager?.showMessage?.(
+            'Error validating item limit',
+            'error',
+            'category'
+        );
         return false;
     }
-
-    return true;
 }
 
 /**
@@ -132,59 +170,75 @@ export function validateItemLimit(itemLimit, globalLimit, manager) {
  * @returns {boolean} True if valid
  */
 export function validateCategoryName(event, manager) {
-    // Validate event and target
-    if (!event?.target?.value) {
-        if (manager?.showMessage) {
-            manager.showMessage('Invalid input element', 'error', 'category');
+    try {
+        // Validate event and target
+        if (!event?.target?.value) {
+            manager?.showMessage?.(
+                'Invalid input element',
+                'error',
+                'category'
+            );
+            return false;
         }
-        return false;
-    }
 
-    const input = event.target;
-    let value = String(input.value || '').trim();
+        const input = event.target;
+        let value = String(input.value || '').trim();
 
-    // Handle empty or whitespace input
-    if (!value) {
-        input.value = '';
+        // Handle empty or whitespace input
+        if (!value) {
+            input.value = '';
+            return true;
+        }
+
+        // Check maximum length
+        if (value.length > MAX_LENGTH) {
+            value = value.slice(0, MAX_LENGTH);
+            input.value = value;
+            manager?.showMessage?.(
+                'Input cannot exceed 36 characters',
+                'warning',
+                'category'
+            );
+        }
+
+        // Remove consecutive spaces
+        const normalized = value.replace(/\s+/g, ' ');
+        if (normalized !== value) {
+            input.value = normalized;
+            value = normalized;
+            manager?.showMessage?.(
+                'Consecutive spaces detected',
+                'warning',
+                'category'
+            );
+        }
+
+        // Check for repeated words
+        const words = value.toLowerCase().split(' ').filter(Boolean);
+        if (words.length !== new Set(words).size) {
+            manager?.showMessage?.(
+                'Category name cannot contain repeated words',
+                'error',
+                'category'
+            );
+            return false;
+        }
+
+        // Convert to title case
+        const titleCased = words.map(word => 
+            word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
+        ).filter(Boolean).join(' ');
+
+        input.value = titleCased;
+
         return true;
-    }
-
-    // Check maximum length
-    if (value.length > MAX_LENGTH) {
-        value = value.slice(0, MAX_LENGTH);
-        input.value = value;
-        if (manager?.showMessage) {
-            manager.showMessage('Input cannot exceed 36 characters', 'warning', 'category');
-        }
-    }
-
-    // Remove consecutive spaces
-    const normalized = value.replace(/\s+/g, ' ');
-    if (normalized !== value) {
-        input.value = normalized;
-        value = normalized;
-        if (manager?.showMessage) {
-            manager.showMessage('Consecutive spaces detected', 'warning', 'category');
-        }
-    }
-
-    // Check for repeated words
-    const words = value.toLowerCase().split(' ').filter(Boolean);
-    if (words.length !== new Set(words).size) {
-        if (manager?.showMessage) {
-            manager.showMessage('Category name cannot contain repeated words', 'error', 'category');
-        }
+    } catch (error) {
+        console.error('Error validating category name input:', error);
+        manager?.showMessage?.(
+            'Error validating input',
+            'error',
+            'category'
+        );
         return false;
     }
-
-    // Convert to title case with proper handling of empty strings
-    input.value = words
-        .map(word => {
-            if (!word) return '';
-            return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-        })
-        .filter(Boolean)
-        .join(' ');
-
-    return true;
 }
