@@ -3,41 +3,69 @@
  */
 
 /**
+ * Normalizes whitespace in a string
+ * @private
+ * @param {string} str - String to normalize
+ * @returns {string} Normalized string
+ */
+function normalizeWhitespace(str) {
+    return String(str || '').trim().replace(/\s+/g, ' ');
+}
+
+/**
+ * Safely parses an integer with validation
+ * @private
+ * @param {*} value - Value to parse
+ * @param {number} defaultValue - Default value if parsing fails
+ * @returns {number} Parsed number or default value
+ */
+function safeParseInt(value, defaultValue = 0) {
+    if (value === null || value === undefined) return defaultValue;
+    const parsed = parseInt(value, 10);
+    return !isNaN(parsed) && isFinite(parsed) ? parsed : defaultValue;
+}
+
+/**
  * Collects form data from category form
  * @returns {Object} Form data with defaults if empty/invalid
  */
 export function collectFormData() {
-    const idInput = document.getElementById('categoryId');
-    const nameInput = document.getElementById('categoryName');
-    const limitInput = document.getElementById('categoryItemLimit');
+    try {
+        const idInput = document.getElementById('categoryId');
+        const nameInput = document.getElementById('categoryName');
+        const limitInput = document.getElementById('categoryItemLimit');
 
-    // Default values for missing or invalid inputs
-    let id = null;
-    let name = '';
-    let itemLimit = 0;
+        // Default values
+        let id = null;
+        let name = '';
+        let itemLimit = 0;
 
-    // Parse ID if present
-    if (idInput) {
-        const parsedId = parseInt(idInput.value, 10);
-        if (!isNaN(parsedId) && parsedId !== 0) {
-            id = parsedId;
+        // Parse ID if present
+        if (idInput?.value) {
+            const parsedId = safeParseInt(idInput.value);
+            if (parsedId > 0) {
+                id = parsedId;
+            }
         }
-    }
 
-    // Get name if present and normalize spaces
-    if (nameInput) {
-        name = nameInput.value.trim().replace(/\s+/g, ' ');
-    }
-
-    // Parse item limit if present
-    if (limitInput) {
-        const parsedLimit = parseInt(limitInput.value, 10);
-        if (!isNaN(parsedLimit) && parsedLimit >= 0) {
-            itemLimit = parsedLimit;
+        // Get and normalize name
+        if (nameInput?.value) {
+            name = normalizeWhitespace(nameInput.value);
         }
-    }
 
-    return { id, name, itemLimit };
+        // Parse item limit
+        if (limitInput?.value) {
+            const parsedLimit = safeParseInt(limitInput.value);
+            if (parsedLimit >= 0) {
+                itemLimit = parsedLimit;
+            }
+        }
+
+        return { id, name, itemLimit };
+    } catch (error) {
+        console.error('Error collecting form data:', error);
+        return { id: null, name: '', itemLimit: 0 };
+    }
 }
 
 /**
@@ -46,10 +74,16 @@ export function collectFormData() {
  * @returns {boolean} True if form is empty or contains only whitespace
  */
 export function isFormEmpty(data) {
-    if (!data || typeof data !== 'object') return true;
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
+        return true;
+    }
     
-    const { name = '', itemLimit = 0 } = data;
-    return !name.trim();
+    const name = data.name;
+    if (name === null || name === undefined) {
+        return true;
+    }
+
+    return !String(name).trim();
 }
 
 /**
@@ -64,17 +98,35 @@ export function formatFormData(data = {}) {
         id: 'New'
     };
 
-    if (!data || typeof data !== 'object') {
+    // Handle invalid input
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
         return { ...defaults };
     }
 
-    const { name = defaults.name, itemLimit = defaults.itemLimit, id = defaults.id, ...rest } = data;
+    // Extract and process values
+    const { name, itemLimit, id, ...rest } = data;
+
+    // Process name
+    const formattedName = normalizeWhitespace(name);
+
+    // Process item limit
+    let formattedLimit = 'No Limit';
+    if (itemLimit !== null && itemLimit !== undefined && itemLimit !== '') {
+        const numLimit = safeParseInt(itemLimit);
+        formattedLimit = numLimit === 0 ? 'No Limit' : String(numLimit);
+    }
+
+    // Process ID
+    let formattedId = defaults.id;
+    if (id !== null && id !== undefined && id !== '') {
+        formattedId = String(id);
+    }
 
     return {
         ...rest,
-        name: String(name?.trim() || defaults.name),
-        itemLimit: (itemLimit === 0 || itemLimit === '0') ? 'No Limit' : String(itemLimit || defaults.itemLimit),
-        id: id === null ? defaults.id : String(id)
+        name: formattedName || defaults.name,
+        itemLimit: formattedLimit,
+        id: formattedId
     };
 }
 
@@ -84,13 +136,15 @@ export function formatFormData(data = {}) {
  * @returns {Object|null} Formatted data or null if invalid
  */
 export function formatForSubmission(data) {
-    if (!data || typeof data !== 'object') {
+    // Handle invalid input
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
         return null;
     }
 
-    const trimmedName = (data.name || '').trim();
+    // Process name
+    const trimmedName = normalizeWhitespace(data.name);
     
-    // Handle valid empty state
+    // Handle empty state
     if (!trimmedName) {
         return {
             name: '',
@@ -98,19 +152,15 @@ export function formatForSubmission(data) {
         };
     }
 
-    // Ensure numeric itemLimit
-    const itemLimit = typeof data.itemLimit === 'string' ? 
-        parseInt(data.itemLimit, 10) : 
-        (typeof data.itemLimit === 'number' ? data.itemLimit : 0);
-
+    // Create result object
     const result = {
         name: trimmedName,
-        itemLimit: isNaN(itemLimit) || itemLimit < 0 ? 0 : itemLimit
+        itemLimit: safeParseInt(data.itemLimit)
     };
 
-    // Only include id if it exists and is valid
-    if (data.id && data.id !== 'New') {
-        result.id = data.id;
+    // Add ID if valid
+    if (data.id && data.id !== 'New' && data.id !== '') {
+        result.id = String(data.id);
     }
 
     return result;
