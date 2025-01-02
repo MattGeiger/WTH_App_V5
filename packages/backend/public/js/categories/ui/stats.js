@@ -8,6 +8,11 @@
  * @param {HTMLElement} container - Stats container element
  */
 function ensureAccessibility(container) {
+    if (!container || !(container instanceof HTMLElement)) {
+        console.error('Invalid container element');
+        return;
+    }
+
     const requiredAttributes = {
         'role': 'region',
         'aria-live': 'polite',
@@ -27,18 +32,28 @@ function ensureAccessibility(container) {
  * @returns {HTMLElement|null} Stats container element or null
  */
 function getStatsContainer() {
-    let container = document.getElementById('categoryStats');
-    if (!container) {
-        container = document.createElement('div');
-        container.id = 'categoryStats';
-        container.className = 'stats';
-        
-        const parent = document.querySelector('#tableContainer') || document.body;
-        parent.appendChild(container);
-    }
+    try {
+        let container = document.getElementById('categoryStats');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'categoryStats';
+            container.className = 'stats';
+            
+            const parent = document.querySelector('#tableContainer');
+            if (!parent) {
+                if (!document.body) return null;
+                document.body.appendChild(container);
+            } else {
+                parent.appendChild(container);
+            }
+        }
 
-    ensureAccessibility(container);
-    return container;
+        ensureAccessibility(container);
+        return container;
+    } catch (error) {
+        console.error('Error getting stats container:', error);
+        return null;
+    }
 }
 
 /**
@@ -84,20 +99,23 @@ function safeParseInt(value) {
  */
 function calculateStats(categories) {
     try {
-        if (!Array.isArray(categories)) {
+        if (!Array.isArray(categories) || categories.length === 0) {
             return { total: 0, withLimits: 0, noLimits: 0, averageLimit: null };
         }
 
+        // Filter valid categories with limits
         const withLimits = categories.filter(cat => {
             if (!cat || typeof cat !== 'object') return false;
             const limit = safeParseInt(cat.itemLimit);
             return limit > 0;
         });
 
+        // Calculate average limit if there are categories with limits
         let averageLimit = null;
         if (withLimits.length > 0) {
             const total = withLimits.reduce((sum, cat) => {
-                return sum + safeParseInt(cat.itemLimit);
+                const limit = safeParseInt(cat.itemLimit);
+                return sum + (limit > 0 ? limit : 0);
             }, 0);
             averageLimit = Math.round(total / withLimits.length);
         }
@@ -106,7 +124,7 @@ function calculateStats(categories) {
             total: categories.length,
             withLimits: withLimits.length,
             noLimits: categories.length - withLimits.length,
-            averageLimit
+            averageLimit: averageLimit !== null && isFinite(averageLimit) ? averageLimit : null
         };
     } catch (error) {
         console.error('Error calculating stats:', error);
@@ -127,7 +145,8 @@ function createStatsDisplay(stats = {}, lastUpdated = null) {
             total: Math.max(0, safeParseInt(stats.total)),
             withLimits: Math.max(0, safeParseInt(stats.withLimits)),
             noLimits: Math.max(0, safeParseInt(stats.noLimits)),
-            averageLimit: stats.averageLimit
+            averageLimit: stats.averageLimit !== null && isFinite(stats.averageLimit) ? 
+                Math.round(stats.averageLimit) : null
         };
 
         const statsContent = [
@@ -136,12 +155,10 @@ function createStatsDisplay(stats = {}, lastUpdated = null) {
             { label: 'No Limits', value: safeStats.noLimits }
         ];
 
-        if (safeStats.averageLimit !== null && 
-            !isNaN(safeStats.averageLimit) && 
-            isFinite(safeStats.averageLimit)) {
+        if (safeStats.averageLimit !== null) {
             statsContent.push({
                 label: 'Average Limit',
-                value: Math.round(safeStats.averageLimit)
+                value: safeStats.averageLimit
             });
         }
 
@@ -152,12 +169,13 @@ function createStatsDisplay(stats = {}, lastUpdated = null) {
             </div>
         `).join('');
 
+        const timestamp = formatTimestamp(lastUpdated);
         return `
             <div class="stats__content">${statsHtml}</div>
             <div class="stats__timestamp" 
                  aria-label="Last updated" 
                  role="status">
-                Last Updated: ${formatTimestamp(lastUpdated)}
+                Last Updated: ${timestamp}
             </div>
         `.trim().replace(/\s+/g, ' ');
     } catch (error) {
@@ -168,7 +186,7 @@ function createStatsDisplay(stats = {}, lastUpdated = null) {
                     Error calculating statistics
                 </div>
             </div>
-            <div class="stats__timestamp">Last Updated: Never</div>
+            <div class="stats__timestamp" role="status">Last Updated: Never</div>
         `.trim();
     }
 }
@@ -181,19 +199,39 @@ function createStatsDisplay(stats = {}, lastUpdated = null) {
  */
 function formatTimestamp(input) {
     try {
+        // Handle null/undefined/empty inputs
         if (!input) return 'Never';
 
+        // Convert input to Date object
         const date = input instanceof Date ? input : new Date(input);
-        if (isNaN(date.getTime())) return 'Never';
+        
+        // Validate date
+        if (!date || isNaN(date.getTime()) || date.getTime() <= 1) return 'Never';
 
-        const now = Date.now();
-        const diff = now - date.getTime();
+        const now = new Date();
+        const diff = now.getTime() - date.getTime();
 
-        if (diff < 0) return date.toLocaleString(); // Future date
+        // Handle invalid time differences
+        if (isNaN(diff)) return 'Never';
+
+        // Format based on time difference
+        if (diff < 0) {
+            // Future dates use standard format
+            return date.toLocaleString(undefined, {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Recent times use relative format
         if (diff < 60000) return 'just now';
         if (diff < 3600000) return 'less than a minute ago';
         if (diff < 86400000) return 'about 1 hour ago';
 
+        // Older dates use standard format
         return date.toLocaleString(undefined, {
             year: 'numeric',
             month: 'short',
