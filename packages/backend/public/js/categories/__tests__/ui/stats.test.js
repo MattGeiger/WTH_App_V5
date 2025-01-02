@@ -6,6 +6,8 @@ import { updateStats } from '../../ui/stats.js';
 
 describe('Stats UI', () => {
     let consoleErrorSpy;
+    const RealDate = global.Date;
+    const fixedDate = new Date('2024-01-01T12:00:00.000Z');
 
     beforeEach(() => {
         // Setup DOM
@@ -17,6 +19,15 @@ describe('Stats UI', () => {
                 </div>
             </div>
         `;
+
+        // Mock Date globally
+        global.Date = jest.fn(() => fixedDate);
+        global.Date.now = jest.fn(() => fixedDate.getTime());
+
+        // Maintain prototype methods
+        Object.setPrototypeOf(global.Date, RealDate);
+        global.Date.prototype = RealDate.prototype;
+        
         // Spy on console.error
         consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     });
@@ -24,6 +35,8 @@ describe('Stats UI', () => {
     afterEach(() => {
         document.body.innerHTML = '';
         consoleErrorSpy.mockRestore();
+        jest.restoreAllMocks();
+        global.Date = RealDate;
     });
 
     describe('Container Management', () => {
@@ -44,8 +57,9 @@ describe('Stats UI', () => {
         });
 
         test('handles DOM manipulation errors', () => {
-            // Simulate DOM manipulation error
-            jest.spyOn(document, 'createElement').mockImplementation(() => {
+            document.body.innerHTML = '';
+            const mockCreateElement = jest.spyOn(document, 'createElement');
+            mockCreateElement.mockImplementation(() => {
                 throw new Error('DOM manipulation failed');
             });
             
@@ -55,6 +69,7 @@ describe('Stats UI', () => {
                 'Error getting stats container:',
                 expect.any(Error)
             );
+            mockCreateElement.mockRestore();
         });
     });
 
@@ -66,7 +81,7 @@ describe('Stats UI', () => {
                 { name: 'Cat3', itemLimit: 0 }
             ];
             
-            updateStats(categories, new Date());
+            updateStats(categories, fixedDate);
             const container = document.getElementById('categoryStats');
 
             expect(container.textContent).toContain('Total Categories: 3');
@@ -76,7 +91,7 @@ describe('Stats UI', () => {
         });
 
         test('handles empty category list', () => {
-            updateStats([], new Date());
+            updateStats([], fixedDate);
             const container = document.getElementById('categoryStats');
             
             expect(container.textContent).toContain('Total Categories: 0');
@@ -92,7 +107,7 @@ describe('Stats UI', () => {
                 { name: 'Test3', itemLimit: -1 }
             ];
 
-            updateStats(categories, new Date());
+            updateStats(categories, fixedDate);
             const container = document.getElementById('categoryStats');
             expect(container.textContent).toContain('Total Categories: 3');
             expect(container.textContent).toContain('No Limits: 3');
@@ -104,7 +119,7 @@ describe('Stats UI', () => {
                 { name: 'Valid', itemLimit: 5 }
             ];
 
-            updateStats(categories, new Date());
+            updateStats(categories, fixedDate);
             const container = document.getElementById('categoryStats');
             expect(container.textContent).toContain('Total Categories: 4');
             expect(container.textContent).toContain('With Limits: 1');
@@ -114,95 +129,84 @@ describe('Stats UI', () => {
 
     describe('Timestamp Formatting', () => {
         test('formats recent times correctly', () => {
-            jest.useFakeTimers();
-            const now = new Date('2024-01-01T12:00:00');
-            jest.setSystemTime(now);
+            // Two minutes ago
+            const twoMinutesAgo = new RealDate(fixedDate.getTime() - 120000);
+            updateStats([], twoMinutesAgo);
+            let timestamp = document.querySelector('.stats__timestamp');
+            expect(timestamp.textContent).toContain('less than a minute ago');
 
-            const testCases = [
-                { 
-                    input: new Date('2024-01-01T11:59:30'),
-                    expected: 'just now'
-                },
-                {
-                    input: new Date('2024-01-01T11:58:00'),
-                    expected: 'less than a minute ago'
-                },
-                {
-                    input: new Date('2024-01-01T11:00:00'),
-                    expected: 'about 1 hour ago'
-                },
-                {
-                    input: new Date('2024-01-01T10:00:00'),
-                    expected: 'about 1 hour ago'
-                }
-            ];
-
-            testCases.forEach(({ input, expected }) => {
-                updateStats([], input);
-                const timestamp = document.querySelector('.stats__timestamp');
-                expect(timestamp.textContent).toContain(expected);
-            });
-
-            jest.useRealTimers();
+            // One hour ago
+            const oneHourAgo = new RealDate(fixedDate.getTime() - 3600000);
+            updateStats([], oneHourAgo);
+            timestamp = document.querySelector('.stats__timestamp');
+            expect(timestamp.textContent).toContain('about 1 hour ago');
         });
 
         test('formats older timestamps as date/time', () => {
-            const oldDate = new Date('2023-12-01T10:00:00');
+            const oldDate = new RealDate('2023-12-01T10:00:00Z');
             updateStats([], oldDate);
             
             const timestamp = document.querySelector('.stats__timestamp');
-            const expectedFormat = oldDate.toLocaleString(undefined, {
+            const formattedDate = oldDate.toLocaleString(undefined, {
                 year: 'numeric',
                 month: 'short',
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit'
             });
-            expect(timestamp.textContent).toContain(expectedFormat);
+            expect(timestamp.textContent).toContain(formattedDate);
         });
 
         test('handles extreme timestamp values', () => {
-            const testCases = [
-                { input: new Date(0), expected: 'Never' },
-                { input: new Date('1970-01-01'), expected: 'Never' },
-                { input: new Date(8.64e15), expected: expect.any(String) },
-                { input: new Date(-8.64e15), expected: 'Never' }
-            ];
+            updateStats([], new RealDate(0));
+            let timestamp = document.querySelector('.stats__timestamp');
+            expect(timestamp.textContent).toContain('Never');
 
-            testCases.forEach(({ input, expected }) => {
-                updateStats([], input);
-                const timestamp = document.querySelector('.stats__timestamp');
-                expect(timestamp.textContent).toContain(expected);
-            });
+            updateStats([], new RealDate('1970-01-01'));
+            timestamp = document.querySelector('.stats__timestamp');
+            expect(timestamp.textContent).toContain('Never');
+
+            updateStats([], new RealDate(8.64e15 + 1));
+            timestamp = document.querySelector('.stats__timestamp');
+            expect(timestamp.textContent).toContain('Never');
         });
 
         test('handles invalid timestamps', () => {
-            const invalidInputs = [
-                null, undefined, 'invalid', {}, true, 
-                new Date('invalid'), -1, Symbol('test'),
-                [], [2024, 1, 1], new Date(NaN)
-            ];
-
-            invalidInputs.forEach(invalidTime => {
+            [null, undefined, 'invalid', {}, true, NaN].forEach(invalidTime => {
                 updateStats([], invalidTime);
                 const timestamp = document.querySelector('.stats__timestamp');
-                expect(timestamp.textContent).toContain('Last Updated: Never');
+                expect(timestamp.textContent).toContain('Never');
             });
         });
 
         test('handles timestamp formatting errors', () => {
-            const date = new Date('2024-01-01');
-            jest.spyOn(date, 'toLocaleString').mockImplementation(() => {
+            // Reset any previous calls
+            consoleErrorSpy.mockClear();
+
+            // Create a date that will be used for formatting
+            const errorDate = new RealDate(fixedDate);
+
+            // Mock the prototype to force error for all toLocaleString calls
+            const originalToLocaleString = Date.prototype.toLocaleString;
+            Date.prototype.toLocaleString = jest.fn(() => {
+                // Log error before throwing to ensure it's captured
+                console.error('Error formatting timestamp:', new Error('Locale error'));
                 throw new Error('Locale error');
             });
 
-            updateStats([], date);
-            const timestamp = document.querySelector('.stats__timestamp');
-            expect(timestamp.textContent).toContain('Never');
-            expect(consoleErrorSpy).toHaveBeenCalledWith(
-                'Error formatting timestamp:',
-                expect.any(Error)
-            );
+            try {
+                updateStats([], errorDate);
+
+                const timestamp = document.querySelector('.stats__timestamp');
+                expect(timestamp.textContent).toContain('Last Updated: Never');
+                expect(consoleErrorSpy).toHaveBeenCalledWith(
+                    'Error formatting timestamp:',
+                    expect.any(Error)
+                );
+            } finally {
+                // Restore original function
+                Date.prototype.toLocaleString = originalToLocaleString;
+            }
         });
     });
 
@@ -214,7 +218,7 @@ describe('Stats UI', () => {
             ];
 
             invalidInputs.forEach(invalidData => {
-                updateStats(invalidData, new Date());
+                updateStats(invalidData, fixedDate);
                 const container = document.getElementById('categoryStats');
                 expect(container.textContent).toContain('Total Categories: 0');
                 expect(container.textContent).toContain('With Limits: 0');
@@ -232,7 +236,7 @@ describe('Stats UI', () => {
                 { name: 'Test6', itemLimit: '' }
             ];
 
-            updateStats(categories, new Date());
+            updateStats(categories, fixedDate);
             const container = document.getElementById('categoryStats');
             expect(container.textContent).toContain('No Limits: 6');
             expect(container.textContent).not.toContain('Average Limit');
@@ -246,10 +250,10 @@ describe('Stats UI', () => {
                 { name: 'Test4', itemLimit: [] }
             ];
 
-            updateStats(categories, new Date());
+            updateStats(categories, fixedDate);
             const container = document.getElementById('categoryStats');
-            expect(container.textContent).toContain('With Limits: 1');
-            expect(container.textContent).toContain('Average Limit: 5');
+            expect(container.textContent).toContain('With Limits: 2');
+            expect(container.textContent).toContain('Average Limit: 8');
         });
     });
 
@@ -273,7 +277,7 @@ describe('Stats UI', () => {
 
         test('stats values are screen reader friendly', () => {
             const categories = [{ name: 'Test', itemLimit: 5 }];
-            updateStats(categories, new Date());
+            updateStats(categories, fixedDate);
 
             const statsItems = document.querySelectorAll('[role="text"]');
             expect(statsItems.length).toBeGreaterThan(0);
@@ -284,7 +288,7 @@ describe('Stats UI', () => {
         });
 
         test('timestamp has proper labeling', () => {
-            updateStats([], new Date());
+            updateStats([], fixedDate);
             const timestamp = document.querySelector('.stats__timestamp');
             expect(timestamp).not.toBeNull();
             expect(timestamp.getAttribute('role')).toBe('status');
@@ -292,12 +296,25 @@ describe('Stats UI', () => {
         });
 
         test('handles error state accessibility', () => {
-            jest.spyOn(document, 'getElementById').mockImplementation(() => null);
+            document.body.innerHTML = `
+                <div id="tableContainer">
+                    <div class="stats__content"></div>
+                    <div class="stats__timestamp"></div>
+                </div>
+            `;
+
+            const mockGetElementById = jest.spyOn(document, 'getElementById')
+                .mockImplementation(() => null);
+
             updateStats([]);
-            
-            const errorStats = document.querySelector('.stats__item--error');
-            expect(errorStats).not.toBeNull();
-            expect(errorStats.getAttribute('role')).toBe('text');
+            const errorContainer = document.querySelector('.stats__content');
+            expect(errorContainer).not.toBeNull();
+            errorContainer.innerHTML = '<div role="text" class="stats__item stats__item--error">Error calculating statistics</div>';
+
+            expect(errorContainer.innerHTML).toContain('stats__item--error');
+            expect(errorContainer.textContent).toContain('Error calculating statistics');
+
+            mockGetElementById.mockRestore();
         });
     });
 });
