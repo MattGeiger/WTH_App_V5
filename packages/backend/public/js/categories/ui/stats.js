@@ -75,20 +75,24 @@ function getStatsContainer() {
  * @returns {number|null} Parsed number or null
  */
 function safeParseInt(value) {
-    // Handle empty values
+    // Empty/null/undefined
     if (value === null || value === undefined || value === '') {
         return null;
     }
 
-    // Handle numeric values first
-    if (typeof value === 'number') {
-        return isFinite(value) && value > 0 ? Math.floor(value) : null;
+    // Handle strings (including something like '10abc')
+    if (typeof value === 'string') {
+        const trimmed = value.trim();
+        const num = parseInt(trimmed, 10);
+        return (isNaN(num) || num <= 0) ? null : num;
     }
 
-    // Handle string values
-    const trimmed = String(value).trim();
-    const parsed = Number(trimmed);
-    return !isNaN(parsed) && isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : null;
+    // Handle actual numbers
+    if (typeof value === 'number' && isFinite(value) && value > 0) {
+        return Math.floor(value);
+    }
+
+    return null;
 }
 
 /**
@@ -137,29 +141,37 @@ function calculateStats(categories) {
  * @returns {string} Formatted timestamp
  */
 function formatTimestamp(input) {
-    // Handle null/undefined/invalid inputs
-    if (!input || input === 'invalid' || typeof input === 'boolean' || input instanceof Error) {
+    // First check for obviously invalid inputs
+    if (input === null || input === undefined || 
+        typeof input === 'boolean' || typeof input === 'symbol' ||
+        (typeof input === 'object' && !(input instanceof Date))) {
         return 'Never';
     }
 
+    // Then try to create a Date
+    let date;
     try {
-        const date = input instanceof Date ? input : new Date(input);
+        date = input instanceof Date ? input : new Date(input);
         
-        // Validate date
-        if (!isFinite(date.getTime()) || date.getTime() <= 0 || date.getTime() >= 8.64e15) {
+        // Check for invalid dates
+        if (isNaN(date.getTime()) || date.getTime() <= 0 || date.getTime() >= 8.64e15) {
             return 'Never';
         }
 
-        const now = Date.now();
-        const diff = now - date.getTime();
-
-        // Handle invalid time differences
-        if (diff < 0) return 'Never';
-        if (diff < 60000) return 'just now';
-        if (diff < 3600000) return 'less than a minute ago';
-        if (diff < 86400000) return 'about 1 hour ago';
-
+        // Check for toLocaleString availability before any other operations
         try {
+            const formatted = date.toLocaleString();
+            if (!formatted) return 'Never';
+
+            // Only after valid toLocaleString, check times
+            const now = Date.now();
+            const diff = now - date.getTime();
+
+            if (diff < 0) return 'Never';
+            if (diff < 60000) return 'just now';
+            if (diff < 3600000) return 'less than a minute ago';
+            if (diff < 86400000) return 'about 1 hour ago';
+
             return date.toLocaleString(undefined, {
                 year: 'numeric',
                 month: 'short',
@@ -172,7 +184,6 @@ function formatTimestamp(input) {
             return 'Never';
         }
     } catch (error) {
-        console.error('Error formatting timestamp:', error);
         return 'Never';
     }
 }
@@ -223,8 +234,7 @@ function createStatsDisplay(stats = {}, lastUpdated = null) {
     }
 
     const statsContent = items
-        .map(({ label, value }) => 
-            `<div role="text" class="stats__item"><span class="stats__label">${label}: </span><span class="stats__value">${value}</span></div>`
+        .map(({ label, value }) => `<div role="text" class="stats__item"><span class="stats__label">${label}: </span><span class="stats__value">${value}</span></div>`
         ).join('');
 
     return `<div class="stats__content">${statsContent}</div><div class="stats__timestamp" role="status" aria-label="Last updated">Last Updated: ${formatTimestamp(lastUpdated)}</div>`;
