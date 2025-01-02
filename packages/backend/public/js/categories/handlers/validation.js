@@ -37,6 +37,18 @@ function countLetters(str) {
 }
 
 /**
+ * Converts string to title case
+ * @private
+ * @param {string} str - String to convert
+ * @returns {string} Title cased string
+ */
+function toTitleCase(str) {
+    return str.split(/\s+/).map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    ).join(' ');
+}
+
+/**
  * Validates category name
  * @param {string} name - Category name to validate
  * @param {Object} [manager] - Category manager instance for showing messages
@@ -225,11 +237,7 @@ export function validateCategoryName(event, manager) {
         }
 
         // Convert to title case
-        const titleCased = words.map(word => 
-            word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
-        ).filter(Boolean).join(' ');
-
-        input.value = titleCased;
+        input.value = toTitleCase(value);
 
         return true;
     } catch (error) {
