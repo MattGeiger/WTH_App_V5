@@ -6,6 +6,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.25] - 2024-01-02
+### Fixed
+- Resolved timestamp handling in Category Statistics
+  - Fixed invalid date handling using RealDate constructor
+  - Added error handling for toLocaleString failures
+  - Improved relative time calculations
+  - Enhanced test coverage for timestamp edge cases
+- Tests passing with better error handling and date formatting
+
+### Development
+- Enhanced test suite robustness
+  - Added proper error state testing
+  - Improved timestamp validation coverage
+  - Added test coverage for formatting errors
+
 ## [0.5.24] - 2024-12-30
 ### Security
 - Added HTML escaping for category names in table display
