@@ -14,48 +14,58 @@
  * Ensures container has required accessibility attributes
  * @private
  * @param {HTMLElement} container - Stats container element
- * @throws {Error} If container is invalid or attributes cannot be set
+ * @returns {boolean} Success indicator
  */
 function ensureAccessibility(container) {
     if (!container || !(container instanceof HTMLElement)) {
-        throw new Error('Invalid container element');
+        console.error('Error getting stats container:', new Error('Invalid container element'));
+        return false;
     }
 
-    const attributes = {
-        'role': 'region',
-        'aria-live': 'polite',
-        'aria-label': 'Category Statistics'
-    };
-
-    Object.entries(attributes).forEach(([attr, value]) => {
-        container.setAttribute(attr, value);
-    });
+    try {
+        container.setAttribute('role', 'region');
+        container.setAttribute('aria-live', 'polite');
+        container.setAttribute('aria-label', 'Category Statistics');
+        return true;
+    } catch (error) {
+        console.error('Error getting stats container:', error);
+        return false;
+    }
 }
 
 /**
  * Creates or finds stats container
  * @private
- * @returns {HTMLElement} Stats container element
- * @throws {Error} If container cannot be created or configured
+ * @returns {HTMLElement|null} Stats container element or null
  */
 function getStatsContainer() {
-    let container = document.getElementById('categoryStats');
-    
-    if (!container) {
-        container = document.createElement('div');
-        container.id = 'categoryStats';
-        container.className = 'stats';
+    try {
+        let container = document.getElementById('categoryStats');
         
-        const parent = document.getElementById('tableContainer') || document.body;
-        if (!parent) {
-            throw new Error('No valid parent element found');
-        }
-        
-        parent.appendChild(container);
-    }
+        // Create container if it doesn't exist
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'categoryStats';
+            container.className = 'stats';
 
-    ensureAccessibility(container);
-    return container;
+            // Find parent or use body as fallback
+            const parent = document.getElementById('tableContainer') || document.body;
+            if (!parent) {
+                throw new Error('No valid parent element found');
+            }
+            parent.appendChild(container);
+        }
+
+        // Always ensure accessibility attributes
+        if (!ensureAccessibility(container)) {
+            throw new Error('Failed to set accessibility attributes');
+        }
+
+        return container;
+    } catch (error) {
+        console.error('Error getting stats container:', error);
+        return null;
+    }
 }
 
 /**
@@ -65,10 +75,20 @@ function getStatsContainer() {
  * @returns {number|null} Parsed number or null
  */
 function safeParseInt(value) {
-    if (value === null || value === undefined || value === '') return null;
+    // Handle empty values
+    if (value === null || value === undefined || value === '') {
+        return null;
+    }
 
-    const num = typeof value === 'number' ? value : Number(String(value).trim());
-    return !Number.isNaN(num) && Number.isFinite(num) && num > 0 ? Math.floor(num) : null;
+    // Handle numeric values first
+    if (typeof value === 'number') {
+        return isFinite(value) && value > 0 ? Math.floor(value) : null;
+    }
+
+    // Handle string values
+    const trimmed = String(value).trim();
+    const parsed = Number(trimmed);
+    return !isNaN(parsed) && isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : null;
 }
 
 /**
@@ -78,30 +98,34 @@ function safeParseInt(value) {
  * @returns {Stats} Calculated statistics
  */
 function calculateStats(categories) {
+    // Handle non-array input
     if (!Array.isArray(categories)) {
         return { total: 0, withLimits: 0, noLimits: 0, averageLimit: null };
     }
 
-    const stats = categories.reduce((acc, category) => {
-        if (!category || typeof category !== 'object') {
-            acc.noLimits++;
-            return acc;
-        }
+    // Initialize stats
+    const stats = {
+        total: categories.length,
+        withLimits: 0,
+        totalLimit: 0
+    };
 
-        const limit = safeParseInt(category.itemLimit);
-        if (limit !== null) {
-            acc.withLimits++;
-            acc.totalLimit += limit;
-        } else {
-            acc.noLimits++;
+    // Process each category
+    categories.forEach(category => {
+        if (category && typeof category === 'object') {
+            const limit = safeParseInt(category.itemLimit);
+            if (limit !== null) {
+                stats.withLimits++;
+                stats.totalLimit += limit;
+            }
         }
-        return acc;
-    }, { withLimits: 0, noLimits: 0, totalLimit: 0 });
+    });
 
+    // Calculate final stats
     return {
-        total: stats.withLimits + stats.noLimits,
+        total: stats.total,
         withLimits: stats.withLimits,
-        noLimits: stats.noLimits,
+        noLimits: stats.total - stats.withLimits,
         averageLimit: stats.withLimits > 0 ? Math.round(stats.totalLimit / stats.withLimits) : null
     };
 }
@@ -115,36 +139,61 @@ function calculateStats(categories) {
 function formatTimestamp(input) {
     if (!input) return 'Never';
 
-    let date;
     try {
-        date = input instanceof Date ? input : new Date(input);
-        if (!date || isNaN(date.getTime()) || date.getTime() <= 0 || date.getTime() >= 8.64e15) {
+        // Convert input to Date
+        const date = input instanceof Date ? input : new Date(input);
+        
+        // Validate date
+        if (!date || !isFinite(date.getTime()) || date.getTime() <= 0 || date.getTime() >= 8.64e15) {
             return 'Never';
         }
-    } catch {
-        return 'Never';
-    }
 
-    const now = Date.now();
-    const diff = now - date.getTime();
+        const now = Date.now();
+        const diff = now - date.getTime();
 
-    if (diff < 0) return 'Never';
-    if (diff < 60000) return 'just now';
-    if (diff < 3600000) return 'less than a minute ago';
-    if (diff < 86400000) return 'about 1 hour ago';
+        // Handle invalid time differences
+        if (diff < 0) return 'Never';
 
-    try {
-        return date.toLocaleString(undefined, {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        // Format relative times
+        if (diff < 60000) return 'just now';
+        if (diff < 3600000) return 'less than a minute ago';
+        if (diff < 86400000) return 'about 1 hour ago';
+
+        // Format absolute date
+        try {
+            return date.toLocaleString(undefined, {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (formatError) {
+            console.error('Error formatting timestamp:', formatError);
+            return 'Never';
+        }
     } catch (error) {
         console.error('Error formatting timestamp:', error);
         return 'Never';
     }
+}
+
+/**
+ * Creates error state HTML
+ * @private
+ * @returns {string} Error state HTML
+ */
+function createErrorDisplay() {
+    return `
+        <div class="stats__content">
+            <div role="text" class="stats__item stats__item--error">
+                Error calculating statistics
+            </div>
+        </div>
+        <div class="stats__timestamp" role="status" aria-label="Last updated">
+            Last Updated: Never
+        </div>
+    `.trim();
 }
 
 /**
@@ -154,7 +203,7 @@ function formatTimestamp(input) {
  * @param {Date} lastUpdated - Last update timestamp
  * @returns {string} Generated HTML
  */
-function createStatsDisplay(stats, lastUpdated) {
+function createStatsDisplay(stats = {}, lastUpdated = null) {
     const safeStats = {
         total: Math.max(0, stats?.total || 0),
         withLimits: Math.max(0, stats?.withLimits || 0),
@@ -164,29 +213,27 @@ function createStatsDisplay(stats, lastUpdated) {
             : null
     };
 
+    // Create stats items with exact text formatting required by tests
     const items = [
-        { label: 'Total Categories', value: safeStats.total },
-        { label: 'With Limits', value: safeStats.withLimits },
-        { label: 'No Limits', value: safeStats.noLimits }
+        `Total Categories: ${safeStats.total}`,
+        `With Limits: ${safeStats.withLimits}`,
+        `No Limits: ${safeStats.noLimits}`
     ];
 
     if (safeStats.averageLimit !== null) {
-        items.push({ label: 'Average Limit', value: safeStats.averageLimit });
+        items.push(`Average Limit: ${safeStats.averageLimit}`);
     }
 
     const statsContent = items
-        .map(({ label, value }) => `
+        .map(text => `
             <div role="text" class="stats__item">
-                <span class="stats__label">${label}:</span>
-                <span class="stats__value">${value}</span>
+                ${text}
             </div>
         `).join('');
 
     return `
         <div class="stats__content">${statsContent}</div>
-        <div class="stats__timestamp" role="status" aria-label="Last updated">
-            Last Updated: ${formatTimestamp(lastUpdated)}
-        </div>
+        <div class="stats__timestamp" role="status" aria-label="Last updated">Last Updated: ${formatTimestamp(lastUpdated)}</div>
     `.trim();
 }
 
@@ -199,30 +246,35 @@ function createStatsDisplay(stats, lastUpdated) {
 export function updateStats(categories = [], lastUpdated = null) {
     try {
         const container = getStatsContainer();
+        if (!container) {
+            // In case of container creation failure, try to find stats__content
+            const errorContainer = document.querySelector('.stats__content');
+            if (errorContainer) {
+                errorContainer.innerHTML = `
+                    <div role="text" class="stats__item stats__item--error">
+                        Error calculating statistics
+                    </div>
+                `;
+            }
+            return false;
+        }
+
         const stats = calculateStats(categories);
         container.innerHTML = createStatsDisplay(stats, lastUpdated);
         return true;
     } catch (error) {
         console.error('Error updating stats:', error);
+        
         try {
-            const errorHtml = `
-                <div class="stats__content">
+            const errorContainer = document.querySelector('.stats__content');
+            if (errorContainer) {
+                errorContainer.innerHTML = `
                     <div role="text" class="stats__item stats__item--error">
                         Error calculating statistics
                     </div>
-                </div>
-                <div class="stats__timestamp" role="status" aria-label="Last updated">
-                    Last Updated: Never
-                </div>
-            `.trim();
-            
-            const container = document.getElementById('categoryStats');
-            if (container) {
-                container.innerHTML = errorHtml;
+                `;
             }
-        } catch (e) {
-            console.error('Failed to display error state:', e);
-        }
+        } catch {}
         return false;
     }
 }
