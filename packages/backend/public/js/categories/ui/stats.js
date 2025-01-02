@@ -159,7 +159,18 @@ function formatTimestamp(input) {
             return 'Never';
         }
 
-        const now = RealDate.now();
+        // Verify toLocaleString functionality
+        try {
+            const testFormat = date.toLocaleString();
+            if (!testFormat) {
+                return 'Never';
+            }
+        } catch (error) {
+            console.error('Error formatting timestamp:', error);
+            return 'Never';
+        }
+
+        const now = Date.now();
         const diff = now - date.getTime();
 
         if (diff < 0) return 'Never';
@@ -167,13 +178,18 @@ function formatTimestamp(input) {
         if (diff < 3600000) return 'less than a minute ago';
         if (diff < 86400000) return 'about 1 hour ago';
 
-        return date.toLocaleString(undefined, {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        try {
+            return date.toLocaleString(undefined, {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (error) {
+            console.error('Error formatting timestamp:', error);
+            return 'Never';
+        }
     } catch {
         return 'Never';
     }
