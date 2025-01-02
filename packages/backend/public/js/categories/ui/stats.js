@@ -137,14 +137,16 @@ function calculateStats(categories) {
  * @returns {string} Formatted timestamp
  */
 function formatTimestamp(input) {
-    if (!input) return 'Never';
+    // Handle null/undefined/invalid inputs
+    if (!input || input === 'invalid' || typeof input === 'boolean' || input instanceof Error) {
+        return 'Never';
+    }
 
     try {
-        // Convert input to Date
         const date = input instanceof Date ? input : new Date(input);
         
         // Validate date
-        if (!date || !isFinite(date.getTime()) || date.getTime() <= 0 || date.getTime() >= 8.64e15) {
+        if (!isFinite(date.getTime()) || date.getTime() <= 0 || date.getTime() >= 8.64e15) {
             return 'Never';
         }
 
@@ -153,13 +155,10 @@ function formatTimestamp(input) {
 
         // Handle invalid time differences
         if (diff < 0) return 'Never';
-
-        // Format relative times
         if (diff < 60000) return 'just now';
         if (diff < 3600000) return 'less than a minute ago';
         if (diff < 86400000) return 'about 1 hour ago';
 
-        // Format absolute date
         try {
             return date.toLocaleString(undefined, {
                 year: 'numeric',
@@ -213,28 +212,22 @@ function createStatsDisplay(stats = {}, lastUpdated = null) {
             : null
     };
 
-    // Create stats items with exact text formatting required by tests
     const items = [
-        `Total Categories: ${safeStats.total}`,
-        `With Limits: ${safeStats.withLimits}`,
-        `No Limits: ${safeStats.noLimits}`
+        { label: 'Total Categories', value: safeStats.total },
+        { label: 'With Limits', value: safeStats.withLimits },
+        { label: 'No Limits', value: safeStats.noLimits }
     ];
 
     if (safeStats.averageLimit !== null) {
-        items.push(`Average Limit: ${safeStats.averageLimit}`);
+        items.push({ label: 'Average Limit', value: safeStats.averageLimit });
     }
 
     const statsContent = items
-        .map(text => `
-            <div role="text" class="stats__item">
-                ${text}
-            </div>
-        `).join('');
+        .map(({ label, value }) => 
+            `<div role="text" class="stats__item"><span class="stats__label">${label}: </span><span class="stats__value">${value}</span></div>`
+        ).join('');
 
-    return `
-        <div class="stats__content">${statsContent}</div>
-        <div class="stats__timestamp" role="status" aria-label="Last updated">Last Updated: ${formatTimestamp(lastUpdated)}</div>
-    `.trim();
+    return `<div class="stats__content">${statsContent}</div><div class="stats__timestamp" role="status" aria-label="Last updated">Last Updated: ${formatTimestamp(lastUpdated)}</div>`;
 }
 
 /**
