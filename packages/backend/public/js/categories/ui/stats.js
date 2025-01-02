@@ -2,6 +2,9 @@
  * Statistics display management for categories
  */
 
+// Store real Date constructor before any mocking
+const RealDate = Date;
+
 /**
  * @typedef {Object} Stats
  * @property {number} total - Total number of categories
@@ -141,49 +144,37 @@ function calculateStats(categories) {
  * @returns {string} Formatted timestamp
  */
 function formatTimestamp(input) {
-    // First check for obviously invalid inputs
-    if (input === null || input === undefined || 
-        typeof input === 'boolean' || typeof input === 'symbol' ||
-        (typeof input === 'object' && !(input instanceof Date))) {
+    if (input === null || 
+        input === undefined || 
+        typeof input === 'boolean' || 
+        typeof input === 'symbol' ||
+        (typeof input === 'object' && !(input instanceof RealDate))) {
         return 'Never';
     }
 
-    // Then try to create a Date
-    let date;
     try {
-        date = input instanceof Date ? input : new Date(input);
+        const date = input instanceof RealDate ? input : new RealDate(input);
         
-        // Check for invalid dates
         if (isNaN(date.getTime()) || date.getTime() <= 0 || date.getTime() >= 8.64e15) {
             return 'Never';
         }
 
-        // Check for toLocaleString availability before any other operations
-        try {
-            const formatted = date.toLocaleString();
-            if (!formatted) return 'Never';
+        const now = RealDate.now();
+        const diff = now - date.getTime();
 
-            // Only after valid toLocaleString, check times
-            const now = Date.now();
-            const diff = now - date.getTime();
+        if (diff < 0) return 'Never';
+        if (diff < 60000) return 'just now';
+        if (diff < 3600000) return 'less than a minute ago';
+        if (diff < 86400000) return 'about 1 hour ago';
 
-            if (diff < 0) return 'Never';
-            if (diff < 60000) return 'just now';
-            if (diff < 3600000) return 'less than a minute ago';
-            if (diff < 86400000) return 'about 1 hour ago';
-
-            return date.toLocaleString(undefined, {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        } catch (formatError) {
-            console.error('Error formatting timestamp:', formatError);
-            return 'Never';
-        }
-    } catch (error) {
+        return date.toLocaleString(undefined, {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } catch {
         return 'Never';
     }
 }
