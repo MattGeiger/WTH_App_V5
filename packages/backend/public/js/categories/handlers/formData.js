@@ -1,167 +1,61 @@
 /**
- * Form data collection and validation
+ * Form data collection and validation for Categories
  */
 
 /**
- * Normalizes whitespace in a string
+ * Normalizes whitespace in a string, converting multiple spaces, tabs, and newlines to single spaces
  * @private
- * @param {string} str - String to normalize
+ * @param {string} value - String to normalize
  * @returns {string} Normalized string
  */
-function normalizeWhitespace(str) {
-    return String(str || '').trim().replace(/\s+/g, ' ');
+function normalizeWhitespace(value) {
+    return (value || '').trim().replace(/\s+/g, ' ');
 }
 
 /**
- * Safely parses an integer with validation
+ * Safely parses a positive integer, returning null for invalid or non-positive values
  * @private
- * @param {*} value - Value to parse
- * @param {number} defaultValue - Default value if parsing fails
- * @returns {number} Parsed number or default value
+ * @param {string|number} value - Value to parse
+ * @returns {number|null} Parsed number or null if invalid
  */
-function safeParseInt(value, defaultValue = 0) {
-    if (value === null || value === undefined) return defaultValue;
+function parsePositiveInt(value) {
     const parsed = parseInt(value, 10);
-    return !isNaN(parsed) && isFinite(parsed) ? parsed : defaultValue;
+    return (!isNaN(parsed) && parsed > 0 && parsed === Number(value)) ? parsed : null;
 }
 
 /**
- * Collects form data from category form
- * @returns {Object} Form data with defaults if empty/invalid
+ * Safely parses a non-negative integer, returning 0 for invalid values
+ * @private
+ * @param {string|number} value - Value to parse
+ * @returns {number} Parsed number or 0 if invalid
  */
-export function collectFormData() {
-    try {
-        const idInput = document.getElementById('categoryId');
-        const nameInput = document.getElementById('categoryName');
-        const limitInput = document.getElementById('categoryItemLimit');
+function parseNonNegativeInt(value) {
+    const parsed = parseInt(value, 10);
+    return (!isNaN(parsed) && parsed >= 0 && parsed === Number(value)) ? parsed : 0;
+}
 
-        // Default values
-        let id = null;
-        let name = '';
-        let itemLimit = 0;
-
-        // Parse ID if present
-        if (idInput?.value) {
-            const parsedId = safeParseInt(idInput.value);
-            if (parsedId > 0) {
-                id = parsedId;
-            }
-        }
-
-        // Get and normalize name
-        if (nameInput?.value) {
-            name = normalizeWhitespace(nameInput.value);
-        }
-
-        // Parse item limit
-        if (limitInput?.value) {
-            const parsedLimit = safeParseInt(limitInput.value);
-            if (parsedLimit >= 0) {
-                itemLimit = parsedLimit;
-            }
-        }
-
-        return { id, name, itemLimit };
-    } catch (error) {
-        console.error('Error collecting form data:', error);
+/**
+ * Collects form data from category form using manager
+ * @param {Object} manager - Category manager instance with form element references
+ * @returns {Object} Collected form data with defaults for missing/invalid values
+ */
+export function collectFormData(manager) {
+    if (!manager) {
         return { id: null, name: '', itemLimit: 0 };
     }
-}
 
-/**
- * Checks if form data is empty
- * @param {Object} data - Form data to check
- * @returns {boolean} True if form is empty or contains only whitespace
- */
-export function isFormEmpty(data) {
-    if (!data || typeof data !== 'object' || Array.isArray(data)) {
-        return true;
-    }
-    
-    const name = data.name;
-    if (name === null || name === undefined) {
-        return true;
-    }
+    // Get and normalize name with fallback to empty string
+    const name = normalizeWhitespace(manager.nameInput?.value);
 
-    return !String(name).trim();
-}
+    // Get ID with validation for positive integers
+    const id = parsePositiveInt(manager.idInput?.value);
 
-/**
- * Formats form data for display/UI
- * @param {Object} data - Raw form data
- * @returns {Object} Formatted data with string values
- */
-export function formatFormData(data = {}) {
-    const defaults = {
-        name: 'Unnamed Category',
-        itemLimit: 'No Limit',
-        id: 'New'
-    };
-
-    // Handle invalid input
-    if (!data || typeof data !== 'object' || Array.isArray(data)) {
-        return { ...defaults };
-    }
-
-    // Extract and process values
-    const { name, itemLimit, id, ...rest } = data;
-
-    // Process name
-    const formattedName = normalizeWhitespace(name);
-
-    // Process item limit
-    let formattedLimit = 'No Limit';
-    if (itemLimit !== null && itemLimit !== undefined && itemLimit !== '') {
-        const numLimit = safeParseInt(itemLimit);
-        formattedLimit = numLimit === 0 ? 'No Limit' : String(numLimit);
-    }
-
-    // Process ID
-    let formattedId = defaults.id;
-    if (id !== null && id !== undefined && id !== '') {
-        formattedId = String(id);
-    }
+    // Get item limit with fallback to 0 for invalid values
+    const itemLimit = parseNonNegativeInt(manager.itemLimitSelect?.value);
 
     return {
-        ...rest,
-        name: formattedName || defaults.name,
-        itemLimit: formattedLimit,
-        id: formattedId
+        id,
+        name,
+        itemLimit
     };
-}
-
-/**
- * Formats form data for API submission
- * @param {Object} data - Form data to format
- * @returns {Object|null} Formatted data or null if invalid
- */
-export function formatForSubmission(data) {
-    // Handle invalid input
-    if (!data || typeof data !== 'object' || Array.isArray(data)) {
-        return null;
-    }
-
-    // Process name
-    const trimmedName = normalizeWhitespace(data.name);
-    
-    // Handle empty state
-    if (!trimmedName) {
-        return {
-            name: '',
-            itemLimit: 0
-        };
-    }
-
-    // Create result object
-    const result = {
-        name: trimmedName,
-        itemLimit: safeParseInt(data.itemLimit)
-    };
-
-    // Add ID if valid
-    if (data.id && data.id !== 'New' && data.id !== '') {
-        result.id = String(data.id);
-    }
-
-    return result;
 }

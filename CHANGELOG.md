@@ -6,6 +6,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.28] - 2024-01-03
+### Changed
+- Refactored Categories form data handling
+  - Simplified data collection using manager pattern
+  - Improved validation and error handling
+  - Enhanced test coverage and organization
+  - Aligned with Food Items implementation pattern
+  - Better type handling for numeric inputs
+  - More robust whitespace normalization
+  - Clearer separation of concerns
+
+### Fixed
+- Categories form data handling edge cases
+  - Proper handling of decimal number inputs
+  - Consistent behavior for invalid number values
+  - Better null and undefined handling
+  - Improved whitespace normalization
+  - More reliable ID validation
+
+### Development
+- Enhanced Categories test organization
+  - Restructured test suites for clarity
+  - Improved test coverage metrics
+  - Better error case handling
+  - More consistent test patterns
+  - Aligned with project standards
+
+### Technical Debt
+- Reduced code complexity in Categories module
+- Improved code maintainability
+- Better alignment between modules
+- More consistent validation patterns
+
 ## [0.5.27] - 2024-01-03
 ### Fixed
 - Enhanced formatter utilities consistency and reliability
