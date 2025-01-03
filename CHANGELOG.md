@@ -6,6 +6,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.27] - 2024-01-03
+### Fixed
+- Enhanced formatter utilities consistency and reliability
+  - Improved error handling in date formatting
+  - Standardized invalid input handling across formatters
+  - Fixed decimal string validation in limit formatting
+  - Enhanced constructor error handling in relative time formatting
+  - Aligned error states with test expectations
+  
+### Changed
+- Standardized formatter response patterns
+  - Consistent "Invalid date" vs "Never" messaging
+  - Better type validation sequences
+  - More robust object conversion handling
+  - Enhanced primitive type handling
+
+### Development
+- Improved test alignment with Food Items implementation
+  - Fixed all failing formatter tests
+  - Enhanced test coverage validation 
+  - Better edge case handling
+  - More consistent error state testing
+
 ## [0.5.26] - 2024-01-03
 ### Fixed
 - Resolved Categories form test suite inconsistencies
