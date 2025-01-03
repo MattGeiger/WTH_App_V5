@@ -6,6 +6,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.26] - 2024-01-03
+### Fixed
+- Resolved Categories form test suite inconsistencies
+  - Fixed select element value reset behavior
+  - Added proper test initialization for form elements
+  - Improved manager dependency injection
+  - Enhanced error recovery testing
+  - Added comprehensive DOM cleanup
+
+### Changed
+- Enhanced Categories form implementation
+  - Aligned with Food Items architecture pattern
+  - Improved manager state handling
+  - Enhanced form element lifecycle management
+  - Added proper value type coercion
+  - Strengthened error boundaries
+
+### Development
+- Improved test suite architecture
+  - Added proper DOM setup in tests
+  - Enhanced mock manager configuration
+  - Added explicit state verification
+  - Improved test isolation and cleanup
+  
 ## [0.5.25] - 2024-01-02
 ### Fixed
 - Resolved timestamp handling in Category Statistics

@@ -3,43 +3,38 @@
  */
 
 /**
- * Creates form layout
+ * Creates or updates form layout
+ * @param {Object} manager - Category manager instance
  * @returns {HTMLFormElement} Form element
  */
-export function createFormLayout() {
-    const existingForm = document.getElementById('categoryForm');
-    if (existingForm) return existingForm;
-
-    const form = document.createElement('form');
-    form.id = 'categoryForm';
-    form.className = 'form';
-    form.setAttribute('aria-label', 'Category management form');
-
-    try {
-        // Setup form structure
-        appendHiddenFields(form);
-        appendNameField(form);
-        appendLimitField(form);
-        appendButtons(form);
-    } catch (error) {
-        console.error('Error creating form layout:', error);
-        // Return basic form if elements fail to append
-        return form;
+export function createFormLayout(manager) {
+    if (!manager || !manager.form) {
+        throw new Error('Invalid manager or missing form element');
     }
 
-    return form;
+    // Clear existing form content
+    while (manager.form.firstChild) {
+        manager.form.removeChild(manager.form.firstChild);
+    }
+
+    manager.form.id = 'categoryForm';
+    manager.form.className = 'form';
+    manager.form.setAttribute('aria-label', 'Category management form');
+
+    // Add form sections
+    appendHiddenFields(manager.form);
+    appendNameField(manager.form);
+    appendLimitField(manager.form, manager.settingsManager);
+    appendButtons(manager.form);
+
+    return manager.form;
 }
 
 /**
  * Appends hidden fields to form
  * @param {HTMLFormElement} form - Form element
- * @throws {Error} If form parameter is invalid
  */
 function appendHiddenFields(form) {
-    if (!form || !(form instanceof HTMLFormElement)) {
-        throw new Error('Invalid form element');
-    }
-
     const idInput = document.createElement('input');
     idInput.type = 'hidden';
     idInput.id = 'categoryId';
@@ -49,13 +44,8 @@ function appendHiddenFields(form) {
 /**
  * Appends name field to form
  * @param {HTMLFormElement} form - Form element
- * @throws {Error} If form parameter is invalid
  */
 function appendNameField(form) {
-    if (!form || !(form instanceof HTMLFormElement)) {
-        throw new Error('Invalid form element');
-    }
-
     const group = document.createElement('div');
     group.className = 'form__group';
 
@@ -81,13 +71,9 @@ function appendNameField(form) {
 /**
  * Appends limit field to form
  * @param {HTMLFormElement} form - Form element
- * @throws {Error} If form parameter is invalid
+ * @param {Object} settingsManager - Settings manager instance
  */
-function appendLimitField(form) {
-    if (!form || !(form instanceof HTMLFormElement)) {
-        throw new Error('Invalid form element');
-    }
-
+function appendLimitField(form, settingsManager) {
     const group = document.createElement('div');
     group.className = 'form__group';
 
@@ -105,6 +91,17 @@ function appendLimitField(form) {
     defaultOption.textContent = 'No Limit';
     select.appendChild(defaultOption);
 
+    // Add limit options if settings manager available
+    if (settingsManager?.getCurrentLimit) {
+        const maxLimit = settingsManager.getCurrentLimit();
+        for (let i = 1; i <= maxLimit; i++) {
+            const option = document.createElement('option');
+            option.value = i.toString();
+            option.textContent = i.toString();
+            select.appendChild(option);
+        }
+    }
+
     group.appendChild(label);
     group.appendChild(select);
     form.appendChild(group);
@@ -113,13 +110,8 @@ function appendLimitField(form) {
 /**
  * Appends action buttons to form
  * @param {HTMLFormElement} form - Form element
- * @throws {Error} If form parameter is invalid
  */
 function appendButtons(form) {
-    if (!form || !(form instanceof HTMLFormElement)) {
-        throw new Error('Invalid form element');
-    }
-
     const group = document.createElement('div');
     group.className = 'form__buttons';
 
@@ -143,76 +135,64 @@ function appendButtons(form) {
 
 /**
  * Updates form state
+ * @param {Object} manager - Category manager instance
  * @param {boolean} isEdit - Whether form is in edit mode
  * @param {boolean} [skipReset=false] - Whether to skip form reset
  */
-export function updateFormState(isEdit, skipReset = false) {
-    try {
-        const form = document.getElementById('categoryForm');
-        if (!form) {
-            console.warn('Form not found for state update');
-            return;
-        }
+export function updateFormState(manager, isEdit, skipReset = false) {
+    if (!manager?.form) return;
 
-        const submitBtn = form.querySelector('button[type="submit"]');
-        if (!submitBtn) {
-            console.warn('Submit button not found for state update');
-            return;
-        }
+    const submitBtn = manager.form.querySelector('button[type="submit"]');
+    if (!submitBtn) return;
 
-        if (isEdit) {
-            submitBtn.textContent = 'Update Category';
-            submitBtn.setAttribute('aria-label', 'Update category');
-        } else {
-            submitBtn.textContent = 'Add Category';
-            submitBtn.setAttribute('aria-label', 'Add category');
-            
-            if (!skipReset) {
-                clearFormFields();
-            }
-        }
-    } catch (error) {
-        console.error('Error updating form state:', error);
+    // Update button state
+    submitBtn.textContent = isEdit ? 'Update Category' : 'Add Category';
+    submitBtn.setAttribute('aria-label', isEdit ? 'Update category' : 'Add category');
+
+    // Handle form reset
+    if (!isEdit && !skipReset) {
+        clearFormFields(manager.form);
     }
 }
 
 /**
- * Internal helper to clear form fields without triggering events
- * @private
+ * Clear form fields
+ * @param {HTMLFormElement} form - Form element
  */
-function clearFormFields() {
-    try {
-        const nameInput = document.getElementById('categoryName');
-        const idInput = document.getElementById('categoryId');
-        const limitSelect = document.getElementById('categoryItemLimit');
-        
-        // Clear each field if it exists
-        if (nameInput) {
-            nameInput.value = '';
-            nameInput.setAttribute('aria-invalid', 'false');
-        }
-        
-        if (idInput) {
-            idInput.value = '';
-        }
-        
-        if (limitSelect) {
-            limitSelect.selectedIndex = 0;
-        }
-    } catch (error) {
-        console.error('Error clearing form fields:', error);
+function clearFormFields(form) {
+    if (!form) return;
+
+    const nameInput = form.querySelector('#categoryName');
+    if (nameInput) {
+        nameInput.value = '';
+        nameInput.setAttribute('aria-invalid', 'false');
+    }
+
+    const idInput = form.querySelector('#categoryId');
+    if (idInput) {
+        idInput.value = '';
+    }
+
+    const limitSelect = form.querySelector('#categoryItemLimit');
+    if (limitSelect) {
+        // Ensure '0' is set as string to match <option> value
+        limitSelect.value = '0'; 
     }
 }
 
 /**
  * Public method to clear form
- * Prevents circular dependency with CategoryManager reset handler
+ * @param {Object} manager - Category manager instance
  */
-export function clearForm() {
+export function clearForm(manager) {
+    if (!manager?.form) return;
+    
     try {
-        clearFormFields();
-        updateFormState(false, true); // Skip reset in updateFormState
+        clearFormFields(manager.form);
+        updateFormState(manager, false, true);
     } catch (error) {
         console.error('Error clearing form:', error);
+        // Attempt state update even if clear fails
+        updateFormState(manager, false, true);
     }
 }

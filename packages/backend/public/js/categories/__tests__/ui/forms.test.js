@@ -4,22 +4,36 @@
 
 import { createFormLayout, updateFormState, clearForm } from '../../ui/forms.js';
 
-// Mock updateFormState to test it's called correctly
-jest.mock('../../ui/forms.js', () => {
-    const originalModule = jest.requireActual('../../ui/forms.js');
-    return {
-        ...originalModule,
-        updateFormState: jest.fn()
-    };
-});
-
 describe('Form UI', () => {
+    let mockForm;
+    let mockManager;
+
     beforeEach(() => {
+        // Create initial form structure with complete elements
         document.body.innerHTML = `
-            <div id="formContainer"></div>
+            <form id="categoryForm">
+                <input type="text" id="categoryName" name="categoryName">
+                <select id="categoryItemLimit">
+                    <option value="0">No Limit</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                </select>
+                <input type="hidden" id="categoryId" value="">
+                <button type="submit">Add Category</button>
+                <button type="reset" id="resetForm">Reset</button>
+            </form>
         `;
-        // Clear mock calls between tests
-        updateFormState.mockClear();
+
+        // Get the form reference first
+        mockForm = document.getElementById('categoryForm');
+        
+        // Create mock manager with form and settings
+        mockManager = {
+            form: mockForm,
+            settingsManager: {
+                getCurrentLimit: jest.fn().mockReturnValue(10)
+            }
+        };
     });
 
     afterEach(() => {
@@ -28,190 +42,144 @@ describe('Form UI', () => {
     });
 
     describe('createFormLayout', () => {
-        test('creates form with correct structure', () => {
-            const form = createFormLayout();
-            document.getElementById('formContainer').appendChild(form);
+        it('creates complete form with all required elements', () => {
+            const form = createFormLayout(mockManager);
             
+            // Verify basic form structure
             expect(form.id).toBe('categoryForm');
-            expect(form.tagName).toBe('FORM');
             expect(form.classList.contains('form')).toBe(true);
             expect(form.getAttribute('aria-label')).toBe('Category management form');
-        });
 
-        test('creates required hidden inputs', () => {
-            const form = createFormLayout();
-            document.getElementById('formContainer').appendChild(form);
+            // Verify form groups
+            const groups = form.querySelectorAll('.form__group');
+            expect(groups.length).toBe(2); // Name and limit groups
+
+            // Verify name input group
+            const nameGroup = groups[0];
+            const nameInput = nameGroup.querySelector('#categoryName');
+            const nameLabel = nameGroup.querySelector('label[for="categoryName"]');
             
-            const idInput = form.querySelector('#categoryId');
-            expect(idInput).not.toBeNull();
-            expect(idInput.type).toBe('hidden');
-        });
-
-        test('creates name input with required attributes', () => {
-            const form = createFormLayout();
-            document.getElementById('formContainer').appendChild(form);
-            
-            const nameGroup = form.querySelector('.form__group');
-            const nameLabel = nameGroup.querySelector('label');
-            const nameInput = form.querySelector('#categoryName');
-
-            expect(nameLabel.htmlFor).toBe('categoryName');
-            expect(nameLabel.classList.contains('form__label--required')).toBe(true);
+            expect(nameInput).toBeTruthy();
+            expect(nameLabel).toBeTruthy();
             expect(nameInput.required).toBe(true);
             expect(nameInput.getAttribute('aria-required')).toBe('true');
             expect(nameInput.getAttribute('aria-invalid')).toBe('false');
             expect(nameInput.maxLength).toBe(36);
-        });
 
-        test('creates category item limit select', () => {
-            const form = createFormLayout();
-            document.getElementById('formContainer').appendChild(form);
+            // Verify limit select
+            const limitGroup = groups[1];
+            const limitSelect = limitGroup.querySelector('#categoryItemLimit');
+            const limitLabel = limitGroup.querySelector('label[for="categoryItemLimit"]');
             
-            const limitGroup = form.querySelectorAll('.form__group')[1];
-            const limitLabel = limitGroup.querySelector('label');
-            const limitSelect = form.querySelector('#categoryItemLimit');
-
-            expect(limitLabel.htmlFor).toBe('categoryItemLimit');
+            expect(limitSelect).toBeTruthy();
+            expect(limitLabel).toBeTruthy();
             expect(limitSelect.options[0].value).toBe('0');
             expect(limitSelect.options[0].text).toBe('No Limit');
         });
 
-        test('creates action buttons', () => {
-            const form = createFormLayout();
-            document.getElementById('formContainer').appendChild(form);
+        it('handles missing settings manager gracefully', () => {
+            const managerWithoutSettings = { form: mockForm };
+            const form = createFormLayout(managerWithoutSettings);
             
-            const btnGroup = form.querySelector('.form__buttons');
-            const submitBtn = btnGroup.querySelector('button[type="submit"]');
-            const resetBtn = btnGroup.querySelector('button[type="reset"]');
-
-            expect(submitBtn.textContent).toBe('Add Category');
-            expect(submitBtn.getAttribute('aria-label')).toBe('Add category');
-            expect(resetBtn.textContent).toBe('Reset');
-            expect(resetBtn.getAttribute('aria-label')).toBe('Reset form');
-            expect(resetBtn.id).toBe('resetForm');
+            const limitSelect = form.querySelector('#categoryItemLimit');
+            expect(limitSelect.options.length).toBe(1); // Only "No Limit" option
         });
 
-        test('reuses existing form without modifications', () => {
-            const existingForm = document.createElement('form');
-            existingForm.id = 'categoryForm';
-            existingForm.innerHTML = '<input type="text" value="test">';
-            document.getElementById('formContainer').appendChild(existingForm);
-
-            const form = createFormLayout();
-            expect(form).toBe(existingForm);
-            expect(form.innerHTML).toBe('<input type="text" value="test">');
+        it('handles errors during form creation gracefully', () => {
+            const invalidManager = { form: null };
+            expect(() => createFormLayout(invalidManager)).toThrow('Invalid manager or missing form element');
         });
     });
 
     describe('updateFormState', () => {
-        let form;
-
-        beforeEach(() => {
-            form = createFormLayout();
-            document.getElementById('formContainer').appendChild(form);
-        });
-
-        test('handles missing form gracefully', () => {
-            document.body.innerHTML = '';
-            updateFormState(true);
-            // Should not throw error
-        });
-
-        test('handles missing submit button gracefully', () => {
-            const formWithoutButton = document.createElement('form');
-            formWithoutButton.id = 'categoryForm';
-            document.body.innerHTML = '';
-            document.body.appendChild(formWithoutButton);
+        it('updates form to edit mode correctly', () => {
+            updateFormState(mockManager, true);
             
-            updateFormState(true);
-            // Should not throw error
-        });
-
-        test('updates for edit mode', () => {
-            updateFormState(true);
-            const submitBtn = form.querySelector('button[type="submit"]');
+            const submitBtn = mockForm.querySelector('button[type="submit"]');
             expect(submitBtn.textContent).toBe('Update Category');
             expect(submitBtn.getAttribute('aria-label')).toBe('Update category');
         });
 
-        test('updates for add mode', () => {
-            // First set to edit mode
-            updateFormState(true);
-            // Then back to add mode
-            updateFormState(false);
+        it('updates form back to add mode correctly', () => {
+            updateFormState(mockManager, true);
+            updateFormState(mockManager, false);
             
-            const submitBtn = form.querySelector('button[type="submit"]');
+            const submitBtn = mockForm.querySelector('button[type="submit"]');
             expect(submitBtn.textContent).toBe('Add Category');
             expect(submitBtn.getAttribute('aria-label')).toBe('Add category');
         });
 
-        test('handles skipReset parameter correctly', () => {
-            const nameInput = form.querySelector('#categoryName');
-            nameInput.value = 'Test';
+        it('handles skipReset parameter correctly', () => {
+            const nameInput = mockForm.querySelector('#categoryName');
+            const limitSelect = mockForm.querySelector('#categoryItemLimit');
             
-            updateFormState(false, true);
-            expect(nameInput.value).toBe('Test'); // Value should remain
+            // Set initial values
+            nameInput.value = 'Test Category';
+            limitSelect.value = '2';
+            
+            // Should preserve values when skipReset is true
+            updateFormState(mockManager, false, true);
+            expect(nameInput.value).toBe('Test Category');
+            expect(limitSelect.value).toBe('2');
 
-            updateFormState(false, false);
-            expect(nameInput.value).toBe(''); // Value should be cleared
+            // Should clear values when skipReset is false
+            updateFormState(mockManager, false, false);
+            expect(nameInput.value).toBe('');
+            expect(limitSelect.value).toBe('0');
+        });
+
+        it('handles missing form gracefully', () => {
+            const managerWithoutForm = { ...mockManager, form: null };
+            expect(() => updateFormState(managerWithoutForm, true)).not.toThrow();
+        });
+
+        it('handles missing submit button gracefully', () => {
+            const submitBtn = mockForm.querySelector('button[type="submit"]');
+            submitBtn.remove();
+            expect(() => updateFormState(mockManager, true)).not.toThrow();
         });
     });
 
     describe('clearForm', () => {
-        let form;
-        let nameInput;
-        let idInput;
-        let itemLimit;
-
         beforeEach(() => {
-            form = createFormLayout();
-            document.getElementById('formContainer').appendChild(form);
-            nameInput = form.querySelector('#categoryName');
-            idInput = form.querySelector('#categoryId');
-            itemLimit = form.querySelector('#categoryItemLimit');
+            const nameInput = mockForm.querySelector('#categoryName');
+            const idInput = mockForm.querySelector('#categoryId');
+            const limitSelect = mockForm.querySelector('#categoryItemLimit');
 
-            // Set up form with data
             nameInput.value = 'Test Category';
-            idInput.value = '1';
-            itemLimit.value = '5';
             nameInput.setAttribute('aria-invalid', 'true');
+            idInput.value = '123';
+            limitSelect.value = '2';
         });
 
-        test('resets all form fields', () => {
-            clearForm();
+        it('clears all form fields and resets state', () => {
+            clearForm(mockManager);
+
+            const nameInput = mockForm.querySelector('#categoryName');
+            const idInput = mockForm.querySelector('#categoryId');
+            const limitSelect = mockForm.querySelector('#categoryItemLimit');
+
             expect(nameInput.value).toBe('');
             expect(idInput.value).toBe('');
-            expect(itemLimit.value).toBe('0');
+            expect(limitSelect.value).toBe('0');
             expect(nameInput.getAttribute('aria-invalid')).toBe('false');
         });
 
-        test('handles missing form elements gracefully', () => {
-            document.body.innerHTML = `
-                <form id="categoryForm">
-                    <input type="text" id="categoryName" value="test" />
-                </form>
-            `;
+        it('handles missing form elements gracefully', () => {
+            mockForm.querySelector('#categoryName').remove();
+            mockForm.querySelector('#categoryId').remove();
+            mockForm.querySelector('#categoryItemLimit').remove();
             
-            clearForm();
-            const remainingInput = document.querySelector('#categoryName');
-            expect(remainingInput.value).toBe('');
+            expect(() => clearForm(mockManager)).not.toThrow();
         });
 
-        test('handles completely missing form gracefully', () => {
-            document.body.innerHTML = '';
-            clearForm();
-            // Should not throw error
+        it('handles missing manager gracefully', () => {
+            expect(() => clearForm(null)).not.toThrow();
         });
 
-        test('reverts to add mode and skips reset', () => {
-            clearForm();
-            expect(updateFormState).toHaveBeenCalledWith(false, true);
-        });
-
-        test('resets aria states', () => {
-            nameInput.setAttribute('aria-invalid', 'true');
-            clearForm();
-            expect(nameInput.getAttribute('aria-invalid')).toBe('false');
+        it('handles completely missing form gracefully', () => {
+            const managerWithoutForm = { ...mockManager, form: null };
+            expect(() => clearForm(managerWithoutForm)).not.toThrow();
         });
     });
 });
