@@ -6,8 +6,8 @@
 import { createFormLayout, updateFormState, clearForm } from './ui/forms.js';
 import { createTableLayout, displayCategories, getSortValue } from './ui/table.js';
 import { updateStats } from './ui/stats.js';
-import { validateName, validateItemLimit, validateCategoryName } from './handlers/validation.js';
-import { collectFormData, formatFormData } from './handlers/formData.js';
+import { validateCategoryName } from './handlers/validation.js';
+import { collectFormData, isValidFormData, prepareForSubmission } from './handlers/formData.js';
 import { showMessage } from '../utils.js';
 
 export class CategoryManager extends EventTarget {
@@ -17,6 +17,11 @@ export class CategoryManager extends EventTarget {
         // Set loading state
         this.isLoading = false;
         this.lastUpdated = null;
+        
+        // Store form elements
+        this.nameInput = null;
+        this.itemLimitSelect = null;
+        this.idInput = null;
         
         // API methods with fallbacks
         this.apiGet = config.apiGet || window.apiGet;
@@ -33,60 +38,208 @@ export class CategoryManager extends EventTarget {
         this.boundHandleSort = this.handleSort.bind(this);
 
         // Initialize UI
-        this.initializeElements();
-        this.setupEventListeners();
-    }
-
-    initializeElements() {
         try {
-            // Form elements
-            this.form = createFormLayout();
-            this.nameInput = document.getElementById('categoryName');
-            this.itemLimitSelect = document.getElementById('itemLimit');
-            
-            if (!this.nameInput || !this.itemLimitSelect) {
-                throw new Error('Required form elements not found');
-            }
-            
-            // Table elements
-            const container = document.getElementById('categoryTableContainer');
-            if (!container) {
-                throw new Error('Category table container not found');
-            }
-            
-            const table = createTableLayout();
-            container.innerHTML = '';
-            container.appendChild(table);
-            this.tableBody = container.querySelector('#categoryTableBody');
-            
-            if (!this.tableBody) {
-                throw new Error('Category table body not found after initialization');
-            }
-            
-            // Stats container
-            this.categoryStats = document.getElementById('categoryStats');
-            if (!this.categoryStats) {
-                console.warn('Stats container not found');
-            }
-            
-            // Initialize sorting
-            this.sortableTable = {
-                currentSort: { key: 'name', direction: 'asc' },
-                sort: this.boundHandleSort
-            };
-
-            // Load initial data
-            this.loadCategories();
+            this.initializeElements();
+            this.setupEventListeners();
         } catch (error) {
             console.error('Initialization error:', error);
             this.showMessage('Failed to initialize category manager', 'error', 'category');
         }
     }
 
+    /**
+     * Initializes or creates required DOM elements
+     * @private
+     */
+    initializeElements() {
+        // Ensure container exists
+        let container = document.getElementById('categoryTableContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'categoryTableContainer';
+            document.body.appendChild(container);
+        }
+
+        // Initialize form
+        this.form = createFormLayout();
+        
+        // Store form element references
+        this.nameInput = document.getElementById('categoryName');
+        this.itemLimitSelect = document.getElementById('categoryItemLimit');
+        this.idInput = document.getElementById('categoryId');
+
+        // Initialize table
+        let table = document.getElementById('categoryTable');
+        if (!table) {
+            table = createTableLayout();
+            container.innerHTML = '';
+            container.appendChild(table);
+        }
+
+        // Initialize tbody
+        this.tableBody = table.querySelector('tbody');
+        if (!this.tableBody) {
+            this.tableBody = document.createElement('tbody');
+            table.appendChild(this.tableBody);
+        }
+
+        // Initialize stats container
+        this.categoryStats = document.getElementById('categoryStats');
+        if (!this.categoryStats) {
+            this.categoryStats = document.createElement('div');
+            this.categoryStats.id = 'categoryStats';
+            container.parentNode.insertBefore(this.categoryStats, container.nextSibling);
+        }
+
+        // Initialize sorting
+        this.initializeSorting();
+
+        // Initial data load if not in test environment
+        if (process.env.NODE_ENV !== 'test') {
+            this.loadCategories();
+        }
+    }
+
+    /**
+     * Sets up event listeners for form and table interactions
+     * @private
+     */
+    setupEventListeners() {
+        // Form events
+        this.form.addEventListener('submit', this.boundHandleSubmit);
+        this.form.addEventListener('reset', this.boundHandleReset);
+        this.nameInput?.addEventListener('input', this.boundHandleNameInput);
+
+        // Settings update event
+        window.addEventListener('settingsUpdated', this.boundHandleSettingsUpdate);
+
+        // Table sort events
+        const headers = this.tableBody?.parentElement.querySelectorAll('th[data-sort-key]');
+        headers?.forEach(header => {
+            if (header.dataset.sortKey !== 'actions') {
+                header.addEventListener('click', () => this.handleSort(header.dataset.sortKey));
+            }
+        });
+    }
+
+    /**
+     * Handles form submission
+     * @param {Event} event - Form submission event
+     * @private
+     */
+    async handleSubmit(event) {
+        event.preventDefault();
+        if (this.isLoading) return;
+
+        try {
+            this.isLoading = true;
+            
+            // Collect and validate form data
+            const formData = collectFormData(this);
+            if (!isValidFormData(formData)) {
+                this.showMessage('Please enter a valid category name', 'error', 'category');
+                return;
+            }
+
+            // Prepare data for submission
+            const submissionData = prepareForSubmission(formData);
+            
+            // Validate category name
+            const nameValidation = await validateCategoryName(submissionData.name, submissionData.id);
+            if (!nameValidation.isValid) {
+                this.showMessage(nameValidation.message, 'error', 'category');
+                return;
+            }
+
+            // Submit to API
+            const isUpdate = Boolean(submissionData.id);
+            const response = await (isUpdate ? 
+                this.apiPut(`/api/categories/${submissionData.id}`, submissionData) :
+                this.apiPost('/api/categories', submissionData));
+
+            // Handle response
+            if (response.success) {
+                this.showMessage(
+                    `Category ${isUpdate ? 'updated' : 'created'} successfully`,
+                    'success',
+                    'category'
+                );
+                await this.loadCategories();
+                this.form.reset();
+            } else {
+                throw new Error(response.message || 'Failed to save category');
+            }
+        } catch (error) {
+            console.error('Submit error:', error);
+            this.showMessage(
+                `Failed to ${submissionData?.id ? 'update' : 'create'} category`,
+                'error',
+                'category'
+            );
+        } finally {
+            this.isLoading = false;
+        }
+    }
+
+    /**
+     * Handles form reset
+     * @param {Event} event - Form reset event
+     * @private
+     */
+    handleReset(event) {
+        updateFormState(this.form);
+        this.dispatchEvent(new CustomEvent('categoryFormReset'));
+    }
+
+    /**
+     * Handles name input changes
+     * @param {Event} event - Input event
+     * @private
+     */
+    handleNameInput(event) {
+        const name = event.target.value.trim();
+        this.dispatchEvent(new CustomEvent('categoryNameInput', {
+            detail: { name }
+        }));
+    }
+
+    /**
+     * Handles settings updates
+     * @param {CustomEvent} event - Settings update event
+     * @private
+     */
+    handleSettingsUpdate(event) {
+        this.loadCategories();
+    }
+
+    /**
+     * Initializes sorting functionality
+     * @private
+     */
+    initializeSorting() {
+        this.sortableTable = {
+            currentSort: { key: 'name', direction: 'asc' },
+            sort: this.boundHandleSort
+        };
+
+        // Add sort attributes to headers
+        const headers = this.tableBody.parentElement.querySelectorAll('th[data-sort-key]');
+        headers.forEach(header => {
+            if (header.dataset.sortKey !== 'actions') {
+                header.classList.add('sortable');
+                header.setAttribute('aria-sort', 'none');
+            }
+        });
+    }
+
+    /**
+     * Handles table sorting
+     * @param {string} key - Column key to sort by
+     * @private
+     */
     handleSort(key) {
         if (this.isLoading || !this.tableBody) return;
         
-        // Get current direction or set initial
         const { currentSort } = this.sortableTable;
         const direction = key === currentSort.key && 
             currentSort.direction === 'asc' ? 'desc' : 'asc';
@@ -94,25 +247,27 @@ export class CategoryManager extends EventTarget {
         try {
             // Get and sort rows
             const rows = Array.from(this.tableBody.querySelectorAll('tr'));
-            if (rows.length === 0) return;
+            if (!rows.length) return;
 
+            // Sort rows
+            const fragment = document.createDocumentFragment();
             rows.sort((a, b) => {
                 const aVal = getSortValue(a, key);
                 const bVal = getSortValue(b, key);
                 return direction === 'asc' ? 
                     (aVal > bVal ? 1 : -1) : 
                     (aVal < bVal ? 1 : -1);
-            });
+            }).forEach(row => fragment.appendChild(row.cloneNode(true)));
 
-            // Update DOM efficiently
-            const fragment = document.createDocumentFragment();
-            rows.forEach(row => fragment.appendChild(row.cloneNode(true)));
+            // Update DOM
             this.tableBody.innerHTML = '';
             this.tableBody.appendChild(fragment);
 
             // Update state and indicators
             this.sortableTable.currentSort = { key, direction };
-            this.updateSortIndicators(document.querySelector(`th[data-sort-key="${key}"]`));
+            this.updateSortIndicators(
+                this.tableBody.parentElement.querySelector(`th[data-sort-key="${key}"]`)
+            );
             
             // Dispatch sort event
             this.dispatchEvent(new CustomEvent('categoriesSorted', {
@@ -124,251 +279,75 @@ export class CategoryManager extends EventTarget {
         }
     }
 
-    updateSortIndicators(clickedHeader) {
-        if (!clickedHeader) return;
-
-        // Remove all sorting classes
-        document.querySelectorAll('th[data-sort-key]').forEach(header => {
-            header.classList.remove('sorted-asc', 'sorted-desc');
-            header.setAttribute('aria-sort', 'none');
-        });
-
-        // Add correct class and aria attribute to clicked header
-        const direction = this.sortableTable.currentSort.direction;
-        clickedHeader.classList.add(`sorted-${direction}`);
-        clickedHeader.setAttribute('aria-sort', direction);
-    }
-
-    setupEventListeners() {
-        // Remove any existing listeners
-        this.cleanupEventListeners();
+    /**
+     * Updates sort indicators in table headers
+     * @param {HTMLElement} activeHeader - Currently active header
+     * @private
+     */
+    updateSortIndicators(activeHeader) {
+        if (!this.tableBody) return;
         
-        // Form events
-        this.form.addEventListener('submit', this.boundHandleSubmit);
-        this.form.addEventListener('reset', this.boundHandleReset);
-        this.nameInput.addEventListener('input', this.boundHandleNameInput);
-        document.addEventListener('settingsUpdated', this.boundHandleSettingsUpdate);
-
-        // Table sorting
-        const headers = document.querySelectorAll('th[data-sort-key]');
+        const headers = this.tableBody.parentElement.querySelectorAll('th[data-sort-key]');
         headers.forEach(header => {
-            const key = header.dataset.sortKey;
-            if (!key) return;
-            
-            const handler = () => this.sortableTable.sort(key);
-            header.addEventListener('click', handler);
-            this._sortListeners = this._sortListeners || [];
-            this._sortListeners.push({ element: header, handler });
+            if (header === activeHeader) {
+                const direction = this.sortableTable.currentSort.direction;
+                header.setAttribute('aria-sort', direction);
+                header.dataset.sortDirection = direction;
+            } else {
+                header.setAttribute('aria-sort', 'none');
+                header.removeAttribute('data-sort-direction');
+            }
         });
     }
 
-    cleanupEventListeners() {
-        // Cleanup sort listeners
-        if (this._sortListeners) {
-            this._sortListeners.forEach(({ element, handler }) => {
-                element.removeEventListener('click', handler);
-            });
-            this._sortListeners = [];
-        }
-    }
-
+    /**
+     * Loads categories from the API
+     * @returns {Promise<void>}
+     */
     async loadCategories() {
         if (this.isLoading) return;
-        
-        this.isLoading = true;
+
         try {
+            this.isLoading = true;
             const response = await this.apiGet('/api/categories');
-            const categories = response.data || [];
-
-            // Batch DOM updates
-            await new Promise(resolve => requestAnimationFrame(resolve));
             
-            // Update UI components
-            displayCategories(this.tableBody, categories);
-            if (this.categoryStats) {
-                updateStats(this.categoryStats, categories, this.lastUpdated);
+            if (response.success) {
+                displayCategories(response.data, this.tableBody);
+                updateStats(response.data, this.categoryStats);
+                this.lastUpdated = new Date();
+                
+                this.dispatchEvent(new CustomEvent('categoriesLoaded', {
+                    detail: { categories: response.data }
+                }));
+            } else {
+                throw new Error(response.message || 'Failed to load categories');
             }
-            this.lastUpdated = new Date();
-
-            // Apply current sort if needed
-            const { key, direction } = this.sortableTable.currentSort;
-            if (key && categories.length > 0) {
-                this.sortableTable.sort(key);
-            }
-
-            // Dispatch load event
-            this.dispatchEvent(new CustomEvent('categoriesLoaded', {
-                detail: { categories }
-            }));
         } catch (error) {
             console.error('Load error:', error);
-            this.showMessage(error.message || 'Error loading categories', 'error', 'category');
+            this.showMessage('Failed to load categories', 'error', 'category');
         } finally {
             this.isLoading = false;
         }
     }
 
-    async handleSubmit(event) {
-        event.preventDefault();
-        if (this.isLoading) return;
-
-        this.isLoading = true;
-        try {
-            // Collect and validate form data
-            const data = collectFormData();
-            if (!data || !data.name?.trim()) {
-                this.showMessage('Invalid form data', 'error', 'category');
-                return;
-            }
-
-            // Determine API endpoint and method
-            const isEdit = !!data.id;
-            const endpoint = isEdit ? `/api/categories/${data.id}` : '/api/categories';
-            const apiMethod = isEdit ? this.apiPut : this.apiPost;
-
-            // Validate name length
-            if (!data.name || data.name.length < 3) {
-                this.showMessage(
-                    'Category name must be at least three characters',
-                    'error',
-                    'category'
-                );
-                return;
-            }
-
-            // Get and validate limit
-            const globalLimit = this.managers?.settings?.getCurrentLimit?.() || 100;
-            const itemLimit = parseInt(data.itemLimit, 10);
-            if (!validateItemLimit(itemLimit, globalLimit, this)) {
-                return;
-            }
-
-            // Prepare and send API payload
-            const payload = {
-                name: data.name,
-                itemLimit: itemLimit || 0
-            };
-
-            await apiMethod(endpoint, payload);
-            
-            // Handle success
-            this.showMessage(
-                `Category ${isEdit ? 'updated' : 'created'} successfully`,
-                'success',
-                'category'
-            );
-            
-            // Update UI
-            this.resetForm();
-            await this.loadCategories();
-
-            // Notify other components
-            document.dispatchEvent(new CustomEvent('categoryUpdated', {
-                detail: { action: isEdit ? 'update' : 'create', category: payload }
-            }));
-        } catch (error) {
-            console.error('Submit error:', error);
-            this.showMessage(error.message || 'An error occurred', 'error', 'category');
-        } finally {
-            this.isLoading = false;
-        }
-    }
-
-    resetForm() {
-        clearForm(this.form);
-        if (this.nameInput) {
-            this.nameInput.setAttribute('aria-invalid', 'false');
-        }
-        updateFormState(false);
-    }
-
-    handleReset() {
-        this.resetForm();
-    }
-
-    handleNameInput(event) {
-        validateCategoryName(event, this);
-    }
-
-    handleSettingsUpdate(event) {
-        if (!event?.detail) return;
-        
-        const oldValue = parseInt(this.itemLimitSelect?.value, 10);
-        this.globalLimit = event.detail.maxItemLimit;
-        this.updateLimitOptions(oldValue);
-        
-        // Notify components of limit change
-        this.dispatchEvent(new CustomEvent('categoryLimitsUpdated', {
-            detail: { oldValue, newValue: this.globalLimit }
-        }));
-    }
-
-    updateLimitOptions(previousValue = 0) {
-        const select = this.itemLimitSelect;
-        if (!select) return;
-
-        select.innerHTML = '<option value="0">No Limit</option>';
-        
-        if (this.globalLimit) {
-            const fragment = document.createDocumentFragment();
-            for (let i = 1; i <= this.globalLimit; i++) {
-                const option = document.createElement('option');
-                option.value = i.toString();
-                option.textContent = i.toString();
-                fragment.appendChild(option);
-            }
-            select.appendChild(fragment);
-        }
-
-        // Only update if value within range
-        if (previousValue > 0 && previousValue <= this.globalLimit) {
-            select.value = previousValue.toString();
-        }
-    }
-
-    editCategory(id, name, limit) {
-        const idInput = document.getElementById('categoryId');
-        if (!idInput || !this.nameInput || !this.itemLimitSelect) {
-            console.error('Required form elements not found');
-            return;
-        }
-
-        idInput.value = id?.toString() || '';
-        this.nameInput.value = name || '';
-        this.itemLimitSelect.value = (limit || 0).toString();
-        updateFormState(true);
-
-        // Notify of edit mode change
-        this.dispatchEvent(new CustomEvent('categoryEditStarted', {
-            detail: { id, name, limit }
-        }));
-    }
-
-    async deleteCategory(id) {
-        if (this.isLoading || !id) return;
-        if (!window.confirm('Are you sure you want to delete this category?')) return;
-
-        this.isLoading = true;
-        try {
-            await this.apiDelete(`/api/categories/${id}`);
-            this.showMessage('Category deleted successfully', 'success', 'category');
-            await this.loadCategories();
-
-            // Notify of deletion
-            document.dispatchEvent(new CustomEvent('categoryUpdated', {
-                detail: { action: 'delete', categoryId: id }
-            }));
-        } catch (error) {
-            console.error('Delete error:', error);
-            this.showMessage(error.message || 'Error deleting category', 'error', 'category');
-        } finally {
-            this.isLoading = false;
-        }
-    }
-
-    // Cleanup on destroy
+    /**
+     * Cleans up event listeners and resources
+     */
     destroy() {
-        this.cleanupEventListeners();
-        document.removeEventListener('settingsUpdated', this.boundHandleSettingsUpdate);
+        // Remove form listeners
+        this.form?.removeEventListener('submit', this.boundHandleSubmit);
+        this.form?.removeEventListener('reset', this.boundHandleReset);
+        this.nameInput?.removeEventListener('input', this.boundHandleNameInput);
+
+        // Remove settings listener
+        window.removeEventListener('settingsUpdated', this.boundHandleSettingsUpdate);
+
+        // Remove sort listeners
+        const headers = this.tableBody?.parentElement.querySelectorAll('th[data-sort-key]');
+        headers?.forEach(header => {
+            if (header.dataset.sortKey !== 'actions') {
+                header.removeEventListener('click', () => this.handleSort(header.dataset.sortKey));
+            }
+        });
     }
 }

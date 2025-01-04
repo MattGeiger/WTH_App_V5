@@ -49,6 +49,60 @@ function toTitleCase(str) {
 }
 
 /**
+ * Handles input transformation for category name
+ * @param {HTMLInputElement} input - Input element to handle
+ * @param {Object} [manager] - Category manager instance for showing messages
+ * @returns {string} Transformed value
+ */
+export function handleNameInput(input, manager) {
+    // Handle non-string values
+    if (!input?.value || typeof input.value !== 'string') {
+        return '';
+    }
+
+    let value = input.value.trim();
+
+    // Handle empty or whitespace input
+    if (!value) {
+        return '';
+    }
+
+    // Check maximum length
+    if (value.length > MAX_LENGTH) {
+        value = value.slice(0, MAX_LENGTH);
+        manager?.showMessage?.(
+            'Input cannot exceed 36 characters',
+            'warning',
+            'category'
+        );
+    }
+
+    // Remove consecutive spaces
+    const normalized = value.replace(/\s+/g, ' ');
+    if (normalized !== value) {
+        manager?.showMessage?.(
+            'Consecutive spaces detected',
+            'warning',
+            'category'
+        );
+        value = normalized;
+    }
+
+    // Check for repeated words
+    const words = value.toLowerCase().split(' ').filter(Boolean);
+    if (words.length !== new Set(words).size) {
+        manager?.showMessage?.(
+            'Category name cannot contain repeated words',
+            'error',
+            'category'
+        );
+    }
+
+    // Convert to title case
+    return toTitleCase(value);
+}
+
+/**
  * Validates category name
  * @param {string} name - Category name to validate
  * @param {Object} [manager] - Category manager instance for showing messages
@@ -129,6 +183,29 @@ export function validateName(name, manager) {
  */
 export function validateItemLimit(itemLimit, globalLimit, manager) {
     try {
+        // Handle string inputs that might be negative
+        if (typeof itemLimit === 'string') {
+            const trimmed = itemLimit.trim();
+            if (trimmed.startsWith('-') || trimmed === '-0') {
+                manager?.showMessage?.(
+                    'Item limit cannot be negative',
+                    'error',
+                    'category'
+                );
+                return false;
+            }
+        }
+
+        // Handle number inputs that might be negative
+        if (typeof itemLimit === 'number' && itemLimit < 0) {
+            manager?.showMessage?.(
+                'Item limit cannot be negative',
+                'error',
+                'category'
+            );
+            return false;
+        }
+
         const numLimit = parseInt(itemLimit, 10);
         const numGlobalLimit = parseInt(globalLimit, 10);
         
@@ -137,16 +214,6 @@ export function validateItemLimit(itemLimit, globalLimit, manager) {
             isNaN(numGlobalLimit) || !Number.isFinite(numGlobalLimit)) {
             manager?.showMessage?.(
                 'Item limit must be a valid number',
-                'error',
-                'category'
-            );
-            return false;
-        }
-
-        // Check for negative values
-        if (numLimit < 0) {
-            manager?.showMessage?.(
-                'Item limit cannot be negative',
                 'error',
                 'category'
             );
@@ -183,8 +250,7 @@ export function validateItemLimit(itemLimit, globalLimit, manager) {
  */
 export function validateCategoryName(event, manager) {
     try {
-        // Validate event and target
-        if (!event?.target?.value) {
+        if (!event?.target) {
             manager?.showMessage?.(
                 'Invalid input element',
                 'error',
@@ -193,51 +259,9 @@ export function validateCategoryName(event, manager) {
             return false;
         }
 
-        const input = event.target;
-        let value = String(input.value || '').trim();
-
-        // Handle empty or whitespace input
-        if (!value) {
-            input.value = '';
-            return true;
-        }
-
-        // Check maximum length
-        if (value.length > MAX_LENGTH) {
-            value = value.slice(0, MAX_LENGTH);
-            input.value = value;
-            manager?.showMessage?.(
-                'Input cannot exceed 36 characters',
-                'warning',
-                'category'
-            );
-        }
-
-        // Remove consecutive spaces
-        const normalized = value.replace(/\s+/g, ' ');
-        if (normalized !== value) {
-            input.value = normalized;
-            value = normalized;
-            manager?.showMessage?.(
-                'Consecutive spaces detected',
-                'warning',
-                'category'
-            );
-        }
-
-        // Check for repeated words
-        const words = value.toLowerCase().split(' ').filter(Boolean);
-        if (words.length !== new Set(words).size) {
-            manager?.showMessage?.(
-                'Category name cannot contain repeated words',
-                'error',
-                'category'
-            );
-            return false;
-        }
-
-        // Convert to title case
-        input.value = toTitleCase(value);
+        // Handle input transformation
+        const transformedValue = handleNameInput(event.target, manager);
+        event.target.value = transformedValue;
 
         return true;
     } catch (error) {
